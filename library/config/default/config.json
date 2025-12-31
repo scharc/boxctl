@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "settings": {
+    "auto_approve": {
+      "Bash": "always",
+      "Read": "always",
+      "Write": "always",
+      "Edit": "always",
+      "Glob": "always",
+      "Grep": "always",
+      "NotebookEdit": "always",
+      "Task": "always",
+      "WebFetch": "always",
+      "WebSearch": "always",
+      "LSP": "always",
+      "TodoWrite": "always",
+      "AskUserQuestion": "never",
+      "EnterPlanMode": "never",
+      "ExitPlanMode": "always"
+    },
+    "model": "sonnet",
+    "display": {
+      "show_tool_results": true,
+      "show_thinking": false
+    }
+  }
+}

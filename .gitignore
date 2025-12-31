@@ -1,0 +1,32 @@
+# Runtime test data (created by test containers)
+runtime/
+
+# Agentbox local state
+.agentbox/
+.claude/
+AGENT.md
+CLAUDE.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Poetry
+poetry.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

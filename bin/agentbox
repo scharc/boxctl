@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Agentbox wrapper script - preserves current working directory
+
+# Capture the user's current working directory
+export AGENTBOX_PROJECT_DIR="$PWD"
+
+# Get the real path of this script (resolve symlinks)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+AGENTBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Change to agentbox directory to run poetry
+cd "$AGENTBOX_ROOT"
+
+# Run poetry with the project dir passed as environment variable
+exec poetry run agentbox "$@"

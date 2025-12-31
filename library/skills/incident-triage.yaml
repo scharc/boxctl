@@ -1,0 +1,7 @@
+name: incident-triage
+version: "0.1.0"
+description: Quick incident triage checklist for failing services.
+steps:
+  - Identify impact and affected services.
+  - Capture error logs and recent deploys.
+  - Form a rollback or mitigation plan.

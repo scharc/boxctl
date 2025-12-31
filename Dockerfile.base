@@ -1,0 +1,146 @@
+# Copyright (c) 2025 Marc Schütze <scharc@gmail.com>
+# SPDX-License-Identifier: MIT
+# See LICENSE file in the project root for full license information.
+
+# Agentbox Base Image
+# Rich development environment with all common tools
+
+FROM ubuntu:24.04
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
+# Install system dependencies and common tools
+RUN apt-get update && apt-get install -y \
+    # Core utilities
+    curl \
+    wget \
+    git \
+    bash \
+    bash-completion \
+    sudo \
+    passwd \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    locales \
+    # Build essentials
+    build-essential \
+    gcc \
+    g++ \
+    make \
+    cmake \
+    pkg-config \
+    # Python essentials
+    python3.12 \
+    python3-pip \
+    python3-venv \
+    python3-dev \
+    # System tools
+    jq \
+    tree \
+    htop \
+    tmux \
+    vim \
+    nano \
+    unzip \
+    zip \
+    ripgrep \
+    fd-find \
+    bat \
+    fzf \
+    httpie \
+    inotify-tools \
+    bc \
+    # Network tools
+    netcat-openbsd \
+    telnet \
+    dnsutils \
+    traceroute \
+    net-tools \
+    iputils-ping \
+    # Database clients
+    postgresql-client \
+    mysql-client \
+    redis-tools \
+    # Notification support
+    libnotify-bin \
+    dbus-x11 \
+    # Other utilities
+    file \
+    less \
+    man-db \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure locales
+RUN locale-gen en_US.UTF-8
+
+# Install Docker CLI
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli docker-compose-plugin \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install global npm packages
+RUN npm install -g \
+    npm@latest \
+    yarn \
+    pnpm
+
+# Install Claude Code via npm
+RUN npm install -g @anthropic-ai/claude-code
+
+# Install OpenAI Codex and Gemini CLIs via npm
+RUN npm install -g \
+    @openai/codex \
+    @google/gemini-cli
+
+# Install Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 - \
+    && ln -s /root/.local/bin/poetry /usr/local/bin/poetry
+
+# Install common Python packages
+RUN pip3 install --no-cache-dir --break-system-packages \
+    pipenv \
+    virtualenv \
+    black \
+    pylint \
+    pytest \
+    requests \
+    pyyaml
+
+# Create directory structure
+RUN mkdir -p /workspace \
+    /agentbox/library/config \
+    /agentbox/library/mcp \
+    /agentbox/library/tools \
+    /agentbox/library/skills
+
+# Copy all scripts from bin/ directory
+COPY bin/container-init.sh /usr/local/bin/container-init.sh
+COPY bin/notify.sh /usr/local/bin/notify
+COPY bin/merge-config.py /usr/local/bin/merge-config.py
+COPY bin/split-config.py /usr/local/bin/split-config.py
+COPY bin/merge-codex-config.py /usr/local/bin/merge-codex-config.py
+COPY bin/split-codex-config.py /usr/local/bin/split-codex-config.py
+COPY bin/config-watcher.sh /usr/local/bin/config-watcher.sh
+RUN chmod +x /usr/local/bin/container-init.sh /usr/local/bin/notify \
+    /usr/local/bin/merge-config.py /usr/local/bin/split-config.py \
+    /usr/local/bin/merge-codex-config.py /usr/local/bin/split-codex-config.py \
+    /usr/local/bin/config-watcher.sh
+
+# Working directory
+WORKDIR /workspace
+
+# Entrypoint runs container initialization
+ENTRYPOINT ["/usr/local/bin/container-init.sh"]

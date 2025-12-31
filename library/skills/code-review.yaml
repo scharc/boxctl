@@ -1,0 +1,7 @@
+name: code-review
+version: "0.1.0"
+description: Lightweight code review checklist focused on risk and tests.
+steps:
+  - Identify behavior changes and edge cases.
+  - Verify error handling and logging.
+  - Check for missing tests and regressions.

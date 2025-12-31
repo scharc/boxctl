@@ -1,0 +1,9 @@
+{
+  "name": "docker",
+  "description": "Docker engine control MCP server (requires socket mount)",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-docker"]
+  },
+  "notes": "Requires /var/run/docker.sock mounted into the container. Agentbox mounts it only when this MCP is enabled."
+}

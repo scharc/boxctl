@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Agentbox alias wrapper - forwards to agentbox
+
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+AGENTBOX_ROOT="$(dirname "$SCRIPT_DIR")"
+
+exec "$AGENTBOX_ROOT/bin/agentbox" "$@"

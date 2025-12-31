@@ -1,0 +1,15 @@
+{
+  "name": "github",
+  "description": "GitHub API MCP server",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-github"],
+    "env": {
+      "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+    }
+  },
+  "env_template": {
+    "GITHUB_TOKEN": "ghp_your_github_token_here"
+  },
+  "notes": "Get token from: https://github.com/settings/tokens\nRequired scopes: repo, workflow, read:org\nOr set GITHUB_TOKEN in your shell environment"
+}
