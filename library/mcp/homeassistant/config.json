@@ -1,0 +1,17 @@
+{
+  "name": "homeassistant",
+  "description": "Home Assistant smart home control MCP server",
+  "config": {
+    "command": "npx",
+    "args": ["-y", "@homeassistant/mcp"],
+    "env": {
+      "HA_URL": "http://host.docker.internal:8123",
+      "HA_TOKEN": "${HA_TOKEN}"
+    }
+  },
+  "env_template": {
+    "HA_URL": "http://host.docker.internal:8123",
+    "HA_TOKEN": "your_long_lived_access_token_here"
+  },
+  "notes": "Get token from: Home Assistant → Profile → Long-Lived Access Tokens\nUse host.docker.internal to access Home Assistant running on your host machine\nOr use local network IP: http://192.168.x.x:8123"
+}

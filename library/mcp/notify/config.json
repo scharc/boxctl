@@ -1,0 +1,8 @@
+{
+  "name": "notify",
+  "description": "Agentbox host notification MCP server",
+  "config": {
+    "command": "python3",
+    "args": ["/agentbox/library/mcp/notify/server.py"]
+  }
+}
