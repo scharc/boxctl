@@ -251,6 +251,79 @@ def _ensure_container_running(manager: ContainerManager, container_name: str) ->
         return False
 
 
+def _run_agent_command_noninteractive(
+    manager: ContainerManager,
+    project: Optional[str],
+    args: tuple,
+    command: str,
+    extra_args: Optional[list[str]] = None,
+    label: Optional[str] = None,
+    extra_env: Optional[dict[str, str]] = None,
+    workdir: Optional[str] = None,
+) -> int:
+    """Run an agent command in non-interactive mode (no tmux, no TTY).
+
+    Returns the exit code of the command.
+    """
+    container_name, args = _resolve_container_and_args(manager, project, args)
+
+    # Get project dir for config version check (before starting container)
+    project_dir = resolve_project_dir()
+
+    # Block if config needs migration
+    if not _require_config_migrated(project_dir):
+        raise SystemExit(1)
+
+    if not _ensure_container_running(manager, container_name):
+        console.print(f"[red]Failed to start container {container_name}[/red]")
+        raise SystemExit(1)
+
+    _warn_if_base_outdated(manager, container_name, project_dir)
+
+    if not manager.wait_for_user(container_name, "abox"):
+        console.print("[red]Container user 'abox' not found.[/red]")
+        console.print("[yellow]Rebuild the base image with: agentbox update[/yellow]")
+        raise SystemExit(1)
+
+    from agentbox.cli.helpers.utils import wait_for_container_ready
+
+    if not wait_for_container_ready(manager, container_name, timeout_s=90.0):
+        console.print("[red]Container failed to initialize (timeout or health check failed)[/red]")
+        raise SystemExit(1)
+
+    # Build command for non-interactive execution
+    cmd = [command]
+    if extra_args:
+        cmd.extend(extra_args)
+    if args:
+        cmd.extend(args)
+
+    display = label or command
+
+    # Build docker exec command without -it (non-interactive)
+    docker_cmd = [
+        "docker",
+        "exec",
+        "-u", "abox",
+        "-w", workdir or "/workspace",
+        "-e", "HOME=/home/abox",
+        "-e", "USER=abox",
+    ]
+    if extra_env:
+        for key, value in extra_env.items():
+            docker_cmd.extend(["-e", f"{key}={value}"])
+    docker_cmd.extend([
+        "-e", f"AGENTBOX_AGENT_LABEL={display}",
+        "-e", f"AGENTBOX_CONTAINER={container_name}",
+        container_name,
+    ])
+    docker_cmd.extend(cmd)
+
+    import subprocess
+    result = subprocess.run(docker_cmd)
+    return result.returncode
+
+
 def _run_agent_command(
     manager: ContainerManager,
     project: Optional[str],

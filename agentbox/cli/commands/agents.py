@@ -16,6 +16,7 @@ from agentbox.cli.helpers import (
     _build_dynamic_context,
     _complete_project_name,
     _run_agent_command,
+    _run_agent_command_noninteractive,
     handle_errors,
 )
 from agentbox.utils.project import resolve_project_dir
@@ -115,13 +116,16 @@ def claude(project: Optional[str], args: tuple):
 
 
 @cli.command()
+@click.option("-p", "--print", "print_mode", is_flag=True, help="Run in non-interactive mode (no tmux, output to stdout)")
 @click.argument("project", required=False, shell_complete=_complete_project_name)
 @click.argument("args", nargs=-1)
 @handle_errors
-def superclaude(project: Optional[str], args: tuple):
+def superclaude(print_mode: bool, project: Optional[str], args: tuple):
     """Run Claude Code with auto-approve permissions enabled.
 
     If no project name is provided, runs in the current project's container.
+
+    Use -p/--print for non-interactive mode (useful for automation/scripting).
     """
     manager = ContainerManager()
     prompt = _read_super_prompt()
@@ -135,21 +139,34 @@ def superclaude(project: Optional[str], args: tuple):
         prompt,
     ]
 
-    # Auto-enable VSCode integration if available on host
-    if _has_vscode():
+    # Auto-enable VSCode integration if available on host (only in interactive mode)
+    if not print_mode and _has_vscode():
         extra_args.append("--ide")
 
-    _run_agent_command(
-        manager,
-        project,
-        args,
-        "claude",
-        extra_args=extra_args,
-        label="Claude Code (auto-approve)",
-        reuse_tmux_session=True,
-        session_key="superclaude",
-        persist_session=False,
-    )
+    # Add -p flag to claude when in print mode
+    if print_mode:
+        extra_args.append("-p")
+        exit_code = _run_agent_command_noninteractive(
+            manager,
+            project,
+            args,
+            "claude",
+            extra_args=extra_args,
+            label="Claude Code (auto-approve)",
+        )
+        raise SystemExit(exit_code)
+    else:
+        _run_agent_command(
+            manager,
+            project,
+            args,
+            "claude",
+            extra_args=extra_args,
+            label="Claude Code (auto-approve)",
+            reuse_tmux_session=True,
+            session_key="superclaude",
+            persist_session=False,
+        )
 
 
 @cli.command()
@@ -176,14 +193,17 @@ def codex(project: Optional[str], args: tuple):
 
 
 @cli.command()
+@click.option("-p", "--print", "print_mode", is_flag=True, help="Run in non-interactive mode (no tmux, output to stdout)")
 @click.argument("project", required=False, shell_complete=_complete_project_name)
 @click.argument("args", nargs=-1)
 @handle_errors
-def supercodex(project: Optional[str], args: tuple):
+def supercodex(print_mode: bool, project: Optional[str], args: tuple):
     """Run Codex with auto-approve permissions enabled.
 
     If no project name is provided, runs in the current project's container.
     Codex uses AGENTS.md files for custom instructions (auto-discovered).
+
+    Use -p/--print for non-interactive mode (useful for automation/scripting).
     """
     manager = ContainerManager()
 
@@ -191,17 +211,28 @@ def supercodex(project: Optional[str], args: tuple):
         "--dangerously-bypass-approvals-and-sandbox",
     ]
 
-    _run_agent_command(
-        manager,
-        project,
-        args,
-        "codex",
-        extra_args=extra_args,
-        label="Codex (auto-approve)",
-        reuse_tmux_session=True,
-        session_key="supercodex",
-        persist_session=False,
-    )
+    if print_mode:
+        exit_code = _run_agent_command_noninteractive(
+            manager,
+            project,
+            args,
+            "codex",
+            extra_args=extra_args,
+            label="Codex (auto-approve)",
+        )
+        raise SystemExit(exit_code)
+    else:
+        _run_agent_command(
+            manager,
+            project,
+            args,
+            "codex",
+            extra_args=extra_args,
+            label="Codex (auto-approve)",
+            reuse_tmux_session=True,
+            session_key="supercodex",
+            persist_session=False,
+        )
 
 
 @cli.command()
@@ -228,26 +259,40 @@ def gemini(project: Optional[str], args: tuple):
 
 
 @cli.command()
+@click.option("-p", "--print", "print_mode", is_flag=True, help="Run in non-interactive mode (no tmux, output to stdout)")
 @click.argument("project", required=False, shell_complete=_complete_project_name)
 @click.argument("args", nargs=-1)
 @handle_errors
-def supergemini(project: Optional[str], args: tuple):
+def supergemini(print_mode: bool, project: Optional[str], args: tuple):
     """Run Gemini with auto-approve permissions enabled.
 
     Gemini uses GEMINI.md files for custom instructions (auto-discovered).
+
+    Use -p/--print for non-interactive mode (useful for automation/scripting).
     """
     manager = ContainerManager()
 
     extra_args = ["--non-interactive"]
 
-    _run_agent_command(
-        manager,
-        project,
-        args,
-        "gemini",
-        extra_args=extra_args,
-        label="Gemini (auto-approve)",
-        reuse_tmux_session=True,
-        session_key="supergemini",
-        persist_session=False,
-    )
+    if print_mode:
+        exit_code = _run_agent_command_noninteractive(
+            manager,
+            project,
+            args,
+            "gemini",
+            extra_args=extra_args,
+            label="Gemini (auto-approve)",
+        )
+        raise SystemExit(exit_code)
+    else:
+        _run_agent_command(
+            manager,
+            project,
+            args,
+            "gemini",
+            extra_args=extra_args,
+            label="Gemini (auto-approve)",
+            reuse_tmux_session=True,
+            session_key="supergemini",
+            persist_session=False,
+        )

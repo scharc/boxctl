@@ -57,6 +57,7 @@ from agentbox.cli.helpers.agent_commands import (
     _build_agent_command,
     _ensure_container_running,
     _run_agent_command,
+    _run_agent_command_noninteractive,
 )
 
 from agentbox.cli.helpers.completions import (
@@ -132,6 +133,7 @@ __all__ = [
     "_build_agent_command",
     "_ensure_container_running",
     "_run_agent_command",
+    "_run_agent_command_noninteractive",
     # Completions
     "_complete_session_name",
     "_complete_project_name",
