@@ -121,7 +121,15 @@ class HostConfig:
     @property
     def socket_dir(self) -> Path:
         """Get agentboxd socket directory."""
-        runtime_dir = os.getenv("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+        runtime_dir = os.getenv("XDG_RUNTIME_DIR")
+        if not runtime_dir:
+            import platform
+            if platform.system() == "Darwin":
+                # macOS: use TMPDIR or fall back to /tmp
+                runtime_dir = os.getenv("TMPDIR", "/tmp").rstrip("/")
+            else:
+                # Linux: use standard XDG runtime directory
+                runtime_dir = f"/run/user/{os.getuid()}"
         return Path(runtime_dir) / "agentboxd"
 
     @property

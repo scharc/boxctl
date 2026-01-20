@@ -269,8 +269,9 @@ class ContainerManager:
         git_author_name = os.getenv("GIT_AUTHOR_NAME", username)
         git_author_email = os.getenv("GIT_AUTHOR_EMAIL", "")
         display = os.getenv("DISPLAY", ":0")
-        runtime_dir = f"/run/user/{os.getuid()}"
-        agentboxd_dir = f"{runtime_dir}/agentboxd"
+        # Use config for runtime directory (handles macOS vs Linux)
+        agentboxd_dir = str(self.config.socket_dir)
+        runtime_dir = str(self.config.socket_dir.parent)
         dbus_address = f"unix:path={runtime_dir}/bus"
 
         # Prepare volume mounts
