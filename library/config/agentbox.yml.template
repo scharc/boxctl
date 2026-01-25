@@ -92,3 +92,10 @@ ports:
   # Forward host ports into container (service runs ON host)
   # Format: "host_port" or "host_port:container_port"
   container: []
+
+# CLI credentials to mount from host (opt-in for security)
+# When enabled, the respective CLI config directory is mounted read-only
+# This allows CLI tools in the container to use your existing auth tokens
+credentials:
+  gh: false     # GitHub CLI (~/.config/gh) - enables 'gh' commands
+  glab: false   # GitLab CLI (~/.config/glab-cli) - enables 'glab' commands

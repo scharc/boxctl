@@ -117,6 +117,19 @@ class DockerConfigModel(BaseModel):
     enabled: bool = False
 
 
+class CredentialsConfig(BaseModel):
+    """CLI credentials auto-mount configuration.
+
+    Controls whether gh (GitHub CLI) and glab (GitLab CLI) credentials
+    from the host are mounted into the container.
+
+    Both default to False for security - users must opt-in to share credentials.
+    """
+
+    gh: bool = False  # Mount ~/.config/gh (GitHub CLI)
+    glab: bool = False  # Mount ~/.config/glab-cli (GitLab CLI)
+
+
 class PackagesConfig(BaseModel):
     """Package installation configuration."""
 
@@ -174,6 +187,7 @@ class ProjectConfigModel(BaseModel):
     task_agents: TaskAgentsConfig = Field(default_factory=TaskAgentsConfig)
     stall_detection: StallDetectionConfig = Field(default_factory=StallDetectionConfig)
     docker: Optional[DockerConfigModel] = None
+    credentials: CredentialsConfig = Field(default_factory=CredentialsConfig)
 
     # MCP and skills
     mcp_servers: List[str] = Field(default_factory=list)

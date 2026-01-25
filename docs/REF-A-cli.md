@@ -27,6 +27,7 @@ abox workspace add --path ~/docs --mode ro --name reference  # Won't work
 # Initialize and run
 abox init                              # Initialize project
 abox superclaude                       # Run autonomous Claude
+abox run superclaude "task"            # Non-interactive (for scripts)
 
 # Manage
 abox list                              # List containers
@@ -36,7 +37,7 @@ abox q                                 # Mobile-friendly TUI menu
 
 # Rebuild after config changes
 abox rebase                            # Rebuild project container
-abox rebuild                      # Rebuild base image
+abox rebuild                           # Rebuild base image
 ```
 
 ---
@@ -90,6 +91,30 @@ Open bash shell in container (no agent).
 abox shell
 abox shell myproject
 ```
+
+### abox run AGENT PROMPT
+
+Run an agent non-interactively for automation and scripting. No tmux, outputs directly to stdout, returns exit codes.
+
+```bash
+abox run superclaude "implement user authentication"
+abox run claude "analyze this codebase"
+abox run supercodex "add unit tests for the API"
+
+# Capture output in scripts
+output=$(abox run superclaude "fix the bug" 2>&1)
+echo "Exit code: $?"
+```
+
+**AGENT:** `claude`, `superclaude`, `codex`, `supercodex`, `gemini`, `supergemini`, `qwen`, `superqwen`
+
+**When to use:** CI/CD pipelines, automation tools, scripting, or any context where you need programmatic control over agent execution without interactive tmux sessions.
+
+**Differences from interactive mode:**
+- No tmux session created
+- No TTY required (works in headless environments)
+- Output goes directly to stdout/stderr
+- Exit code reflects agent's success/failure
 
 ---
 
@@ -201,11 +226,20 @@ abox rebase all                        # All projects
 
 ### abox reconfigure
 
-Interactive reconfiguration of project settings.
+Interactive reconfiguration of project settings. Walks through common options:
+
+- **Claude Settings**: Model, thinking display, tool results
+- **Notifications**: Super agent hooks, AI-enhanced notifications
+- **Stall Detection**: Enable/disable and threshold
+- **SSH Settings**: Mode (keys/mount/config/none) and agent forwarding
+- **Docker Settings**: Socket access for running Docker commands
+- **CLI Credentials**: GitHub CLI (gh) and GitLab CLI (glab) credential mounting
 
 ```bash
 abox reconfigure
 ```
+
+Changes are saved to `.agentbox/config.yml`. Run `abox rebase` to apply.
 
 ---
 
@@ -701,6 +735,46 @@ abox config migrate                    # Interactive
 abox config migrate --dry-run          # Preview only
 abox config migrate --auto             # Auto-apply all
 ```
+
+---
+
+## Conversation Logs
+
+View and export agent conversation history. Sessions are automatically tracked when agents run in tmux.
+
+### abox logs list
+
+List all tracked sessions.
+
+```bash
+abox logs list
+```
+
+Shows session name, agent type, start time, and log file location.
+
+### abox logs show [SESSION]
+
+Show recent messages from a session.
+
+```bash
+abox logs show                         # List available sessions
+abox logs show superclaude-1           # Show last 20 messages
+abox logs show superclaude-1 -n 50     # Show last 50 messages
+```
+
+Displays a condensed view of the conversation with timestamps.
+
+### abox logs export [SESSION]
+
+Export session to markdown file.
+
+```bash
+abox logs export                       # List available sessions
+abox logs export superclaude-1         # Export to .agentbox/logs/
+abox logs export superclaude-1 -o ~/session.md  # Custom output path
+```
+
+Creates a readable markdown document with full conversation history.
 
 ---
 

@@ -4,4 +4,4 @@
 
 """Agentbox - Secure, isolated Docker environment for Claude Code."""
 
-__version__ = "0.2.1"
+__version__ = "0.3.1"

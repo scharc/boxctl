@@ -622,6 +622,31 @@ def reconfigure():
     if new_docker_enabled != current_docker_enabled:
         docker_changed = True
 
+    # === CREDENTIALS SETTINGS ===
+    console.print("\n[bold]─── CLI Credentials ───[/bold]")
+
+    # GitHub CLI (gh)
+    current_gh_enabled = config.gh_enabled
+    console.print(f"\n[dim]Mount GitHub CLI (gh) credentials from ~/.config/gh[/dim]")
+    console.print(f"[dim]Allows 'gh' commands in container to use your GitHub auth.[/dim]")
+    new_gh_enabled = _prompt_bool(
+        f"Enable GitHub CLI credentials? (current: {current_gh_enabled})",
+        current_gh_enabled
+    )
+
+    # GitLab CLI (glab)
+    current_glab_enabled = config.glab_enabled
+    console.print(f"\n[dim]Mount GitLab CLI (glab) credentials from ~/.config/glab-cli[/dim]")
+    console.print(f"[dim]Allows 'glab' commands in container to use your GitLab auth.[/dim]")
+    new_glab_enabled = _prompt_bool(
+        f"Enable GitLab CLI credentials? (current: {current_glab_enabled})",
+        current_glab_enabled
+    )
+
+    credentials_changed = False
+    if new_gh_enabled != current_gh_enabled or new_glab_enabled != current_glab_enabled:
+        credentials_changed = True
+
     # === SAVE CHANGES ===
     if changes_made:
         console.print("\n[bold]─── Saving Claude configs ───[/bold]")
@@ -630,7 +655,7 @@ def reconfigure():
         claude_super_path.write_text(json.dumps(claude_super, indent=2) + "\n")
         console.print(f"  [green]✓[/green] {claude_super_path.relative_to(project_dir)}")
 
-    if ssh_changed or stall_changed or ai_changed or docker_changed or project_config_changed:
+    if ssh_changed or stall_changed or ai_changed or docker_changed or credentials_changed or project_config_changed:
         console.print("\n[bold]─── Saving project config ───[/bold]")
         if ssh_changed:
             config.ssh_mode = new_ssh_mode
@@ -648,10 +673,13 @@ def reconfigure():
             }
         if docker_changed:
             config.docker_enabled = new_docker_enabled
+        if credentials_changed:
+            config.gh_enabled = new_gh_enabled
+            config.glab_enabled = new_glab_enabled
         config.save()
         console.print(f"  [green]✓[/green] .agentbox/config.yml")
 
-    if not changes_made and not ssh_changed and not stall_changed and not ai_changed and not docker_changed and not project_config_changed:
+    if not changes_made and not ssh_changed and not stall_changed and not ai_changed and not docker_changed and not credentials_changed and not project_config_changed:
         console.print("\n[dim]No changes made.[/dim]")
     else:
         console.print("\n[green]✓ Configuration updated[/green]")

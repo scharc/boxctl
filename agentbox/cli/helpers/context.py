@@ -334,6 +334,42 @@ def _get_docker_context(project_dir: Path, config: Optional["ProjectConfig"] = N
     return lines
 
 
+def _get_credentials_context(project_dir: Path, config: Optional["ProjectConfig"] = None) -> list[str]:
+    """Get CLI credentials context lines for agents.
+
+    Args:
+        project_dir: Project directory path
+        config: Optional cached ProjectConfig instance
+
+    Returns:
+        List of markdown lines describing mounted CLI credentials.
+    """
+    lines = []
+
+    try:
+        if config is None:
+            from agentbox.config import ProjectConfig
+            config = ProjectConfig(project_dir)
+
+        gh_enabled = config.gh_enabled
+        glab_enabled = config.glab_enabled
+
+        if gh_enabled or glab_enabled:
+            lines.append("### CLI Credentials")
+            if gh_enabled:
+                lines.append("- **GitHub CLI (gh):** Credentials from `~/.config/gh` are mounted")
+                lines.append("  - `gh` commands can use your GitHub authentication")
+            if glab_enabled:
+                lines.append("- **GitLab CLI (glab):** Credentials from `~/.config/glab-cli` are mounted")
+                lines.append("  - `glab` commands can use your GitLab authentication")
+            lines.append("")
+
+    except Exception:
+        pass
+
+    return lines
+
+
 def _get_ports_context(project_dir: Path, config: Optional["ProjectConfig"] = None) -> list[str]:
     """Get ports/networking context lines for agents.
 
@@ -506,6 +542,11 @@ def _build_dynamic_context(agentbox_dir: Path) -> str:
     docker_lines = _get_docker_context(project_dir, project_config)
     if docker_lines:
         lines.extend(docker_lines)
+
+    # CLI Credentials (gh, glab)
+    credentials_lines = _get_credentials_context(project_dir, project_config)
+    if credentials_lines:
+        lines.extend(credentials_lines)
 
     # Port Forwarding
     ports_lines = _get_ports_context(project_dir, project_config)

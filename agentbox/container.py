@@ -463,12 +463,12 @@ class ContainerManager:
         if host_qwen_dir.exists():
             volumes[str(host_qwen_dir)] = {"bind": ContainerPaths.host_qwen_mount(username), "mode": "rw"}
 
-        # GitHub CLI config (gh) - auto-mount if exists
-        if host_gh_config_dir.exists():
+        # GitHub CLI config (gh) - mount if enabled in config and exists
+        if config.gh_enabled and host_gh_config_dir.exists():
             volumes[str(host_gh_config_dir)] = {"bind": ContainerPaths.host_gh_mount(username), "mode": "ro"}
 
-        # GitLab CLI config (glab) - auto-mount if exists
-        if host_glab_config_dir.exists():
+        # GitLab CLI config (glab) - mount if enabled in config and exists
+        if config.glab_enabled and host_glab_config_dir.exists():
             volumes[str(host_glab_config_dir)] = {"bind": ContainerPaths.host_glab_mount(username), "mode": "ro"}
 
         # Extra user-defined workspace mounts from .agentbox/config.yml

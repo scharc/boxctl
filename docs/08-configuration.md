@@ -97,7 +97,7 @@ ssh:
 
 ### Automatic Credential Sharing
 
-Agentbox automatically shares your host credentials with the container. No configuration needed.
+Agentbox automatically shares your host AI credentials with the container. No configuration needed.
 
 **How it works:**
 
@@ -123,6 +123,23 @@ When OAuth tokens refresh, the credential file is replaced (new inode). If we mo
 **Git author:**
 
 Git commits use your host's `GIT_AUTHOR_NAME` and `GIT_AUTHOR_EMAIL` environment variables. If not set, defaults to your username.
+
+### CLI Credentials (gh/glab)
+
+GitHub CLI (`gh`) and GitLab CLI (`glab`) credentials are **opt-in** for security. Enable them in `.agentbox.yml`:
+
+```yaml
+credentials:
+  gh: true      # Mount ~/.config/gh (GitHub CLI)
+  glab: true    # Mount ~/.config/glab-cli (GitLab CLI)
+```
+
+Or use `agentbox reconfigure` to enable interactively.
+
+When enabled:
+- Credentials are mounted **read-only** from your host
+- `gh` and `glab` commands in the container use your existing authentication
+- No need to re-authenticate inside the container
 
 ### Workspace Mounts
 

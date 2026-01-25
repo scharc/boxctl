@@ -4,6 +4,8 @@ All notable changes to Agentbox are documented here.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-01-25
+
 ### Added
 
 - **Non-interactive mode** - New `abox run` command for automation and scripting
@@ -11,9 +13,10 @@ All notable changes to Agentbox are documented here.
   - Suitable for CI/CD pipelines, automation tools, and scripting
   - Returns exit codes for programmatic handling
   - Thanks to [@stephanj](https://github.com/stephanj) for the concept ([#3](https://github.com/scharc/agentbox/pull/3))
-- **GitHub/GitLab CLI credentials** - Auto-mount `gh` and `glab` CLI configs
-  - `~/.config/gh/` mounted for GitHub CLI authentication
-  - `~/.config/glab-cli/` mounted for GitLab CLI authentication
+- **GitHub/GitLab CLI credentials** - Opt-in mounting for `gh` and `glab` CLI configs
+  - Enable via `abox reconfigure` or set `credentials.gh: true` in config
+  - `~/.config/gh/` mounted read-only for GitHub CLI authentication
+  - `~/.config/glab-cli/` mounted read-only for GitLab CLI authentication
 
 ### Fixed
 

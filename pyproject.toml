@@ -1,6 +1,6 @@
 [project]
 name = "agentbox"
-version = "0.2.1"
+version = "0.3.1"
 description = "Secure, isolated Docker environment for Claude Code with complete development tooling"
 readme = "README.md"
 authors = [{name = "Marc Schuetze", email = "marc@schuetze.io"}]

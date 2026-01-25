@@ -17,6 +17,7 @@ from agentbox.paths import ProjectPaths
 from agentbox.models.project_config import (
     ProjectConfigModel,
     ContainerConnection,
+    CredentialsConfig,
     DockerConfigModel,
     PackagesConfig,
     PortsConfig,
@@ -420,6 +421,30 @@ class ProjectConfig:
             model.docker = DockerConfigModel(enabled=value)
         else:
             model.docker.enabled = value
+
+    @property
+    def gh_enabled(self) -> bool:
+        """Get GitHub CLI (gh) credentials mount setting."""
+        if not self._model:
+            return False
+        return self._model.credentials.gh
+
+    @gh_enabled.setter
+    def gh_enabled(self, value: bool) -> None:
+        """Set GitHub CLI (gh) credentials mount."""
+        self._ensure_model().credentials.gh = value
+
+    @property
+    def glab_enabled(self) -> bool:
+        """Get GitLab CLI (glab) credentials mount setting."""
+        if not self._model:
+            return False
+        return self._model.credentials.glab
+
+    @glab_enabled.setter
+    def glab_enabled(self, value: bool) -> None:
+        """Set GitLab CLI (glab) credentials mount."""
+        self._ensure_model().credentials.glab = value
 
     # -------------------------------------------------------------------------
     # Methods
