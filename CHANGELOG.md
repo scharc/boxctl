@@ -4,6 +4,28 @@ All notable changes to Boxctl are documented here.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-01-27
+
+### Breaking Changes
+
+- **Renamed project from `agentbox` to `boxctl`**
+  - CLI commands now use `boxctl` instead of `agentbox`
+  - Config directory changed from `.agentbox/` to `.boxctl/`
+  - MCP servers renamed: `agentbox-analyst` → `boxctl-analyst`, `agentbox-notify` → `boxctl-notify`
+  - Existing projects need to rename `.agentbox/` to `.boxctl/`
+
+### Added
+
+- **Dev branch workflow** - Cleaner release process with private dev branch
+- **Improved test infrastructure** - Better DinD test coverage and reliability
+- **Centralized configuration** - Hardcoded values consolidated
+
+### Fixed
+
+- Docker connection error detection improvements
+- SSH handler method compatibility in tests
+- Various test fixes for renamed codebase
+
 ## [0.3.1] - 2026-01-25
 
 ### Added
