@@ -2,8 +2,6 @@
 
 All notable changes to Boxctl are documented here.
 
-## [Unreleased]
-
 ## [0.3.2] - 2026-01-27
 
 ### Breaking Changes
