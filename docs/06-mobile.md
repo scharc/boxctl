@@ -88,16 +88,13 @@ Each project has its own container, its own sessions, its own world.
 
 When you're away, how do you know when something finishes?
 
-The agent can send notifications that reach your host system:
+Agents send notifications automatically:
+- **Claude**: Hooks trigger on task completion and permission requests
+- **Codex/Gemini/Qwen**: Stall detection notifies when agent appears idle
 
-```bash
-# From inside the container
-notify.sh "Build complete" "All tests passing"
-```
+If you've set up `boxctld` (the daemon), these appear as desktop notifications. Even if you're SSH'd in from your phone, the notification fires on your laptop. Next time you're at your desk, you see it.
 
-If you've set up `boxctld` (the daemon), this appears as a desktop notification. Even if you're SSH'd in from your phone, the notification fires on your laptop. Next time you're at your desk, you see it.
-
-For truly mobile notifications, you can configure a webhook to send to Slack, Discord, or a push notification service. The daemon supports custom notification hooks.
+For truly mobile notifications, you can configure Telegram or a webhook to send to Slack, Discord, or a push notification service. The daemon supports custom notification channels.
 
 ## Stall Detection
 

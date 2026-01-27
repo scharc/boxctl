@@ -2,6 +2,19 @@
 
 All notable changes to Boxctl are documented here.
 
+## [0.3.3] - 2026-01-27
+
+### Fixed
+
+- **Documentation cleanup** - Removed obsolete `notify.sh` references throughout docs
+- **Agent templates updated** - Clarified notification mechanisms (Claude via hooks, others via stall detection)
+- **Git workflow docs** - Updated to reflect dev branch workflow
+- **Naming consistency** - Updated remaining `agentbox` references to `boxctl`
+
+### Added
+
+- **No-AI-attribution guideline** - Agent templates now instruct against adding AI contribution notes
+
 ## [0.3.2] - 2026-01-27
 
 ### Breaking Changes
@@ -618,3 +631,9 @@ Boxctl is built on top of amazing open source projects:
 ---
 
 **Thank you for using Boxctl!** 🚀
+
+[0.3.3]: https://github.com/scharc/boxctl/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/scharc/boxctl/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/scharc/boxctl/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/scharc/boxctl/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/scharc/boxctl/compare/v0.1.3...v0.2.0

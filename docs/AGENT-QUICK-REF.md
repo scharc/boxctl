@@ -10,8 +10,8 @@ You are **inside a Docker container**. This is your sandbox.
 Location: Docker container
 Tools:
   - agentctl         # Manage git worktrees & tmux sessions
-  - notify.sh        # Send desktop notifications to host
   - git, node, python, docker CLI, etc.
+  - Notifications: Claude via hooks, others via stall detection
 
 Directories:
   /workspace         # Your project (read-write)
@@ -39,13 +39,12 @@ agentctl switch_branch feature/new-api
 agentctl list_worktrees
 agentctl get_current_context
 
-# Send notifications
-notify.sh "Task Complete" "Finished the implementation" "normal"
-
 # Regular development
 git status
 npm test
 python script.py
+
+# Notifications are sent automatically via hooks on task completion
 ```
 
 ### What USER Runs (Host System)
@@ -82,7 +81,7 @@ abox shell
 │                          │
 │  Agent CLI               │
 │  agentctl                │
-│  notify.sh ──────────────┤→ Notifications
+│  Hooks ──────────────────┤→ Notifications (automatic)
 │  /workspace (your code)  │
 └──────────────────────────┘
 ```
@@ -112,8 +111,8 @@ agentctl worktree add feature-branch create
 ```
 bin/container-init.sh       # Container startup script
 bin/agentctl               # Worktree management CLI
-bin/notify.sh              # Notification bridge
-boxctl/agentctl/         # Agentctl Python package
+bin/abox-notify            # Notification command (used by hooks)
+library/mcp/agentctl/      # Agentctl MCP server
 ```
 
 ### Host-side (edit but test from host)
@@ -180,25 +179,17 @@ pytest tests/
 
 ## Common Tasks
 
-### Test notification system
-```bash
-notify.sh "Test" "Hello from container" "normal"
-# Should appear as desktop notification on host
-```
-
 ### Work on a new branch in parallel
 ```bash
-agentctl switch_branch feature/awesome-feature --create
+agentctl switch_branch feature/awesome-feature
 agentctl switch_session feature/awesome-feature-superclaude
 # Now you're in a new worktree for that branch
 ```
 
-### Send notification when task completes
-```bash
-# Do some work...
-git commit -m "Implement awesome feature"
-notify.sh "Task Complete" "Awesome feature implemented" "normal"
-```
+### Notifications
+Notifications are automatic - no manual commands needed:
+- **Claude**: Hooks trigger on task completion and permission requests
+- **Codex/Gemini/Qwen**: Stall detection notifies when agent appears idle
 
 ## Quick Troubleshooting
 
@@ -207,11 +198,11 @@ You're inside the container. `boxctl` runs on the host only.
 Use `agentctl` instead, or ask the user to run `boxctl` commands.
 
 ### "Notification didn't appear"
-Check if web proxy is running on host:
+Check if notification socket exists:
 ```bash
 ls -la /home/abox/.boxctl/notify.sock
 ```
-If missing, user needs to run: `boxctl proxy install --enable`
+If missing, user needs to run: `boxctl service start` on host
 
 ### "Can't modify container config"
 You can't add MCP servers or workspaces from inside.
@@ -222,9 +213,9 @@ User must run on host: `boxctl mcp add <name>` or `boxctl rebuild`
 ✅ You CAN:
 - Edit any file in /workspace
 - Run agentctl for worktrees
-- Send notifications with notify.sh
 - Use all installed dev tools and MCP servers
 - Run tests with pytest
+- Notifications are automatic (Claude via hooks, others via stall detection)
 
 ❌ You CANNOT:
 - Run boxctl/abox commands (host-only)
@@ -238,7 +229,6 @@ User must run on host: `boxctl mcp add <name>` or `boxctl rebuild`
 3. Run `pytest tests/` to ensure tests pass
 4. Commit changes (code + tests together)
 5. **After completing work:** Update `.boxctl/agents.md` or `.boxctl/superagents.md` with learnings to help future agents
-6. Notify when done!
 
 ## Self-Improvement
 

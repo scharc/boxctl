@@ -576,7 +576,7 @@ When you run `boxctl claude` or `boxctl superclaude`, the system assembles a sys
 This file tells agents about their environment:
 - They're running inside a Docker container
 - Working directory is `/workspace`
-- What tools are available (`agentctl`, `notify.sh`)
+- What tools are available (`agentctl`, automatic notifications via hooks)
 - What they CAN'T do (run `boxctl` commands, access host filesystem)
 - Workflow best practices
 

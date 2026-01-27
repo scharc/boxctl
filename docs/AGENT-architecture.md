@@ -17,24 +17,24 @@ This is where AI agents execute. When a user runs `abox claude` or `abox supercl
 - Development tools (git, node, python, docker CLI, etc.)
 
 **Special tools inside:**
-- **`agentctl`** (`/workspace/bin/agentctl`) - Python CLI for managing git worktrees and tmux sessions
+- **`agentctl`** (`/usr/local/bin/agentctl`) - CLI for managing git worktrees and tmux sessions
   - Allows agents to work on multiple branches in parallel
   - Uses git worktree to create isolated branch environments
   - Integrates with tmux for session management
-  - Source: `/workspace/boxctl/agentctl/`
+  - Also available as MCP server at `/workspace/.boxctl/mcp/agentctl/`
 
-- **`notify.sh`** / **`abox-notify`** (`/workspace/bin/notify.sh`, `/usr/local/bin/abox-notify`)
-  - Send desktop notifications from container to host
-  - Communicates via Unix socket to the web proxy on host
+- **`abox-notify`** (`/usr/local/bin/abox-notify`)
+  - Send desktop notifications from container to host (used by hooks)
+  - Communicates via Unix socket to the daemon on host
   - Socket path: `/home/abox/.boxctl/notify.sock`
-  - Appends notifications to `.boxctl/LOG.md`
+  - Notifications are sent automatically via agent hooks on task completion
 
 **Container initialization:**
-- Entry point: `/workspace/bin/container-init.sh`
+- Entry point: `/usr/local/bin/container-init.sh`
 - Bootstraps credentials from host (SSH keys, git config, API tokens - read-only)
 - Installs MCP server packages based on `/workspace/.boxctl/mcp-meta.json`
 - Sets up tmux environment
-- Runs `/workspace/bin/start-mcp-servers.py` to launch MCP servers
+- Launches MCP servers from `/workspace/.boxctl/mcp/`
 
 ### 2. Outside the Container (Host System)
 This is the user's host machine that creates and manages containers.
@@ -87,7 +87,7 @@ This is the user's host machine that creates and manages containers.
 │      ↓                                              │
 │  Agent works on /workspace                         │
 │      ↓                                              │
-│  Calls notify.sh to send notification              │
+│  Hooks trigger notifications automatically         │
 │      ↓                                              │
 │  Unix socket → Web Proxy → Host Desktop            │
 │                                                     │
@@ -111,31 +111,28 @@ This is the user's host machine that creates and manages containers.
 - `/workspace/Dockerfile.base` - Base image definition
 
 ### Container-side (runs inside Docker)
-- `/workspace/bin/container-init.sh` - Container initialization script
-- `/workspace/bin/agentctl` - Worktree/session management CLI
-- `/workspace/bin/notify.sh` - Notification bridge script
-- `/usr/local/bin/abox-notify` - Enhanced notification script
-- `/workspace/bin/install-packages.py` - Package installation
-- `/workspace/bin/start-mcp-servers.py` - MCP server launcher
-- `/workspace/bin/generate-mcp-config.py` - MCP config generator
-- `/workspace/boxctl/agentctl/` - Agentctl Python package
+- `/usr/local/bin/container-init.sh` - Container initialization script
+- `/usr/local/bin/agentctl` - Worktree/session management CLI
+- `/usr/local/bin/abox-notify` - Notification command (used by hooks)
+- `/workspace/.boxctl/mcp/` - Project MCP servers (synced from library)
+- `/boxctl/library/mcp/` - Library MCP servers (mounted read-only)
 
-### Template files (copied to user projects)
-- `/workspace/.boxctl/agents.md` - Base agent instructions (template)
-- `/workspace/.boxctl/superagents.md` - Super agent instructions (template)
-- `/workspace/.boxctl/config.yml` - Boxctl project config
+### Project files (in user's project)
+- `/workspace/.boxctl/agents.md` - Agent instructions (customize per project)
+- `/workspace/.boxctl/superagents.md` - Super agent instructions
+- `/workspace/.boxctl/config.yml` - Project config
+- `/workspace/.boxctl/mcp.json` - MCP server configuration
 - `/workspace/.boxctl/mcp-meta.json` - MCP installation tracking
-- `/workspace/.boxctl/workspaces.json` - Additional directory mounts
 
 ## Important Constraints
 
 ### What agents inside the container CAN do:
 - Run `agentctl` to manage worktrees and sessions
-- Run `notify.sh` to send notifications to host
 - Access `/workspace` (read-write)
 - Access `/context/*` mounts (typically read-only)
 - Use MCP servers configured for the project
 - Execute all standard dev tools
+- Notifications are sent automatically via hooks
 
 ### What agents inside the container CANNOT do:
 - Run `boxctl` or `abox` commands (those are host-side only)
@@ -255,7 +252,7 @@ When working on the Boxctl repository:
 A: `boxctl` is a host-side command that modifies the container configuration and rebuilds it. You're inside the container, so you can only use what's already installed.
 
 **Q: How do notifications work?**
-A: The web proxy service runs on the host and creates a Unix socket. This socket is mounted into the container at `/home/abox/.boxctl/notify.sock`. When you run `notify.sh` inside the container, it sends a JSON message through the socket, and the proxy displays it on the host desktop.
+A: The daemon runs on the host and creates a Unix socket mounted into the container at `/home/abox/.boxctl/notify.sock`. Agent hooks automatically trigger `abox-notify` which sends a JSON message through the socket, and the daemon displays it on the host desktop.
 
 **Q: What's the difference between `abox` and `boxctl`?**
 A: `abox` is a quick launcher (e.g., `abox claude`). `boxctl` is the full CLI with all management commands (e.g., `boxctl mcp add boxctl-analyst`). Both run on the host, not inside the container.
@@ -265,7 +262,7 @@ A: Inside the container only. It's a tool for agents to manage git worktrees and
 
 ## Summary
 
-- **Inside container**: Agent runtime, `agentctl`, `notify.sh`, user code
+- **Inside container**: Agent runtime, `agentctl`, hooks with `abox-notify`, user code
 - **Outside container**: `boxctl` CLI, `abox` launcher, web proxy service
 - **Communication**: Unix socket for notifications, Docker exec for commands
 - **One-way boundary**: Container can notify host, but can't manage itself

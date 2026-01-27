@@ -43,7 +43,7 @@ This test suite provides **real flow testing** of all boxctl CLI commands using 
 | 16c | Agent with Auth | Auth-dependent tests (optional) |
 | 17 | Service Daemon | `service status`, `service config`, `service logs` |
 | 17b | Agentboxd | Daemon server functionality |
-| 17c | Notifications | `notify.sh`, NotificationClient |
+| 17c | Notifications | `abox-notify`, NotificationClient |
 | 18 | Config Migration | `config migrate` |
 | 19 | Quick Commands | `quick`, `q` |
 | 20 | Fix-Terminal | `fix-terminal` |

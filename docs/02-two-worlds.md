@@ -34,7 +34,7 @@ From inside, the agent can:
 - Work on multiple branches using worktrees
 - Send you notifications when something important happens
 
-**The commands inside the container:** Agents use `agentctl` for session and worktree management. They can run `notify.sh` to send you desktop notifications.
+**The commands inside the container:** Agents use `agentctl` for session and worktree management. Desktop notifications are automatic (Claude via hooks, others via stall detection).
 
 ## The Boundary
 
@@ -56,7 +56,7 @@ That's where `boxctld` comes in - a daemon running on your host that bridges the
 
 Each container establishes an SSH tunnel to the daemon. Through this tunnel, the container can:
 
-1. **Send notifications** - Agent finishes a task, calls `notify.sh`, message appears on your desktop. Works even when you're away - the notification will be waiting when you get back.
+1. **Send notifications** - Agent finishes a task, hook triggers notification, message appears on your desktop. Works even when you're away - the notification will be waiting when you get back.
 
 2. **Forward ports** - Docker normally requires a container restart to change port mappings. With the SSH tunnel, ports are dynamic. Agent starts a web server on port 3000, wants to expose it - one command, no restart. Agent wants to debug Chrome remotely - expose the debug port, connect from host, see exactly what the agent sees.
 
@@ -97,7 +97,7 @@ It starts automatically when you log in. Most of the time you don't think about 
 │   ├── Edits code                                           │
 │   ├── Runs tests                                           │
 │   ├── Commits changes                                      │
-│   └── Calls notify.sh → Tunnel → Your desktop              │
+│   └── Hooks trigger → Tunnel → Your desktop                │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```

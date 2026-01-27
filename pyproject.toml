@@ -1,6 +1,6 @@
 [project]
 name = "boxctl"
-version = "0.3.2"
+version = "0.3.3"
 description = "Secure, isolated Docker containers for AI coding agents with complete development tooling"
 readme = "README.md"
 authors = [{name = "Marc Schuetze", email = "marc@schuetze.io"}]

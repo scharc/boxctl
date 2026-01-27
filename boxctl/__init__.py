@@ -4,4 +4,4 @@
 
 """boxctl - Secure, isolated Docker containers for AI coding agents."""
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
