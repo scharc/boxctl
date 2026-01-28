@@ -30,7 +30,7 @@ agentctl = "boxctl.agentctl:main"
 packages = [{include = "boxctl"}]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
+pytest = "^7.4.4"
 black = "^23.12.1"
 mypy = "^1.7.1"
 ruff = "^0.1.8"
