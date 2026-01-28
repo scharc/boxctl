@@ -9,8 +9,13 @@ import os
 import socket
 import subprocess
 import json
-from typing import Optional
+from typing import Optional, Literal
 from fastmcp import FastMCP
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 # Initialize FastMCP server
 mcp = FastMCP(
@@ -1512,6 +1517,446 @@ def clear_agent_limit(agent: str) -> dict:
         return {"ok": True, "cleared_from": "local"}
     except ImportError:
         return {"ok": False, "error": "usage module not available"}
+
+
+# ============================================================================
+# Dependency Management Tools
+# ============================================================================
+
+# Type alias for package managers
+PackageManager = Literal["npm", "pip", "apt", "cargo", "post"]
+
+# Config file path - use workspace config for project dependencies
+CONFIG_PATH = "/workspace/.boxctl/config.yml"
+
+
+def _load_config() -> tuple[Optional[dict], Optional[str]]:
+    """Load the boxctl config file.
+
+    Returns:
+        (config_dict, error_message) - config is None on error
+    """
+    if yaml is None:
+        return None, "PyYAML not installed. Cannot manage dependencies."
+
+    if not os.path.exists(CONFIG_PATH):
+        return None, f"Config file not found at {CONFIG_PATH}"
+
+    try:
+        with open(CONFIG_PATH, "r") as f:
+            config = yaml.safe_load(f)
+        return config, None
+    except Exception as e:
+        return None, f"Failed to read config: {str(e)}"
+
+
+def _save_config(config: dict) -> Optional[str]:
+    """Save the boxctl config file.
+
+    Returns:
+        Error message on failure, None on success
+    """
+    if yaml is None:
+        return "PyYAML not installed. Cannot manage dependencies."
+
+    try:
+        with open(CONFIG_PATH, "w") as f:
+            yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+        return None
+    except Exception as e:
+        return f"Failed to write config: {str(e)}"
+
+
+def _ensure_packages_section(config: dict) -> None:
+    """Ensure the packages section exists with all managers."""
+    if "packages" not in config:
+        config["packages"] = {}
+
+    managers = ["npm", "pip", "apt", "cargo", "post"]
+    for manager in managers:
+        if manager not in config["packages"]:
+            config["packages"][manager] = []
+
+
+@mcp.tool()
+def add_dependency(
+    package: str,
+    manager: PackageManager,
+) -> dict:
+    """Add a project dependency to the boxctl config file.
+
+    Adds a package to the specified package manager's list in the project config.
+    These dependencies will be installed when the container is built or rebased.
+
+    Syntax examples for each manager:
+    - npm: "lodash", "typescript@^5.0.0", "express@latest"
+    - pip: "requests", "django>=4.0", "flask[async]"
+    - apt: "curl", "build-essential", "libssl-dev"
+    - cargo: "ripgrep", "fd-find", "tokei"
+    - post: Shell commands to run after other packages install, e.g., "npm install -g pnpm"
+
+    Natural language triggers:
+    - "add <package> dependency" or "install <package>"
+    - "I need <package>" or "add <package> to the project"
+    - "configure <package> for this project"
+
+    Args:
+        package: Package name with optional version specifier (syntax depends on manager)
+        manager: Package manager - one of: npm, pip, apt, cargo, post
+
+    Returns:
+        Dict with success status and updated dependency list.
+    """
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    _ensure_packages_section(config)
+
+    packages_list = config["packages"][manager]
+
+    # Check if already present
+    if package in packages_list:
+        return {
+            "success": True,
+            "already_present": True,
+            "manager": manager,
+            "package": package,
+            "packages": packages_list,
+            "message": f"Package '{package}' already in {manager} dependencies"
+        }
+
+    # Add the package
+    packages_list.append(package)
+
+    # Save config
+    error = _save_config(config)
+    if error:
+        return {"success": False, "error": error}
+
+    return {
+        "success": True,
+        "added": True,
+        "manager": manager,
+        "package": package,
+        "packages": packages_list,
+        "message": f"Added '{package}' to {manager} dependencies. "
+                  f"Run 'abox rebase' on the host to install."
+    }
+
+
+@mcp.tool()
+def remove_dependency(
+    package: str,
+    manager: PackageManager,
+) -> dict:
+    """Remove a project dependency from the boxctl config file.
+
+    Removes a package from the specified package manager's list in the project config.
+
+    Natural language triggers:
+    - "remove <package>" or "uninstall <package>"
+    - "I don't need <package> anymore"
+    - "delete <package> dependency"
+
+    Args:
+        package: Package name to remove (must match exactly as it was added)
+        manager: Package manager - one of: npm, pip, apt, cargo, post
+
+    Returns:
+        Dict with success status and updated dependency list.
+    """
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    _ensure_packages_section(config)
+
+    packages_list = config["packages"][manager]
+
+    # Check if present
+    if package not in packages_list:
+        return {
+            "success": True,
+            "not_found": True,
+            "manager": manager,
+            "package": package,
+            "packages": packages_list,
+            "message": f"Package '{package}' not found in {manager} dependencies"
+        }
+
+    # Remove the package
+    packages_list.remove(package)
+
+    # Save config
+    error = _save_config(config)
+    if error:
+        return {"success": False, "error": error}
+
+    return {
+        "success": True,
+        "removed": True,
+        "manager": manager,
+        "package": package,
+        "packages": packages_list,
+        "message": f"Removed '{package}' from {manager} dependencies. "
+                  f"Note: Already-installed packages remain until container rebuild."
+    }
+
+
+@mcp.tool()
+def list_dependencies() -> dict:
+    """List all project dependencies from the boxctl config file.
+
+    Shows all packages configured for each package manager (npm, pip, apt, cargo, post).
+
+    Natural language triggers:
+    - "what dependencies are configured?"
+    - "show project packages" or "list dependencies"
+    - "what packages does this project need?"
+
+    Returns:
+        Dict with all configured dependencies by manager.
+    """
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    _ensure_packages_section(config)
+
+    packages = config.get("packages", {})
+
+    # Count total
+    total = sum(len(pkgs) for pkgs in packages.values() if isinstance(pkgs, list))
+
+    return {
+        "success": True,
+        "packages": packages,
+        "total_count": total,
+        "config_path": CONFIG_PATH,
+        "message": f"Found {total} configured dependencies across all managers"
+    }
+
+
+@mcp.tool()
+def set_dependencies(
+    packages: list[str],
+    manager: PackageManager,
+) -> dict:
+    """Replace all dependencies for a package manager.
+
+    Completely replaces the dependency list for the specified manager.
+    Use this when you want to set an exact list rather than add/remove individually.
+
+    Args:
+        packages: List of packages (replaces existing list entirely)
+        manager: Package manager - one of: npm, pip, apt, cargo, post
+
+    Returns:
+        Dict with success status and new dependency list.
+    """
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    _ensure_packages_section(config)
+
+    old_packages = config["packages"][manager].copy()
+    config["packages"][manager] = packages
+
+    # Save config
+    error = _save_config(config)
+    if error:
+        return {"success": False, "error": error}
+
+    return {
+        "success": True,
+        "manager": manager,
+        "old_packages": old_packages,
+        "new_packages": packages,
+        "message": f"Replaced {manager} dependencies: {len(old_packages)} -> {len(packages)} packages. "
+                  f"Run 'abox rebase' on the host to apply changes."
+    }
+
+
+# ============================================================================
+# Environment Variable Tools
+# ============================================================================
+
+# Blocklist of env vars that should not be modified by agents (security/stability)
+ENV_BLOCKLIST = {
+    # System paths and identity
+    "PATH", "HOME", "USER", "SHELL", "PWD", "OLDPWD", "TERM", "LANG", "LC_ALL",
+    # Boxctl internal
+    "BOXCTL_PROJECT_DIR", "BOXCTL_SUPER_MODE", "BOXCTL_CONTAINER",
+    # SSH/credentials
+    "SSH_AUTH_SOCK", "SSH_AGENT_PID", "GPG_AGENT_INFO",
+    # Docker
+    "DOCKER_HOST", "DOCKER_CONFIG",
+    # Potentially dangerous
+    "LD_PRELOAD", "LD_LIBRARY_PATH", "PYTHONPATH", "NODE_PATH",
+}
+
+
+def _validate_env_key(key: str) -> tuple[bool, Optional[str]]:
+    """Validate an environment variable key.
+
+    Returns:
+        (is_valid, error_message)
+    """
+    if not key:
+        return False, "Key cannot be empty"
+
+    if key in ENV_BLOCKLIST:
+        return False, f"Cannot modify protected variable '{key}'"
+
+    # Key must be valid env var name (letters, digits, underscore, not starting with digit)
+    if not key.replace("_", "").isalnum():
+        return False, f"Invalid key '{key}': must contain only letters, digits, and underscores"
+
+    if key[0].isdigit():
+        return False, f"Invalid key '{key}': cannot start with a digit"
+
+    return True, None
+
+
+@mcp.tool()
+def set_env(key: str, value: str) -> dict:
+    """Set a project environment variable in the boxctl config.
+
+    Sets an environment variable that will be available in the container.
+    Changes take effect after 'abox rebase' on the host.
+
+    Common use cases:
+    - NODE_ENV=development, NODE_ENV=production
+    - DEBUG=true, DEBUG=1
+    - API_URL=https://api.example.com
+    - LOG_LEVEL=debug
+
+    Note: Some system variables are protected and cannot be modified (PATH, HOME, etc.)
+
+    Natural language triggers:
+    - "set NODE_ENV to production"
+    - "add environment variable DEBUG=true"
+    - "configure API_URL"
+
+    Args:
+        key: Environment variable name (e.g., "NODE_ENV")
+        value: Value to set (e.g., "production")
+
+    Returns:
+        Dict with success status and current env vars.
+    """
+    # Validate key
+    valid, error = _validate_env_key(key)
+    if not valid:
+        return {"success": False, "error": error}
+
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    # Ensure env section exists
+    if "env" not in config:
+        config["env"] = {}
+
+    old_value = config["env"].get(key)
+    config["env"][key] = value
+
+    # Save config
+    error = _save_config(config)
+    if error:
+        return {"success": False, "error": error}
+
+    action = "Updated" if old_value is not None else "Set"
+    return {
+        "success": True,
+        "key": key,
+        "value": value,
+        "old_value": old_value,
+        "env": config["env"],
+        "message": f"{action} {key}={value}. Run 'abox rebase' on the host to apply."
+    }
+
+
+@mcp.tool()
+def remove_env(key: str) -> dict:
+    """Remove a project environment variable from the boxctl config.
+
+    Removes an environment variable from the project configuration.
+    The variable will no longer be set in new container sessions after rebase.
+
+    Natural language triggers:
+    - "remove DEBUG env var"
+    - "unset NODE_ENV"
+    - "delete environment variable API_URL"
+
+    Args:
+        key: Environment variable name to remove
+
+    Returns:
+        Dict with success status and current env vars.
+    """
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    env = config.get("env", {})
+
+    if key not in env:
+        return {
+            "success": True,
+            "not_found": True,
+            "key": key,
+            "env": env,
+            "message": f"Environment variable '{key}' not found in config"
+        }
+
+    old_value = env.pop(key)
+    config["env"] = env
+
+    # Save config
+    error = _save_config(config)
+    if error:
+        return {"success": False, "error": error}
+
+    return {
+        "success": True,
+        "removed": True,
+        "key": key,
+        "old_value": old_value,
+        "env": env,
+        "message": f"Removed {key}. Run 'abox rebase' on the host to apply."
+    }
+
+
+@mcp.tool()
+def list_env() -> dict:
+    """List all project environment variables from the boxctl config.
+
+    Shows all environment variables configured for this project.
+
+    Natural language triggers:
+    - "what env vars are set?"
+    - "show environment variables"
+    - "list project environment"
+
+    Returns:
+        Dict with all configured environment variables.
+    """
+    config, error = _load_config()
+    if error:
+        return {"success": False, "error": error}
+
+    env = config.get("env", {})
+
+    return {
+        "success": True,
+        "env": env,
+        "count": len(env),
+        "config_path": CONFIG_PATH,
+        "message": f"Found {len(env)} configured environment variables"
+    }
 
 
 # ============================================================================

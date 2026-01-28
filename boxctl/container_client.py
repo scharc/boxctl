@@ -555,11 +555,13 @@ class ContainerClient:
 
         # Use async methods to avoid deadlock (we're on the SSH event loop)
         if direction == "local":
-            success = await self._ssh_client.add_local_forward_async(config)
+            success, error = await self._ssh_client.add_local_forward_async(config)
         else:
-            success = await self._ssh_client.add_remote_forward_async(config)
+            success, error = await self._ssh_client.add_remote_forward_async(config)
 
-        return {"ok": success}
+        if success:
+            return {"ok": True}
+        return {"ok": False, "error": error or f"failed to add {direction} forward for port {host_port}"}
 
     async def _handle_port_remove(self, payload: dict) -> dict:
         """Handle dynamic port remove request."""

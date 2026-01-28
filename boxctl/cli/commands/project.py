@@ -566,13 +566,13 @@ def reconfigure():
         stall_changed = True
 
     # Stall threshold (only ask if enabled)
-    current_threshold = current_stall.get("threshold_seconds", 30)
+    current_threshold = int(current_stall.get("threshold_seconds", 30))  # Ensure int
     new_threshold = current_threshold
     if new_stall_enabled:
         threshold_choices = ["30", "60", "120", "300"]
         console.print(f"\n[dim]Current stall threshold: {current_threshold}s[/dim]")
         new_threshold_str = _prompt_choice("Stall threshold (seconds)", threshold_choices, str(current_threshold))
-        new_threshold = int(new_threshold_str)
+        new_threshold = int(float(new_threshold_str))  # Handle both "30" and "30.0"
         if new_threshold != current_threshold:
             stall_changed = True
 

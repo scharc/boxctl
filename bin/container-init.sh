@@ -902,8 +902,8 @@ start_container_client() {
     fi
 
     echo "Starting container client from ${container_client}..."
-    CONTAINER_NAME="${AGENTBOX_CONTAINER:-$(cat /etc/hostname 2>/dev/null || echo unknown)}"
-    su -s /bin/bash abox -c "AGENTBOX_CONTAINER=${CONTAINER_NAME} nohup python3 ${container_client} >> /tmp/container-client.log 2>&1 &"
+    CONTAINER_NAME="${BOXCTL_CONTAINER:-$(cat /etc/hostname 2>/dev/null || echo unknown)}"
+    su -s /bin/bash abox -c "BOXCTL_CONTAINER=${CONTAINER_NAME} nohup python3 ${container_client} >> /tmp/container-client.log 2>&1 &"
     echo "Container client started (logs: /tmp/container-client.log)"
 }
 

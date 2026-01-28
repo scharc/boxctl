@@ -1156,12 +1156,20 @@ class SSHTunnelClient:
         except Exception:
             return None
 
-    async def add_local_forward_async(self, config: PortForwardConfig) -> bool:
-        """Dynamically add a local forward (async version for use in event loop)."""
+    async def add_local_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+        """Dynamically add a local forward (async version for use in event loop).
+
+        Returns:
+            Tuple of (success, error_message). error_message is None on success.
+        """
         return await self._add_local_forward_async(config)
 
-    async def add_remote_forward_async(self, config: PortForwardConfig) -> bool:
-        """Dynamically add a remote forward (async version for use in event loop)."""
+    async def add_remote_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+        """Dynamically add a remote forward (async version for use in event loop).
+
+        Returns:
+            Tuple of (success, error_message). error_message is None on success.
+        """
         return await self._add_remote_forward_async(config)
 
     # Sync wrappers for threaded code (do NOT call from the event loop thread)
@@ -1214,12 +1222,16 @@ class SSHTunnelClient:
         except Exception:
             return None
 
-    def add_local_forward(self, config: PortForwardConfig) -> bool:
-        """Dynamically add a local forward."""
+    def add_local_forward(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+        """Dynamically add a local forward.
+
+        Returns:
+            Tuple of (success, error_message). error_message is None on success.
+        """
         if not self._loop or not self._running:
-            return False
+            return False, "SSH tunnel not running"
         if not self._check_not_on_loop("add_local_forward"):
-            return False
+            return False, "Called from event loop thread"
 
         future = asyncio.run_coroutine_threadsafe(
             self._add_local_forward_async(config),
@@ -1227,13 +1239,17 @@ class SSHTunnelClient:
         )
         try:
             return future.result(timeout=5.0)
-        except Exception:
-            return False
+        except Exception as e:
+            return False, str(e)
 
-    async def _add_local_forward_async(self, config: PortForwardConfig) -> bool:
-        """Add a local forward (async version)."""
+    async def _add_local_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+        """Add a local forward (async version).
+
+        Returns:
+            Tuple of (success, error_message). error_message is None on success.
+        """
         if not self._conn:
-            return False
+            return False, "SSH connection not established"
 
         try:
             listener = await self._conn.forward_local_port(
@@ -1245,17 +1261,21 @@ class SSHTunnelClient:
             self._local_listeners[config.container_port] = listener
             self.local_forwards.append(config)
             logger.info(f"Added local forward: {config.container_port} -> host:{config.host_port}")
-            return True
+            return True, None
         except Exception as e:
             logger.error(f"Failed to add local forward: {e}")
-            return False
+            return False, str(e)
 
-    def add_remote_forward(self, config: PortForwardConfig) -> bool:
-        """Dynamically add a remote forward."""
+    def add_remote_forward(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+        """Dynamically add a remote forward.
+
+        Returns:
+            Tuple of (success, error_message). error_message is None on success.
+        """
         if not self._loop or not self._running:
-            return False
+            return False, "SSH tunnel not running"
         if not self._check_not_on_loop("add_remote_forward"):
-            return False
+            return False, "Called from event loop thread"
 
         future = asyncio.run_coroutine_threadsafe(
             self._add_remote_forward_async(config),
@@ -1263,13 +1283,17 @@ class SSHTunnelClient:
         )
         try:
             return future.result(timeout=5.0)
-        except Exception:
-            return False
+        except Exception as e:
+            return False, str(e)
 
-    async def _add_remote_forward_async(self, config: PortForwardConfig) -> bool:
-        """Add a remote forward (async version)."""
+    async def _add_remote_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+        """Add a remote forward (async version).
+
+        Returns:
+            Tuple of (success, error_message). error_message is None on success.
+        """
         if not self._conn:
-            return False
+            return False, "SSH connection not established"
 
         try:
             listener = await self._conn.forward_remote_port(
@@ -1282,10 +1306,10 @@ class SSHTunnelClient:
                 self._remote_listeners[config.host_port] = listener
             self.remote_forwards.append(config)
             logger.info(f"Added remote forward: host:{config.host_port} -> {config.container_port}")
-            return True
+            return True, None
         except Exception as e:
             logger.error(f"Failed to add remote forward: {e}")
-            return False
+            return False, str(e)
 
     async def remove_local_forward_async(self, host_port: int) -> bool:
         """Remove a local forward by host port."""
