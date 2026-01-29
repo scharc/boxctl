@@ -22,6 +22,7 @@ console = Console()
 def _get_boxctld_socket_path() -> Path:
     """Get the boxctld IPC socket path (platform-aware: macOS vs Linux)."""
     from boxctl.host_config import get_config
+
     return get_config().socket_path
 
 
@@ -57,6 +58,7 @@ def _send_boxctld_command(command: dict) -> dict:
 @dataclass
 class PortConflict:
     """Represents a port conflict."""
+
     port: int
     container_port: int
     direction: str  # "exposed" or "forwarded"
@@ -78,10 +80,12 @@ def check_port_available(port: int) -> Dict[str, Any]:
             - available: bool
             - used_by: dict with blocker info or None
     """
-    response = _send_boxctld_command({
-        "action": "check_port",
-        "port": port,
-    })
+    response = _send_boxctld_command(
+        {
+            "action": "check_port",
+            "port": port,
+        }
+    )
 
     if not response.get("ok"):
         # Daemon not available, try to check locally with socket
@@ -144,15 +148,17 @@ def check_configured_ports(
             if used_by.get("type") == "boxctl" and used_by.get("container") == container_name:
                 continue
 
-            conflicts.append(PortConflict(
-                port=host_port,
-                container_port=container_port,
-                direction="exposed",
-                blocker_type=used_by.get("type", "external"),
-                blocker_container=used_by.get("container"),
-                blocker_process=used_by.get("process"),
-                blocker_pid=used_by.get("pid"),
-            ))
+            conflicts.append(
+                PortConflict(
+                    port=host_port,
+                    container_port=container_port,
+                    direction="exposed",
+                    blocker_type=used_by.get("type", "external"),
+                    blocker_container=used_by.get("container"),
+                    blocker_process=used_by.get("process"),
+                    blocker_pid=used_by.get("pid"),
+                )
+            )
 
     # Check forwarded ports (host -> container)
     for port_config in config.ports_container:
@@ -167,15 +173,17 @@ def check_configured_ports(
             if used_by.get("type") == "boxctl" and used_by.get("container") == container_name:
                 continue
 
-            conflicts.append(PortConflict(
-                port=host_port,
-                container_port=container_port,
-                direction="forwarded",
-                blocker_type=used_by.get("type", "external"),
-                blocker_container=used_by.get("container"),
-                blocker_process=used_by.get("process"),
-                blocker_pid=used_by.get("pid"),
-            ))
+            conflicts.append(
+                PortConflict(
+                    port=host_port,
+                    container_port=container_port,
+                    direction="forwarded",
+                    blocker_type=used_by.get("type", "external"),
+                    blocker_container=used_by.get("container"),
+                    blocker_process=used_by.get("process"),
+                    blocker_pid=used_by.get("pid"),
+                )
+            )
 
     return conflicts
 
@@ -229,7 +237,10 @@ def format_conflict_message(conflict: PortConflict) -> str:
 
     if conflict.blocker_type == "boxctl":
         # Extract just the project name for cleaner display
-        display_name = container_naming.extract_project_name(conflict.blocker_container) or conflict.blocker_container
+        display_name = (
+            container_naming.extract_project_name(conflict.blocker_container)
+            or conflict.blocker_container
+        )
         return (
             f"Port {conflict.port} ({direction_desc}) is used by "
             f"boxctl: [cyan]{display_name}[/cyan]"
@@ -260,10 +271,12 @@ def release_port_from_container(container_name: str, port: int, direction: str) 
     else:
         action = "remove_container_port"
 
-    response = _send_boxctld_command({
-        "action": action,
-        "container": container_name,
-        "host_port": port,
-    })
+    response = _send_boxctld_command(
+        {
+            "action": action,
+            "container": container_name,
+            "host_port": port,
+        }
+    )
 
     return response.get("ok", False)

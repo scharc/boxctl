@@ -87,7 +87,7 @@ def test_ssh_mode_defaults_to_keys(test_project):
         "version": "1.0",
         "ssh": {
             "forward_agent": False,
-        }
+        },
     }
 
     with open(config_file, "w") as f:
@@ -110,7 +110,7 @@ def test_ssh_config_mode_with_forward_agent(test_project):
         "ssh": {
             "mode": "config",
             "forward_agent": True,
-        }
+        },
     }
 
     with open(config_file, "w") as f:
@@ -151,7 +151,7 @@ def test_workspace_mount_from_yml(test_project, workspace_dir):
     result = subprocess.run(
         ["docker", "exec", container_name, "cat", "/context/testws/yml_marker.txt"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, "Should be able to read from workspace mount"
@@ -199,6 +199,7 @@ def test_container_connection_from_yml(test_project):
 
     # Load and verify
     from boxctl.config import ProjectConfig
+
     config = ProjectConfig(test_project)
 
     assert len(config.containers) == 1
@@ -209,10 +210,10 @@ def test_container_connection_from_yml(test_project):
 def test_network_cli_writes_to_yml(test_project):
     """Test that 'boxctl network connect' writes to .boxctl.yml."""
     # Create a test container
-    subprocess.run([
-        "docker", "run", "-d", "--name", "test-nginx",
-        "--rm", "busybox", "sleep", "300"
-    ], check=False)
+    subprocess.run(
+        ["docker", "run", "-d", "--name", "test-nginx", "--rm", "busybox", "sleep", "300"],
+        check=False,
+    )
 
     try:
         # Create .boxctl.yml first
@@ -265,6 +266,7 @@ def test_ssh_forward_agent_env_var(test_project, tmp_path):
 
     # Mock SSH_AUTH_SOCK environment variable
     import os
+
     original_sock = os.environ.get("SSH_AUTH_SOCK")
     try:
         os.environ["SSH_AUTH_SOCK"] = str(fake_socket)
@@ -278,7 +280,7 @@ def test_ssh_forward_agent_env_var(test_project, tmp_path):
         result = subprocess.run(
             ["docker", "exec", container_name, "bash", "-c", "echo $SSH_AUTH_SOCK"],
             capture_output=True,
-            text=True
+            text=True,
         )
 
         assert result.returncode == 0
@@ -313,9 +315,16 @@ def test_ssh_config_mode_no_keys_copied(test_project):
 
     # Check if private keys exist in container (they shouldn't in config mode)
     result = subprocess.run(
-        ["docker", "exec", container_name, "bash", "-c", "ls /home/abox/.ssh/id_* 2>/dev/null | wc -l"],
+        [
+            "docker",
+            "exec",
+            container_name,
+            "bash",
+            "-c",
+            "ls /home/abox/.ssh/id_* 2>/dev/null | wc -l",
+        ],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     # Should have 0 private key files in config mode
@@ -371,22 +380,22 @@ def test_resources_applied_to_container(test_project):
     container_name = f"boxctl-{test_project.name}"
 
     # Inspect container to check resource limits
-    result = subprocess.run(
-        ["docker", "inspect", container_name],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["docker", "inspect", container_name], capture_output=True, text=True)
 
     assert result.returncode == 0
     container_info = json.loads(result.stdout)[0]
 
     # Check memory limit (512m = 536870912 bytes)
     memory_limit = container_info["HostConfig"]["Memory"]
-    assert memory_limit == 536870912, f"Memory limit should be 512m (536870912 bytes), got {memory_limit}"
+    assert (
+        memory_limit == 536870912
+    ), f"Memory limit should be 512m (536870912 bytes), got {memory_limit}"
 
     # Check CPU limit (1.0 CPUs = 1000000000 nanocpus)
     nano_cpus = container_info["HostConfig"]["NanoCpus"]
-    assert nano_cpus == 1000000000, f"CPU limit should be 1.0 (1000000000 nanocpus), got {nano_cpus}"
+    assert (
+        nano_cpus == 1000000000
+    ), f"CPU limit should be 1.0 (1000000000 nanocpus), got {nano_cpus}"
 
 
 def test_security_options_applied(test_project):
@@ -410,11 +419,7 @@ def test_security_options_applied(test_project):
     container_name = f"boxctl-{test_project.name}"
 
     # Inspect container
-    result = subprocess.run(
-        ["docker", "inspect", container_name],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["docker", "inspect", container_name], capture_output=True, text=True)
 
     assert result.returncode == 0
     container_info = json.loads(result.stdout)[0]
@@ -436,7 +441,7 @@ def test_port_mappings_applied(test_project):
     def get_free_port():
         """Find an available port on localhost."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
+            s.bind(("", 0))
             return s.getsockname()[1]
 
     # Get two random available ports to avoid conflicts
@@ -459,11 +464,7 @@ def test_port_mappings_applied(test_project):
     container_name = f"boxctl-{test_project.name}"
 
     # Inspect container
-    result = subprocess.run(
-        ["docker", "inspect", container_name],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["docker", "inspect", container_name], capture_output=True, text=True)
 
     assert result.returncode == 0
     container_info = json.loads(result.stdout)[0]
@@ -529,11 +530,7 @@ def test_devices_applied_to_container(test_project):
     container_name = f"boxctl-{test_project.name}"
 
     # Inspect container
-    result = subprocess.run(
-        ["docker", "inspect", container_name],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["docker", "inspect", container_name], capture_output=True, text=True)
 
     assert result.returncode == 0
     container_info = json.loads(result.stdout)[0]

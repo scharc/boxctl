@@ -110,8 +110,15 @@ def exec_in_container(
 ) -> subprocess.CompletedProcess:
     """Execute command inside container."""
     return run_docker(
-        "exec", "-u", user, "-w", workdir,
-        container, "bash", "-c", command,
+        "exec",
+        "-u",
+        user,
+        "-w",
+        workdir,
+        container,
+        "bash",
+        "-c",
+        command,
         timeout=timeout,
     )
 
@@ -148,7 +155,7 @@ def create_git_repo(path: Path, branches: List[str] = None) -> None:
     subprocess.run(["git", "add", "."], cwd=path, capture_output=True)
     subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=path, capture_output=True)
 
-    for branch in (branches or []):
+    for branch in branches or []:
         subprocess.run(["git", "branch", branch], cwd=path, capture_output=True)
 
 
@@ -187,10 +194,12 @@ def copy_agentbox_repo(dest: Path, branches: List[str] = None) -> None:
     subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=dest, capture_output=True)
     subprocess.run(["git", "config", "user.name", "Test"], cwd=dest, capture_output=True)
     subprocess.run(["git", "add", "."], cwd=dest, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "Initial commit from boxctl repo"], cwd=dest, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "Initial commit from boxctl repo"], cwd=dest, capture_output=True
+    )
 
     # Create additional branches if requested
-    for branch in (branches or []):
+    for branch in branches or []:
         subprocess.run(["git", "branch", branch], cwd=dest, capture_output=True)
 
 
@@ -425,7 +434,9 @@ class TestPhase2_ProjectLifecycle:
         # Don't start, just stop
         result = run_abox("stop", cwd=project_dir)
         # Should not hard fail
-        assert result.returncode == 0 or "not found" in result.stdout.lower() + result.stderr.lower()
+        assert (
+            result.returncode == 0 or "not found" in result.stdout.lower() + result.stderr.lower()
+        )
 
     # --- list / ps ---
 
@@ -542,7 +553,9 @@ class TestPhase3_SessionManagement:
     """Test session commands: list, attach, rename, remove, and interactive mode."""
 
     @pytest.fixture
-    def running_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def running_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create and start a project, yield (path, container_name)."""
         project = test_root / f"test-session-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -647,7 +660,9 @@ class TestPhase4_WorkspaceMounts:
     """Test workspace commands: list, add, remove."""
 
     @pytest.fixture
-    def workspace_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str, Path], None, None]:
+    def workspace_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str, Path], None, None]:
         """Create project with extra mount directory."""
         project = test_root / f"test-workspace-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -920,7 +935,11 @@ class TestPhase7_MCPServers:
         result = run_abox("mcp", "list", cwd=project)
         assert result.returncode == 0
         # Should show some available MCPs
-        assert "fetch" in result.stdout.lower() or "Available" in result.stdout or len(result.stdout) > 10
+        assert (
+            "fetch" in result.stdout.lower()
+            or "Available" in result.stdout
+            or len(result.stdout) > 10
+        )
 
     def test_mcps_alias(self, mcp_project):
         """Test 'boxctl mcps' works as alias."""
@@ -1028,7 +1047,11 @@ class TestPhase8_Skills:
         # Try to add a skill (westworld is usually available)
         result = run_abox("skill", "add", "westworld", cwd=project)
         # May succeed or say already added
-        assert result.returncode == 0 or "already" in result.stdout.lower() or "not found" in result.stdout.lower()
+        assert (
+            result.returncode == 0
+            or "already" in result.stdout.lower()
+            or "not found" in result.stdout.lower()
+        )
 
     def test_skill_remove(self, skill_project):
         """Test 'boxctl skill remove' removes a skill."""
@@ -1169,7 +1192,9 @@ class TestPhase10_DockerSocket:
     """Test docker commands: enable, disable, status."""
 
     @pytest.fixture
-    def docker_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def docker_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create project for docker socket testing."""
         project = test_root / f"test-docker-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1235,7 +1260,9 @@ class TestPhase11_Network:
     """Test network commands: available, list, connect, disconnect."""
 
     @pytest.fixture
-    def network_setup(self, test_root, base_image_built) -> Generator[Tuple[Path, str, str], None, None]:
+    def network_setup(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str, str], None, None]:
         """Create project and target container for network testing."""
         project = test_root / f"test-network-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1321,7 +1348,9 @@ class TestPhase12_Devices:
     """Test devices commands: list, add, remove, clear, choose."""
 
     @pytest.fixture
-    def device_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def device_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create project for device testing."""
         project = test_root / f"test-device-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1393,7 +1422,9 @@ class TestPhase13_Rebase:
     """Test rebase command."""
 
     @pytest.fixture
-    def rebase_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def rebase_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create project for rebase testing."""
         project = test_root / f"test-rebase-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1447,7 +1478,9 @@ class TestPhase14_MultiSession:
     """Test multiple tmux sessions in same container."""
 
     @pytest.fixture
-    def multi_session_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def multi_session_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create project for multi-session testing."""
         project = test_root / f"test-multi-session-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1502,7 +1535,9 @@ class TestPhase15_MultiProject:
     """Test multiple projects running simultaneously."""
 
     @pytest.fixture
-    def multi_project_setup(self, test_root, base_image_built) -> Generator[List[Tuple[Path, str]], None, None]:
+    def multi_project_setup(
+        self, test_root, base_image_built
+    ) -> Generator[List[Tuple[Path, str]], None, None]:
         """Create multiple projects."""
         projects = []
 
@@ -1635,7 +1670,9 @@ class TestPhase16b_AgentLaunch:
     """Test actual agent launch in tmux sessions with config verification."""
 
     @pytest.fixture
-    def agent_ready_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def agent_ready_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create and start project ready for agent testing."""
         project = test_root / f"test-agent-launch-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1678,7 +1715,9 @@ class TestPhase16b_AgentLaunch:
         assert "exists" in result.stdout
 
         # Check superagents.md
-        result = exec_in_container(container, "test -f /workspace/.boxctl/superagents.md && echo exists")
+        result = exec_in_container(
+            container, "test -f /workspace/.boxctl/superagents.md && echo exists"
+        )
         assert result.returncode == 0
         assert "exists" in result.stdout
 
@@ -1708,7 +1747,7 @@ class TestPhase16b_AgentLaunch:
         # Create session like boxctl does
         result = exec_in_container(
             container,
-            f"tmux new-session -d -s {session} -c /workspace 'echo claude-session-started; sleep 10'"
+            f"tmux new-session -d -s {session} -c /workspace 'echo claude-session-started; sleep 10'",
         )
         assert result.returncode == 0, f"Failed to create session: {result.stderr}"
 
@@ -1730,7 +1769,7 @@ class TestPhase16b_AgentLaunch:
 
         result = exec_in_container(
             container,
-            f"tmux new-session -d -s {session} -c /workspace 'echo superclaude-ready; sleep 10'"
+            f"tmux new-session -d -s {session} -c /workspace 'echo superclaude-ready; sleep 10'",
         )
         assert result.returncode == 0
 
@@ -1747,8 +1786,7 @@ class TestPhase16b_AgentLaunch:
         # Create all sessions
         for session in sessions:
             result = exec_in_container(
-                container,
-                f"tmux new-session -d -s {session} -c /workspace 'sleep 30'"
+                container, f"tmux new-session -d -s {session} -c /workspace 'sleep 30'"
             )
             assert result.returncode == 0, f"Failed to create {session}"
 
@@ -1773,7 +1811,7 @@ class TestPhase16b_AgentLaunch:
         # Access from session
         result = exec_in_container(
             container,
-            "tmux new-session -d -s access-test 'cat /workspace/session_test.txt > /tmp/session_out.txt; sleep 2'"
+            "tmux new-session -d -s access-test 'cat /workspace/session_test.txt > /tmp/session_out.txt; sleep 2'",
         )
         assert result.returncode == 0
 
@@ -1791,7 +1829,7 @@ class TestPhase16b_AgentLaunch:
         # mcp.json is now at root level (unified for all agents)
         result = exec_in_container(
             container,
-            "tmux new-session -d -s mcp-test 'cat /workspace/.boxctl/mcp.json > /tmp/mcp_out.txt; sleep 2'"
+            "tmux new-session -d -s mcp-test 'cat /workspace/.boxctl/mcp.json > /tmp/mcp_out.txt; sleep 2'",
         )
         assert result.returncode == 0
 
@@ -1808,7 +1846,7 @@ class TestPhase16b_AgentLaunch:
 
         result = exec_in_container(
             container,
-            "tmux new-session -d -s help-test 'claude --help > /tmp/claude_help.txt 2>&1; sleep 2'"
+            "tmux new-session -d -s help-test 'claude --help > /tmp/claude_help.txt 2>&1; sleep 2'",
         )
         assert result.returncode == 0
 
@@ -1828,7 +1866,7 @@ class TestPhase16b_AgentLaunch:
 
         result = exec_in_container(
             container,
-            "tmux new-session -d -s workdir-test -c /workspace 'pwd > /tmp/workdir.txt; sleep 2'"
+            "tmux new-session -d -s workdir-test -c /workspace 'pwd > /tmp/workdir.txt; sleep 2'",
         )
         assert result.returncode == 0
 
@@ -1847,8 +1885,7 @@ class TestPhase16b_AgentLaunch:
         exec_in_container(container, "tmux set-environment -g AGENT_TEST 'test-value'")
 
         result = exec_in_container(
-            container,
-            "tmux new-session -d -s env-test 'echo $AGENT_TEST > /tmp/env.txt; sleep 2'"
+            container, "tmux new-session -d -s env-test 'echo $AGENT_TEST > /tmp/env.txt; sleep 2'"
         )
         assert result.returncode == 0
 
@@ -1864,8 +1901,7 @@ class TestPhase16b_AgentLaunch:
         project, container = agent_ready_project
 
         result = exec_in_container(
-            container,
-            "tmux new-session -d -s user-test 'whoami > /tmp/user.txt; sleep 2'"
+            container, "tmux new-session -d -s user-test 'whoami > /tmp/user.txt; sleep 2'"
         )
         assert result.returncode == 0
 
@@ -1921,8 +1957,7 @@ class TestPhase16b_AgentLaunch:
 
         # Create initial session
         exec_in_container(
-            container,
-            f"tmux new-session -d -s {session} 'echo run-1 > /tmp/run.txt; sleep 30'"
+            container, f"tmux new-session -d -s {session} 'echo run-1 > /tmp/run.txt; sleep 30'"
         )
         time.sleep(1)
 
@@ -1932,8 +1967,7 @@ class TestPhase16b_AgentLaunch:
         # Kill and recreate
         exec_in_container(container, f"tmux kill-session -t {session}")
         exec_in_container(
-            container,
-            f"tmux new-session -d -s {session} 'echo run-2 > /tmp/run.txt; sleep 30'"
+            container, f"tmux new-session -d -s {session} 'echo run-2 > /tmp/run.txt; sleep 30'"
         )
         time.sleep(1)
 
@@ -1953,7 +1987,9 @@ class TestPhase16c_AgentLaunchWithAuth:
     """Test agent launch with actual auth credentials (skipped if no auth)."""
 
     @pytest.fixture
-    def auth_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str, bool, bool], None, None]:
+    def auth_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str, bool, bool], None, None]:
         """Create project and check auth availability."""
         project = test_root / f"test-auth-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -1966,8 +2002,12 @@ class TestPhase16c_AgentLaunchWithAuth:
         wait_for_container(container)
 
         # Check auth
-        has_claude = Path("/home/testuser/.claude").is_dir() if Path("/home/testuser").exists() else False
-        has_codex = Path("/home/testuser/.codex").is_dir() if Path("/home/testuser").exists() else False
+        has_claude = (
+            Path("/home/testuser/.claude").is_dir() if Path("/home/testuser").exists() else False
+        )
+        has_codex = (
+            Path("/home/testuser/.codex").is_dir() if Path("/home/testuser").exists() else False
+        )
 
         yield project, container, has_claude, has_codex
 
@@ -2032,7 +2072,11 @@ class TestPhase17_Service:
         """Test 'boxctl service logs' shows logs."""
         result = run_abox("service", "logs")
         # May have no logs if not running
-        assert result.returncode == 0 or "no logs" in result.stdout.lower() or "not" in result.stdout.lower()
+        assert (
+            result.returncode == 0
+            or "no logs" in result.stdout.lower()
+            or "not" in result.stdout.lower()
+        )
 
     def test_service_install_help(self, dind_ready):
         """Test 'boxctl service install --help'."""
@@ -2088,7 +2132,9 @@ class TestPhase17b_BoxctldServer:
     """Test boxctld daemon server functionality."""
 
     @pytest.fixture
-    def daemon_test_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def daemon_test_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create project for daemon testing."""
         project = test_root / f"test-daemon-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -2111,9 +2157,7 @@ class TestPhase17b_BoxctldServer:
 
         # Start daemon in background (it should exit gracefully or run)
         result = exec_in_container(
-            container,
-            "timeout 5 boxctld serve --port 8765 2>&1 || true",
-            timeout=10
+            container, "timeout 5 boxctld serve --port 8765 2>&1 || true", timeout=10
         )
         # Should not hard crash
         assert "error" not in result.stderr.lower() or "traceback" not in result.stderr.lower()
@@ -2124,8 +2168,7 @@ class TestPhase17b_BoxctldServer:
 
         # Check daemon module can be imported
         result = exec_in_container(
-            container,
-            "python3 -c 'from boxctl.daemon.server import create_app; print(\"ok\")'"
+            container, "python3 -c 'from boxctl.daemon.server import create_app; print(\"ok\")'"
         )
         assert result.returncode == 0 or "ok" in result.stdout
 
@@ -2139,7 +2182,9 @@ class TestPhase17c_Notifications:
     """Test notification functionality."""
 
     @pytest.fixture
-    def notify_project(self, test_root, base_image_built) -> Generator[Tuple[Path, str], None, None]:
+    def notify_project(
+        self, test_root, base_image_built
+    ) -> Generator[Tuple[Path, str], None, None]:
         """Create project for notification testing."""
         project = test_root / f"test-notify-{uuid.uuid4().hex[:8]}"
         project.mkdir(parents=True, exist_ok=True)
@@ -2170,7 +2215,7 @@ class TestPhase17c_Notifications:
 
         result = exec_in_container(
             container,
-            "python3 -c 'from boxctl.notifications import NotificationClient; print(\"ok\")'"
+            "python3 -c 'from boxctl.notifications import NotificationClient; print(\"ok\")'",
         )
         assert result.returncode == 0
         assert "ok" in result.stdout
@@ -2184,7 +2229,7 @@ class TestPhase17c_Notifications:
             "python3 -c '"
             "from boxctl.notifications import NotificationClient; "
             "client = NotificationClient(); "
-            "print(f\"created:{client is not None}\")'"
+            'print(f"created:{client is not None}")\'',
         )
         assert result.returncode == 0
         assert "created:True" in result.stdout
@@ -2199,7 +2244,7 @@ class TestPhase17c_Notifications:
             "from boxctl.notifications import NotificationClient; "
             "client = NotificationClient(); "
             "# Just test the interface exists "
-            "hasattr(client, \"send\") and print(\"has_send:True\")'"
+            'hasattr(client, "send") and print("has_send:True")\'',
         )
         assert result.returncode == 0
         # Should have the send method

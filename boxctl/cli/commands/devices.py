@@ -107,7 +107,9 @@ def devices_choose():
 
     if not available:
         console.print("[yellow]No devices found on this system[/yellow]")
-        console.print("[dim]Common device paths checked: /dev/snd, /dev/dri/*, /dev/ttyUSB*, etc.[/dim]")
+        console.print(
+            "[dim]Common device paths checked: /dev/snd, /dev/dri/*, /dev/ttyUSB*, etc.[/dim]"
+        )
         return
 
     # Build choices grouped by category
@@ -122,11 +124,11 @@ def devices_choose():
             choices.append(questionary.Separator(f"── {category} ──"))
             current_category = category
 
-        choices.append(questionary.Choice(
-            title=device_path,
-            value=device_path,
-            checked=device_path in configured
-        ))
+        choices.append(
+            questionary.Choice(
+                title=device_path, value=device_path, checked=device_path in configured
+            )
+        )
 
     # Add any configured devices that aren't currently available
     missing_configured = configured - {d[0] for d in available}
@@ -134,15 +136,17 @@ def devices_choose():
         choices.append(questionary.Separator())
         choices.append(questionary.Separator("── Configured (currently unavailable) ──"))
         for device_path in sorted(missing_configured):
-            choices.append(questionary.Choice(
-                title=f"{device_path} [not found]",
-                value=device_path,
-                checked=True
-            ))
+            choices.append(
+                questionary.Choice(
+                    title=f"{device_path} [not found]", value=device_path, checked=True
+                )
+            )
 
     console.print("[bold]Select devices to pass through to container:[/bold]")
     console.print("[dim]Space to toggle, Enter to confirm, Ctrl+C to cancel[/dim]")
-    console.print("[dim]Unavailable devices are skipped at container start (won't cause failures)[/dim]\n")
+    console.print(
+        "[dim]Unavailable devices are skipped at container start (won't cause failures)[/dim]\n"
+    )
 
     try:
         selected = questionary.checkbox(
@@ -214,7 +218,9 @@ def devices_list():
             if device in available_paths:
                 console.print(f"  [green]✓[/green] {device}")
             else:
-                console.print(f"  [yellow]![/yellow] {device} [dim](not found - will be skipped)[/dim]")
+                console.print(
+                    f"  [yellow]![/yellow] {device} [dim](not found - will be skipped)[/dim]"
+                )
     else:
         console.print("  [dim]None[/dim]")
 
@@ -253,9 +259,7 @@ def devices_add(device: str):
 
     # Validate device path format
     if not device.startswith("/dev/"):
-        raise click.ClickException(
-            f"Invalid device path: {device}. Must start with /dev/"
-        )
+        raise click.ClickException(f"Invalid device path: {device}. Must start with /dev/")
 
     configured = _get_configured_devices(config)
 

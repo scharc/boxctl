@@ -18,9 +18,9 @@ class TestSessionManagement:
     def test_session_list_empty(self, running_container, test_project):
         result = run_abox("session", "list", cwd=test_project)
         assert result.returncode == 0, f"session list failed: {result.stderr}"
-        assert "No tmux sessions found" in result.stdout, (
-            f"expected empty session message. stdout: {result.stdout}"
-        )
+        assert (
+            "No tmux sessions found" in result.stdout
+        ), f"expected empty session message. stdout: {result.stdout}"
 
     def test_session_rename_and_remove(self, running_container, test_project):
         container_name = f"boxctl-{test_project.name}"
@@ -30,17 +30,15 @@ class TestSessionManagement:
 
         result = run_abox("session", "list", cwd=test_project)
         assert result.returncode == 0, f"session list failed: {result.stderr}"
-        assert "shell-test" in result.stdout, (
-            f"created session not listed. stdout: {result.stdout}"
-        )
+        assert "shell-test" in result.stdout, f"created session not listed. stdout: {result.stdout}"
 
         result = run_abox("session", "rename", "shell-test", "renamed", cwd=test_project)
         assert result.returncode == 0, f"session rename failed: {result.stderr}"
 
         result = run_abox("session", "list", cwd=test_project)
-        assert "shell-renamed" in result.stdout, (
-            f"renamed session not listed. stdout: {result.stdout}"
-        )
+        assert (
+            "shell-renamed" in result.stdout
+        ), f"renamed session not listed. stdout: {result.stdout}"
 
         result = run_abox("session", "remove", "shell-renamed", cwd=test_project)
         assert result.returncode == 0, f"session remove failed: {result.stderr}"
@@ -60,9 +58,9 @@ class TestSessionCreation:
 
         # Should fail with initialization error
         assert result.returncode != 0, "session new should fail in un-initialized directory"
-        assert "not initialized" in result.stdout or "not initialized" in result.stderr, (
-            f"Should show initialization error. stdout: {result.stdout}, stderr: {result.stderr}"
-        )
+        assert (
+            "not initialized" in result.stdout or "not initialized" in result.stderr
+        ), f"Should show initialization error. stdout: {result.stdout}, stderr: {result.stderr}"
 
     def test_session_new_creates_session(self, running_container, test_project):
         """Test creating a new session."""
@@ -82,10 +80,7 @@ class TestSessionCreation:
         container_name = f"boxctl-{test_project.name}"
 
         # Create session with agent-style naming
-        result = exec_in_container(
-            container_name,
-            "tmux new-session -d -s claude-test 'sleep 30'"
-        )
+        result = exec_in_container(container_name, "tmux new-session -d -s claude-test 'sleep 30'")
         assert result.returncode == 0
 
         result = run_abox("session", "list", cwd=test_project)
@@ -103,8 +98,7 @@ class TestSessionCreation:
         # Create sessions for different agents
         for agent in agents:
             result = exec_in_container(
-                container_name,
-                f"tmux new-session -d -s {agent}-test 'sleep 30'"
+                container_name, f"tmux new-session -d -s {agent}-test 'sleep 30'"
             )
             assert result.returncode == 0, f"Failed to create {agent} session"
 
@@ -117,7 +111,9 @@ class TestSessionCreation:
 
         # Cleanup
         for agent in agents:
-            exec_in_container(container_name, f"tmux kill-session -t {agent}-test 2>/dev/null || true")
+            exec_in_container(
+                container_name, f"tmux kill-session -t {agent}-test 2>/dev/null || true"
+            )
 
 
 @pytest.mark.integration
@@ -130,8 +126,7 @@ class TestSessionRemoval:
 
         # Create session with long-running process
         result = exec_in_container(
-            container_name,
-            "tmux new-session -d -s long-running 'sleep 300'"
+            container_name, "tmux new-session -d -s long-running 'sleep 300'"
         )
         assert result.returncode == 0
 
@@ -152,9 +147,11 @@ class TestSessionRemoval:
         result = run_abox("session", "remove", "nonexistent-session", cwd=test_project)
 
         # Should fail or warn
-        assert result.returncode != 0 or "not found" in result.stdout.lower() or "not found" in result.stderr.lower(), (
-            f"Should handle non-existent session gracefully"
-        )
+        assert (
+            result.returncode != 0
+            or "not found" in result.stdout.lower()
+            or "not found" in result.stderr.lower()
+        ), f"Should handle non-existent session gracefully"
 
     def test_remove_all_sessions(self, running_container, test_project):
         """Test removing multiple sessions."""
@@ -163,10 +160,7 @@ class TestSessionRemoval:
         # Create multiple sessions
         sessions = ["session-1", "session-2", "session-3"]
         for session in sessions:
-            exec_in_container(
-                container_name,
-                f"tmux new-session -d -s {session} 'sleep 30'"
-            )
+            exec_in_container(container_name, f"tmux new-session -d -s {session} 'sleep 30'")
 
         # Remove all sessions
         for session in sessions:
@@ -220,7 +214,9 @@ class TestSessionRename:
 
         # Cleanup
         exec_in_container(container_name, "tmux kill-session -t session-a 2>/dev/null || true")
-        exec_in_container(container_name, "tmux kill-session -t shell-session-b 2>/dev/null || true")
+        exec_in_container(
+            container_name, "tmux kill-session -t shell-session-b 2>/dev/null || true"
+        )
 
     def test_rename_nonexistent_session(self, running_container, test_project):
         """Test renaming non-existent session fails."""
@@ -254,8 +250,7 @@ class TestSessionIntegration:
 
         # 1. Create session
         exec_in_container(
-            container_name,
-            f"tmux new-session -d -s {session_name} 'echo marker; sleep 30'"
+            container_name, f"tmux new-session -d -s {session_name} 'echo marker; sleep 30'"
         )
 
         # 2. List and verify
@@ -311,17 +306,11 @@ class TestSessionIntegration:
         container_name = f"boxctl-{test_project.name}"
 
         # Create session in first exec
-        result = exec_in_container(
-            container_name,
-            "tmux new-session -d -s persist-test 'sleep 60'"
-        )
+        result = exec_in_container(container_name, "tmux new-session -d -s persist-test 'sleep 60'")
         assert result.returncode == 0
 
         # Verify in second exec
-        result = exec_in_container(
-            container_name,
-            "tmux has-session -t persist-test"
-        )
+        result = exec_in_container(container_name, "tmux has-session -t persist-test")
         assert result.returncode == 0
 
         # List in third exec (via abox)

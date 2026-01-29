@@ -25,9 +25,7 @@ import pytest
 
 def pytest_configure(config):
     """Configure pytest markers."""
-    config.addinivalue_line(
-        "markers", "requires_auth: tests requiring Claude/Codex credentials"
-    )
+    config.addinivalue_line("markers", "requires_auth: tests requiring Claude/Codex credentials")
     config.addinivalue_line("markers", "slow: marks tests as slow (>30s)")
     config.addinivalue_line("markers", "pulls_images: tests that pull Docker images")
     config.addinivalue_line("markers", "chain: dependency chain tests")
@@ -74,8 +72,7 @@ def docker_available():
     test_container = f"dind-test-{uuid.uuid4().hex[:8]}"
     try:
         result = subprocess.run(
-            ["docker", "run", "--rm", "--name", test_container,
-             "alpine:latest", "echo", "dind-ok"],
+            ["docker", "run", "--rm", "--name", test_container, "alpine:latest", "echo", "dind-ok"],
             capture_output=True,
             timeout=60,
         )
@@ -87,8 +84,7 @@ def docker_available():
             )
         if b"dind-ok" not in result.stdout:
             pytest.fail(
-                f"Container ran but output unexpected. "
-                f"stdout: {result.stdout.decode()}"
+                f"Container ran but output unexpected. " f"stdout: {result.stdout.decode()}"
             )
     except subprocess.TimeoutExpired:
         # Clean up just in case
@@ -149,9 +145,12 @@ def module_workspace(test_workspace) -> Generator[Path, None, None]:
     from helpers.docker import run_docker
 
     result = run_docker(
-        "ps", "-a",
-        "--filter", f"name=boxctl-test-{module_id}",
-        "--format", "{{.Names}}",
+        "ps",
+        "-a",
+        "--filter",
+        f"name=boxctl-test-{module_id}",
+        "--format",
+        "{{.Names}}",
     )
     for container in result.stdout.strip().split("\n"):
         if container:
@@ -274,9 +273,12 @@ def nginx_container(docker_available, test_network) -> Generator[str, None, None
 
     # Start nginx
     result = run_docker(
-        "run", "-d",
-        "--name", container_name,
-        "--network", test_network,
+        "run",
+        "-d",
+        "--name",
+        container_name,
+        "--network",
+        test_network,
         "nginx:alpine",
     )
 
@@ -305,10 +307,14 @@ def postgres_container(docker_available) -> Generator[str, None, None]:
 
     # Start postgres
     result = run_docker(
-        "run", "-d",
-        "--name", container_name,
-        "-e", "POSTGRES_PASSWORD=testpass",
-        "-e", "POSTGRES_DB=testdb",
+        "run",
+        "-d",
+        "--name",
+        container_name,
+        "-e",
+        "POSTGRES_PASSWORD=testpass",
+        "-e",
+        "POSTGRES_DB=testdb",
         "postgres:16-alpine",
     )
 
@@ -318,8 +324,11 @@ def postgres_container(docker_available) -> Generator[str, None, None]:
     # Wait for postgres to be ready
     for _ in range(30):
         result = run_docker(
-            "exec", container_name,
-            "pg_isready", "-U", "postgres",
+            "exec",
+            container_name,
+            "pg_isready",
+            "-U",
+            "postgres",
         )
         if result.returncode == 0:
             break

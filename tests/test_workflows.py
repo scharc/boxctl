@@ -74,8 +74,7 @@ def initialized_project(test_project):
     assert result.returncode == 0, f"Init failed: {result.stderr}\nOutput: {result.stdout}"
     # Verify init created the config file (can be at either location)
     config_path = get_config_path(test_project)
-    assert config_path.exists(), \
-        f"Init didn't create config. Output: {result.stdout}"
+    assert config_path.exists(), f"Init didn't create config. Output: {result.stdout}"
     return test_project
 
 
@@ -154,8 +153,9 @@ class TestPortsWorkflow:
         # Verify in config
         config = load_project_config(project)
         container_ports = config.get("ports", {}).get("container", [])
-        assert "8080" in container_ports or 8080 in container_ports, \
-            f"Forward not in config: {container_ports}"
+        assert (
+            "8080" in container_ports or 8080 in container_ports
+        ), f"Forward not in config: {container_ports}"
 
         # 3. List ports
         result = run_abox("ports", "list", cwd=project)
@@ -388,7 +388,16 @@ class TestQuickCommandParity:
 
     def test_agent_commands_have_help(self):
         """All agent commands (used by quick) should work."""
-        agents = ["claude", "superclaude", "codex", "supercodex", "gemini", "supergemini", "qwen", "superqwen"]
+        agents = [
+            "claude",
+            "superclaude",
+            "codex",
+            "supercodex",
+            "gemini",
+            "supergemini",
+            "qwen",
+            "superqwen",
+        ]
         for agent in agents:
             result = run_abox(agent, "--help")
             assert result.returncode == 0, f"Agent {agent} help failed"
@@ -405,7 +414,9 @@ class TestCommandAliases:
 
         assert quick_help.returncode == q_help.returncode
         # Help text should be similar (may differ in command name shown)
-        assert "mobile-friendly" in quick_help.stdout.lower() or "quick" in quick_help.stdout.lower()
+        assert (
+            "mobile-friendly" in quick_help.stdout.lower() or "quick" in quick_help.stdout.lower()
+        )
 
     def test_ps_alias_for_list(self):
         """'ps' should be an alias for 'list'."""
@@ -443,10 +454,10 @@ class TestErrorHandling:
             # Should have helpful error message (may be in stdout or stderr)
             output = result.stdout.lower() + result.stderr.lower()
             assert (
-                "not initialized" in output or
-                "boxctl" in output or
-                ".boxctl" in output or
-                "error" in output
+                "not initialized" in output
+                or "boxctl" in output
+                or ".boxctl" in output
+                or "error" in output
             )
 
     def test_invalid_arguments_handled(self, initialized_project):

@@ -36,7 +36,14 @@ from boxctl.web.tmux_manager import (
 )
 from boxctl.web.pty_manager import get_pty_manager
 from boxctl.core.sessions import create_agent_session as create_session
-from boxctl.boxctld import get_cached_buffer, send_input, get_tunnel_stats, get_connected_containers, get_session_metadata, get_usage_status
+from boxctl.boxctld import (
+    get_cached_buffer,
+    send_input,
+    get_tunnel_stats,
+    get_connected_containers,
+    get_session_metadata,
+    get_usage_status,
+)
 from boxctl.host_config import get_config
 from boxctl.container import ContainerManager
 from boxctl.paths import ContainerDefaults
@@ -49,21 +56,22 @@ CACHE_BUST_VERSION = str(int(time.time()))
 
 # Map ANSI escape sequences to tmux key names
 ANSI_TO_TMUX = {
-    '\x1B': 'Escape',
-    '\t': 'Tab',
-    '\r': 'Enter',
-    '\n': 'Enter',
-    '\x1B[A': 'Up',
-    '\x1B[B': 'Down',
-    '\x1B[D': 'Left',
-    '\x1B[C': 'Right',
-    '\x7F': 'BSpace',
-    '\x1B[3~': 'DC',  # Delete
-    '\x1B[H': 'Home',
-    '\x1B[F': 'End',
-    '\x1B[5~': 'PPage',  # Page Up
-    '\x1B[6~': 'NPage',  # Page Down
+    "\x1B": "Escape",
+    "\t": "Tab",
+    "\r": "Enter",
+    "\n": "Enter",
+    "\x1B[A": "Up",
+    "\x1B[B": "Down",
+    "\x1B[D": "Left",
+    "\x1B[C": "Right",
+    "\x7F": "BSpace",
+    "\x1B[3~": "DC",  # Delete
+    "\x1B[H": "Home",
+    "\x1B[F": "End",
+    "\x1B[5~": "PPage",  # Page Up
+    "\x1B[6~": "NPage",  # Page Down
 }
+
 
 # Ctrl key mappings (Ctrl+A = \x01, etc.)
 def parse_ctrl_key(char):
@@ -72,8 +80,9 @@ def parse_ctrl_key(char):
     if 1 <= code <= 26:
         # Ctrl+A through Ctrl+Z
         key_char = chr(code + 64)
-        return f'C-{key_char.lower()}'
+        return f"C-{key_char.lower()}"
     return None
+
 
 # Request models
 class CreateSessionRequest(BaseModel):
@@ -124,7 +133,7 @@ async def index():
 
     # Read HTML and inject cache-busting timestamp
     html_content = index_file.read_text()
-    html_content = html_content.replace('CACHE_BUST', CACHE_BUST_VERSION)
+    html_content = html_content.replace("CACHE_BUST", CACHE_BUST_VERSION)
 
     return HTMLResponse(content=html_content)
 
@@ -138,7 +147,7 @@ async def decisions():
 
     # Read HTML and inject cache-busting timestamp
     html_content = decisions_file.read_text()
-    html_content = html_content.replace('CACHE_BUST', CACHE_BUST_VERSION)
+    html_content = html_content.replace("CACHE_BUST", CACHE_BUST_VERSION)
 
     return HTMLResponse(content=html_content)
 
@@ -168,9 +177,9 @@ async def get_sessions() -> Dict[str, List[Dict]]:
         try:
             preview_output = capture_session_output(container_name, session_name)
             if preview_output:
-                lines = preview_output.strip().split('\n')
+                lines = preview_output.strip().split("\n")
                 preview_lines = lines[-5:] if len(lines) > 5 else lines
-                return (session, '\n'.join(preview_lines))
+                return (session, "\n".join(preview_lines))
         except Exception:
             pass
         return (session, "")
@@ -216,20 +225,26 @@ async def get_sessions_metadata() -> Dict:
     for container_name, sess_list in metadata.items():
         # Get project info
         container_info = containers.get(container_name, {})
-        project = container_info.get("project") or container_naming.extract_project_name(container_name) or ""
+        project = (
+            container_info.get("project")
+            or container_naming.extract_project_name(container_name)
+            or ""
+        )
         project_path = container_info.get("project_path", "")
 
         for sess in sess_list:
-            sessions.append({
-                "container_name": container_name,
-                "project": project,
-                "project_path": project_path,
-                "session_name": sess.get("name", ""),
-                "windows": sess.get("windows", 1),
-                "attached": sess.get("attached", False),
-                "agent_type": sess.get("agent_type"),
-                "identifier": sess.get("identifier"),
-            })
+            sessions.append(
+                {
+                    "container_name": container_name,
+                    "project": project,
+                    "project_path": project_path,
+                    "session_name": sess.get("name", ""),
+                    "windows": sess.get("windows", 1),
+                    "attached": sess.get("attached", False),
+                    "agent_type": sess.get("agent_type"),
+                    "identifier": sess.get("identifier"),
+                }
+            )
 
     return {"sessions": sessions, "source": "daemon"}
 
@@ -247,7 +262,7 @@ async def create_new_session(request: CreateSessionRequest):
     result = create_session(
         container_name=request.container,
         agent_type=request.agent_type,
-        identifier=request.identifier
+        identifier=request.identifier,
     )
 
     if not result["success"]:
@@ -268,7 +283,7 @@ async def terminal_page(container: str, session_name: str):
 
     # Read HTML and inject cache-busting timestamp
     html_content = terminal_file.read_text()
-    html_content = html_content.replace('CACHE_BUST', CACHE_BUST_VERSION)
+    html_content = html_content.replace("CACHE_BUST", CACHE_BUST_VERSION)
 
     return HTMLResponse(content=html_content)
 
@@ -303,10 +318,10 @@ async def websocket_endpoint(websocket: WebSocket, container: str, session_name:
     # Callback to forward PTY output to WebSocket with filtering
     async def on_pty_output(data: bytes):
         try:
-            text = data.decode('utf-8', errors='replace')
+            text = data.decode("utf-8", errors="replace")
             # Filter terminal capability query responses to prevent feedback
             # Skip: CSI responses, OSC color queries
-            if '\x1b[>' in text or '\x1b]10' in text or '\x1b]11' in text:
+            if "\x1b[>" in text or "\x1b]10" in text or "\x1b]11" in text:
                 return
             await websocket.send_text(text)
         except Exception as e:
@@ -337,7 +352,9 @@ async def websocket_endpoint(websocket: WebSocket, container: str, session_name:
                     # Write history to xterm.js - it will naturally flow into scrollback
                     # as it scrolls off the visible screen
                     await websocket.send_text(initial_scrollback)
-                    logger.debug(f"Sent {len(initial_scrollback)} bytes of reformatted history [{client_id}]")
+                    logger.debug(
+                        f"Sent {len(initial_scrollback)} bytes of reformatted history [{client_id}]"
+                    )
 
                 # Register PTY reader for live streaming
                 if not reader_registered:
@@ -349,7 +366,9 @@ async def websocket_endpoint(websocket: WebSocket, container: str, session_name:
                 try:
                     dims = data[10:]
                     w, h = dims.split("x")
-                    logger.debug(f"Resizing PTY [{client_id}] {container}/{session_name} to {w}x{h}")
+                    logger.debug(
+                        f"Resizing PTY [{client_id}] {container}/{session_name} to {w}x{h}"
+                    )
                     await pty_session.resize(int(w), int(h))
                 except (ValueError, IndexError) as e:
                     logger.warning(f"Resize error: {e}")
@@ -433,6 +452,7 @@ async def get_debug_logs():
 # Status Page and API
 # ============================================================================
 
+
 @app.get("/status")
 async def status_page():
     """Serve the status/info page with cache-busting timestamp."""
@@ -441,7 +461,7 @@ async def status_page():
         return HTMLResponse("<h1>Status page not found</h1>")
 
     html_content = status_file.read_text()
-    html_content = html_content.replace('CACHE_BUST', CACHE_BUST_VERSION)
+    html_content = html_content.replace("CACHE_BUST", CACHE_BUST_VERSION)
 
     return HTMLResponse(content=html_content)
 

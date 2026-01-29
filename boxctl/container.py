@@ -28,7 +28,7 @@ console = Console()
 
 # Module-level container cache (shared across all ContainerManager instances)
 # Uses explicit string keys to avoid ambiguity with boolean parameters
-_CACHE_KEY_ALL = "containers_all"      # all_containers=True
+_CACHE_KEY_ALL = "containers_all"  # all_containers=True
 _CACHE_KEY_RUNNING = "containers_running"  # all_containers=False
 
 _container_cache: Dict[str, List[Dict]] = {}
@@ -145,7 +145,9 @@ class ContainerManager:
                     if not host_path.is_absolute():
                         host_path = project_dir / host_path
                     if host_path.exists():
-                        mounts.append({"host": str(host_path), "container": container, "mode": mode})
+                        mounts.append(
+                            {"host": str(host_path), "container": container, "mode": mode}
+                        )
         return mounts
 
     def get_runtime_dir(self, project_name: str) -> Path:
@@ -287,10 +289,11 @@ class ContainerManager:
         if self.container_exists(container_name):
             # Lazy import to avoid circular dependency
             from boxctl.cli.helpers.tmux_ops import _show_warning_panel
+
             _show_warning_panel(
                 "Config changes won't apply to existing container.\n"
                 "Run 'boxctl rebase' to recreate with new settings.",
-                "Existing Container"
+                "Existing Container",
             )
             container = self.get_container(container_name)
             if not self.is_running(container_name):
@@ -354,9 +357,18 @@ class ContainerManager:
             # Project-local Codex state for session isolation
             str(project_codex_dir): {"bind": f"/{username}/codex", "mode": "rw"},
             # boxctl global library (read-only)
-            str(self.BOXCTL_DIR / "library" / "config"): {"bind": ContainerPaths.LIBRARY_CONFIG, "mode": "ro"},
-            str(self.BOXCTL_DIR / "library" / "mcp"): {"bind": ContainerPaths.LIBRARY_MCP, "mode": "ro"},
-            str(self.BOXCTL_DIR / "library" / "skills"): {"bind": ContainerPaths.LIBRARY_SKILLS, "mode": "ro"},
+            str(self.BOXCTL_DIR / "library" / "config"): {
+                "bind": ContainerPaths.LIBRARY_CONFIG,
+                "mode": "ro",
+            },
+            str(self.BOXCTL_DIR / "library" / "mcp"): {
+                "bind": ContainerPaths.LIBRARY_MCP,
+                "mode": "ro",
+            },
+            str(self.BOXCTL_DIR / "library" / "skills"): {
+                "bind": ContainerPaths.LIBRARY_SKILLS,
+                "mode": "ro",
+            },
         }
 
         # Mount user's custom MCP/skills directories if they exist
@@ -378,26 +390,41 @@ class ContainerManager:
         # after container creation, so this is acceptable. Rebuild image for production.
         local_init_script = self.BOXCTL_DIR / "bin" / "container-init.sh"
         if local_init_script.exists():
-            volumes[str(local_init_script)] = {"bind": "/usr/local/bin/container-init.sh", "mode": "ro"}
+            volumes[str(local_init_script)] = {
+                "bind": "/usr/local/bin/container-init.sh",
+                "mode": "ro",
+            }
 
         # Mount install-packages.py for development (same caveat as container-init.sh)
         local_install_script = self.BOXCTL_DIR / "bin" / "install-packages.py"
         if local_install_script.exists():
-            volumes[str(local_install_script)] = {"bind": "/usr/local/bin/install-packages.py", "mode": "ro"}
+            volumes[str(local_install_script)] = {
+                "bind": "/usr/local/bin/install-packages.py",
+                "mode": "ro",
+            }
 
         # Mount generate-mcp-config.py for development
         local_mcp_config_script = self.BOXCTL_DIR / "bin" / "generate-mcp-config.py"
         if local_mcp_config_script.exists():
-            volumes[str(local_mcp_config_script)] = {"bind": "/usr/local/bin/generate-mcp-config.py", "mode": "ro"}
+            volumes[str(local_mcp_config_script)] = {
+                "bind": "/usr/local/bin/generate-mcp-config.py",
+                "mode": "ro",
+            }
 
         # Mount host credential directories (not individual files) to avoid stale inode issues
         # When OAuth tokens refresh, the credential file is replaced (new inode).
         # File mounts would still show the old content; directory mounts see updates.
         # Must be read-write so container can update credentials during OAuth token refresh.
         if host_claude_dir.exists():
-            volumes[str(host_claude_dir)] = {"bind": ContainerPaths.host_claude_mount(username), "mode": "rw"}
+            volumes[str(host_claude_dir)] = {
+                "bind": ContainerPaths.host_claude_mount(username),
+                "mode": "rw",
+            }
         if host_codex_dir.exists():
-            volumes[str(host_codex_dir)] = {"bind": ContainerPaths.host_codex_mount(username), "mode": "rw"}
+            volumes[str(host_codex_dir)] = {
+                "bind": ContainerPaths.host_codex_mount(username),
+                "mode": "rw",
+            }
 
         # SSH configuration based on mode
         ssh_home = HostPaths.ssh_dir()
@@ -433,7 +460,9 @@ class ContainerManager:
                 # Mount the directory containing the socket
                 volumes[str(ssh_sock_dir)] = {"bind": "/ssh-agent-dir", "mode": "ro"}
             else:
-                console.print("[yellow]Warning: SSH agent forwarding enabled but SSH_AUTH_SOCK not found[/yellow]")
+                console.print(
+                    "[yellow]Warning: SSH agent forwarding enabled but SSH_AUTH_SOCK not found[/yellow]"
+                )
 
         # Add MCP-specific mounts from mcp-meta.json
         for mount in mcp_mounts:
@@ -458,19 +487,34 @@ class ContainerManager:
 
         # Optional OpenAI/Gemini configs for CLI auth (already directories)
         if host_openai_config_dir.exists():
-            volumes[str(host_openai_config_dir)] = {"bind": ContainerPaths.host_openai_mount(username), "mode": "rw"}
+            volumes[str(host_openai_config_dir)] = {
+                "bind": ContainerPaths.host_openai_mount(username),
+                "mode": "rw",
+            }
         if host_gemini_dir.exists():
-            volumes[str(host_gemini_dir)] = {"bind": ContainerPaths.host_gemini_mount(username), "mode": "rw"}
+            volumes[str(host_gemini_dir)] = {
+                "bind": ContainerPaths.host_gemini_mount(username),
+                "mode": "rw",
+            }
         if host_qwen_dir.exists():
-            volumes[str(host_qwen_dir)] = {"bind": ContainerPaths.host_qwen_mount(username), "mode": "rw"}
+            volumes[str(host_qwen_dir)] = {
+                "bind": ContainerPaths.host_qwen_mount(username),
+                "mode": "rw",
+            }
 
         # GitHub CLI config (gh) - mount if enabled in config and exists
         if config.gh_enabled and host_gh_config_dir.exists():
-            volumes[str(host_gh_config_dir)] = {"bind": ContainerPaths.host_gh_mount(username), "mode": "ro"}
+            volumes[str(host_gh_config_dir)] = {
+                "bind": ContainerPaths.host_gh_mount(username),
+                "mode": "ro",
+            }
 
         # GitLab CLI config (glab) - mount if enabled in config and exists
         if config.glab_enabled and host_glab_config_dir.exists():
-            volumes[str(host_glab_config_dir)] = {"bind": ContainerPaths.host_glab_mount(username), "mode": "ro"}
+            volumes[str(host_glab_config_dir)] = {
+                "bind": ContainerPaths.host_glab_mount(username),
+                "mode": "ro",
+            }
 
         # Extra user-defined workspace mounts from .boxctl/config.yml
         for entry in config.workspaces:
@@ -487,7 +531,9 @@ class ContainerManager:
             abs_path = Path(host_path).expanduser().absolute()
             # Skip if this is the project directory (already mounted at /workspace)
             if abs_path == project_dir.absolute():
-                console.print(f"[yellow]Warning: skipping workspace mount for project directory[/yellow]")
+                console.print(
+                    f"[yellow]Warning: skipping workspace mount for project directory[/yellow]"
+                )
                 continue
             if not abs_path.exists():
                 console.print(f"[yellow]Warning: mount path not found: {host_path}[/yellow]")
@@ -617,7 +663,9 @@ class ContainerManager:
                 try:
                     target = self.client.containers.get(target_name)
                     if target.status == "running":
-                        networks = list(target.attrs.get("NetworkSettings", {}).get("Networks", {}).keys())
+                        networks = list(
+                            target.attrs.get("NetworkSettings", {}).get("Networks", {}).keys()
+                        )
                         for network in networks:
                             try:
                                 net = self.client.networks.get(network)
@@ -625,11 +673,17 @@ class ContainerManager:
                                 current_networks = self.get_container_networks(container_name)
                                 if network not in current_networks:
                                     net.connect(container)
-                                    console.print(f"[blue]Connected to {target_name} network: {network}[/blue]")
+                                    console.print(
+                                        f"[blue]Connected to {target_name} network: {network}[/blue]"
+                                    )
                             except Exception as e:
-                                console.print(f"[yellow]Warning: Could not connect to network {network}: {e}[/yellow]")
+                                console.print(
+                                    f"[yellow]Warning: Could not connect to network {network}: {e}[/yellow]"
+                                )
                 except Exception:
-                    console.print(f"[yellow]Warning: Container {target_name} not found or not running[/yellow]")
+                    console.print(
+                        f"[yellow]Warning: Container {target_name} not found or not running[/yellow]"
+                    )
 
             invalidate_container_cache()
             return container
@@ -758,13 +812,15 @@ class ContainerManager:
                     project_path = mount.get("Source")
                     break
 
-            result.append({
-                "name": container.name,
-                "project": project_name,
-                "status": container.status,
-                "runtime_dir": str(runtime_dir),
-                "project_path": project_path,
-            })
+            result.append(
+                {
+                    "name": container.name,
+                    "project": project_name,
+                    "status": container.status,
+                    "runtime_dir": str(runtime_dir),
+                    "project_path": project_path,
+                }
+            )
 
         return result
 
@@ -997,14 +1053,18 @@ class ContainerManager:
                     port_num = port_key.split("/")[0] if "/" in port_key else port_key
                     ports.append(port_num)
 
-            result.append({
-                "name": container.name,
-                "id": container.id[:12],
-                "image": container.image.tags[0] if container.image.tags else container.image.id[:12],
-                "networks": networks,
-                "ports": ports,
-                "status": container.status,
-            })
+            result.append(
+                {
+                    "name": container.name,
+                    "id": container.id[:12],
+                    "image": (
+                        container.image.tags[0] if container.image.tags else container.image.id[:12]
+                    ),
+                    "networks": networks,
+                    "ports": ports,
+                    "status": container.status,
+                }
+            )
 
         return result
 

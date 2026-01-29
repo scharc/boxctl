@@ -20,16 +20,10 @@ class TestServiceFileGeneration:
         container_name = f"boxctl-{test_project.name}"
 
         # Run install (will fail on systemctl but should create files)
-        result = exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        result = exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Check config file was created
-        result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/boxctl/config.yml"
-        )
+        result = exec_in_container(container_name, "test -f /home/abox/.config/boxctl/config.yml")
 
         assert result.returncode == 0, "Config file should be created"
 
@@ -38,15 +32,12 @@ class TestServiceFileGeneration:
         container_name = f"boxctl-{test_project.name}"
 
         # Install to create config
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Verify YAML is parseable
         result = exec_in_container(
             container_name,
-            "python3 -c \"import yaml; yaml.safe_load(open('/home/abox/.config/boxctl/config.yml'))\""
+            "python3 -c \"import yaml; yaml.safe_load(open('/home/abox/.config/boxctl/config.yml'))\"",
         )
 
         assert result.returncode == 0, f"Config should be valid YAML: {result.stderr}"
@@ -55,15 +46,9 @@ class TestServiceFileGeneration:
         """Test that config contains expected web server settings."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
-        result = exec_in_container(
-            container_name,
-            "cat /home/abox/.config/boxctl/config.yml"
-        )
+        result = exec_in_container(container_name, "cat /home/abox/.config/boxctl/config.yml")
 
         assert result.returncode == 0
         assert "web_server:" in result.stdout
@@ -75,15 +60,11 @@ class TestServiceFileGeneration:
         """Test that service install creates systemd unit file."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Check service file exists
         result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "test -f /home/abox/.config/systemd/user/boxctld.service"
         )
 
         assert result.returncode == 0, "Systemd service file should be created"
@@ -92,14 +73,10 @@ class TestServiceFileGeneration:
         """Test that service file is valid systemd unit format."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         result = exec_in_container(
-            container_name,
-            "cat /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "cat /home/abox/.config/systemd/user/boxctld.service"
         )
 
         assert result.returncode == 0
@@ -113,14 +90,10 @@ class TestServiceFileGeneration:
         """Test that service file ExecStart uses 'service serve'."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         result = exec_in_container(
-            container_name,
-            "grep ExecStart /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "grep ExecStart /home/abox/.config/systemd/user/boxctld.service"
         )
 
         assert result.returncode == 0
@@ -132,23 +105,17 @@ class TestServiceFileGeneration:
         container_name = f"boxctl-{test_project.name}"
 
         # First install
-        result1 = exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        result1 = exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Second install
-        result2 = exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        result2 = exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Both should succeed (exit 0 or just create files)
         # Verify files still exist and are valid
         result = exec_in_container(
             container_name,
             "test -f /home/abox/.config/boxctl/config.yml && "
-            "test -f /home/abox/.config/systemd/user/boxctld.service"
+            "test -f /home/abox/.config/systemd/user/boxctld.service",
         )
 
         assert result.returncode == 0, "Files should exist after multiple installs"
@@ -163,28 +130,20 @@ class TestServiceUninstall:
         container_name = f"boxctl-{test_project.name}"
 
         # Install first
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Verify file exists
         result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "test -f /home/abox/.config/systemd/user/boxctld.service"
         )
         assert result.returncode == 0
 
         # Uninstall
-        exec_in_container(
-            container_name,
-            "boxctl service uninstall 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service uninstall 2>&1 || true")
 
         # Verify file is gone
         result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "test -f /home/abox/.config/systemd/user/boxctld.service"
         )
 
         assert result.returncode != 0, "Service file should be removed"
@@ -194,16 +153,10 @@ class TestServiceUninstall:
         container_name = f"boxctl-{test_project.name}"
 
         # Ensure service is not installed
-        exec_in_container(
-            container_name,
-            "rm -f /home/abox/.config/systemd/user/boxctld.service"
-        )
+        exec_in_container(container_name, "rm -f /home/abox/.config/systemd/user/boxctld.service")
 
         # Uninstall should not error
-        result = exec_in_container(
-            container_name,
-            "boxctl service uninstall 2>&1"
-        )
+        result = exec_in_container(container_name, "boxctl service uninstall 2>&1")
 
         # Should handle gracefully (may show "not installed" message)
         assert "Service not installed" in result.stdout or result.returncode == 0
@@ -213,22 +166,13 @@ class TestServiceUninstall:
         container_name = f"boxctl-{test_project.name}"
 
         # Install
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Uninstall
-        exec_in_container(
-            container_name,
-            "boxctl service uninstall 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service uninstall 2>&1 || true")
 
         # Config should still exist
-        result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/boxctl/config.yml"
-        )
+        result = exec_in_container(container_name, "test -f /home/abox/.config/boxctl/config.yml")
 
         assert result.returncode == 0, "Config should be preserved after uninstall"
 
@@ -242,33 +186,24 @@ class TestServiceConfig:
         container_name = f"boxctl-{test_project.name}"
 
         # Install to create config
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Run config command (will try to open editor, but we can check output)
-        result = exec_in_container(
-            container_name,
-            "boxctl service config 2>&1 || true"
-        )
+        result = exec_in_container(container_name, "boxctl service config 2>&1 || true")
 
-        assert ".config/boxctl/config.yml" in result.stdout or ".config/boxctl/config.yml" in result.stderr
+        assert (
+            ".config/boxctl/config.yml" in result.stdout
+            or ".config/boxctl/config.yml" in result.stderr
+        )
 
     def test_config_message_when_not_installed(self, running_container, test_project):
         """Test config command when config doesn't exist."""
         container_name = f"boxctl-{test_project.name}"
 
         # Ensure config doesn't exist
-        exec_in_container(
-            container_name,
-            "rm -f /home/abox/.config/boxctl/config.yml"
-        )
+        exec_in_container(container_name, "rm -f /home/abox/.config/boxctl/config.yml")
 
-        result = exec_in_container(
-            container_name,
-            "boxctl service config 2>&1"
-        )
+        result = exec_in_container(container_name, "boxctl service config 2>&1")
 
         assert "not found" in result.stdout.lower() or "install" in result.stdout.lower()
 
@@ -282,11 +217,7 @@ class TestServiceServe:
         container_name = f"boxctl-{test_project.name}"
 
         # Check help for serve command
-        result = exec_in_container(
-            container_name,
-            "boxctl service serve --help",
-            timeout=5
-        )
+        result = exec_in_container(container_name, "boxctl service serve --help", timeout=5)
 
         assert result.returncode == 0, f"serve --help should work: {result.stderr}"
         assert "serve" in result.stdout.lower() or "daemon" in result.stdout.lower()
@@ -299,7 +230,7 @@ class TestServiceServe:
         result = exec_in_container(
             container_name,
             "timeout 2 boxctl service serve /tmp/test-proxy.sock 2>&1 || true",
-            timeout=5
+            timeout=5,
         )
 
         # Should have attempted to start (timeout will kill it)
@@ -315,7 +246,7 @@ class TestServiceServe:
         result = exec_in_container(
             container_name,
             f"timeout 1 boxctl service serve {custom_socket} 2>&1 || true",
-            timeout=3
+            timeout=3,
         )
 
         # Should have attempted to use custom socket
@@ -332,9 +263,7 @@ class TestServiceLogs:
         container_name = f"boxctl-{test_project.name}"
 
         result = exec_in_container(
-            container_name,
-            "boxctl service logs --help || boxctl service --help",
-            timeout=5
+            container_name, "boxctl service logs --help || boxctl service --help", timeout=5
         )
 
         # Command should be recognized
@@ -345,14 +274,12 @@ class TestServiceLogs:
         container_name = f"boxctl-{test_project.name}"
 
         # This will fail if journalctl not available, which is expected in DinD
-        result = exec_in_container(
-            container_name,
-            "boxctl service logs 10 2>&1 || true",
-            timeout=5
-        )
+        result = exec_in_container(container_name, "boxctl service logs 10 2>&1 || true", timeout=5)
 
         # Should attempt to run journalctl (may fail if not available)
-        assert "journalctl" in result.stderr or "journalctl" in result.stdout or result.returncode != 0
+        assert (
+            "journalctl" in result.stderr or "journalctl" in result.stdout or result.returncode != 0
+        )
 
 
 @pytest.mark.integration
@@ -363,16 +290,10 @@ class TestServicePaths:
         """Test that config directory is created on install."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Check directory exists
-        result = exec_in_container(
-            container_name,
-            "test -d /home/abox/.config/boxctl"
-        )
+        result = exec_in_container(container_name, "test -d /home/abox/.config/boxctl")
 
         assert result.returncode == 0, "Config directory should be created"
 
@@ -380,15 +301,9 @@ class TestServicePaths:
         """Test that systemd user directory is created."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
-        result = exec_in_container(
-            container_name,
-            "test -d /home/abox/.config/systemd/user"
-        )
+        result = exec_in_container(container_name, "test -d /home/abox/.config/systemd/user")
 
         assert result.returncode == 0, "Systemd user directory should be created"
 
@@ -396,38 +311,30 @@ class TestServicePaths:
         """Test that service file has appropriate permissions."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         result = exec_in_container(
-            container_name,
-            "stat -c '%a' /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "stat -c '%a' /home/abox/.config/systemd/user/boxctld.service"
         )
 
         assert result.returncode == 0
         # Should be readable (at least 600 or 644)
         perms = result.stdout.strip()
-        assert perms in ['644', '664', '600', '640'], f"Unexpected permissions: {perms}"
+        assert perms in ["644", "664", "600", "640"], f"Unexpected permissions: {perms}"
 
     def test_config_file_permissions(self, running_container, test_project):
         """Test that config file has appropriate permissions."""
         container_name = f"boxctl-{test_project.name}"
 
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         result = exec_in_container(
-            container_name,
-            "stat -c '%a' /home/abox/.config/boxctl/config.yml"
+            container_name, "stat -c '%a' /home/abox/.config/boxctl/config.yml"
         )
 
         assert result.returncode == 0
         perms = result.stdout.strip()
-        assert perms in ['644', '664', '600', '640'], f"Unexpected permissions: {perms}"
+        assert perms in ["644", "664", "600", "640"], f"Unexpected permissions: {perms}"
 
 
 @pytest.mark.integration
@@ -439,37 +346,27 @@ class TestServiceIntegration:
         container_name = f"boxctl-{test_project.name}"
 
         # 1. Install
-        result = exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        result = exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # 2. Verify files exist
         result = exec_in_container(
             container_name,
             "test -f /home/abox/.config/boxctl/config.yml && "
-            "test -f /home/abox/.config/systemd/user/boxctld.service"
+            "test -f /home/abox/.config/systemd/user/boxctld.service",
         )
         assert result.returncode == 0
 
         # 3. Uninstall
-        exec_in_container(
-            container_name,
-            "boxctl service uninstall 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service uninstall 2>&1 || true")
 
         # 4. Verify service file removed
         result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "test -f /home/abox/.config/systemd/user/boxctld.service"
         )
         assert result.returncode != 0
 
         # 5. Config should still exist
-        result = exec_in_container(
-            container_name,
-            "test -f /home/abox/.config/boxctl/config.yml"
-        )
+        result = exec_in_container(container_name, "test -f /home/abox/.config/boxctl/config.yml")
         assert result.returncode == 0
 
     def test_multiple_install_uninstall_cycles(self, running_container, test_project):
@@ -478,58 +375,44 @@ class TestServiceIntegration:
 
         for i in range(3):
             # Install
-            exec_in_container(
-                container_name,
-                "boxctl service install 2>&1 || true"
-            )
+            exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
             # Verify
             result = exec_in_container(
-                container_name,
-                "test -f /home/abox/.config/systemd/user/boxctld.service"
+                container_name, "test -f /home/abox/.config/systemd/user/boxctld.service"
             )
             assert result.returncode == 0, f"Cycle {i}: Service file should exist after install"
 
             # Uninstall
-            exec_in_container(
-                container_name,
-                "boxctl service uninstall 2>&1 || true"
-            )
+            exec_in_container(container_name, "boxctl service uninstall 2>&1 || true")
 
             # Verify
             result = exec_in_container(
-                container_name,
-                "test -f /home/abox/.config/systemd/user/boxctld.service"
+                container_name, "test -f /home/abox/.config/systemd/user/boxctld.service"
             )
-            assert result.returncode != 0, f"Cycle {i}: Service file should not exist after uninstall"
+            assert (
+                result.returncode != 0
+            ), f"Cycle {i}: Service file should not exist after uninstall"
 
     def test_config_persists_across_install_uninstall(self, running_container, test_project):
         """Test that config modifications persist."""
         container_name = f"boxctl-{test_project.name}"
 
         # Install
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         # Modify config
         test_marker = "# TEST_MARKER_12345"
         exec_in_container(
-            container_name,
-            f"echo '{test_marker}' >> /home/abox/.config/boxctl/config.yml"
+            container_name, f"echo '{test_marker}' >> /home/abox/.config/boxctl/config.yml"
         )
 
         # Uninstall
-        exec_in_container(
-            container_name,
-            "boxctl service uninstall 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service uninstall 2>&1 || true")
 
         # Verify marker still exists
         result = exec_in_container(
-            container_name,
-            "grep TEST_MARKER_12345 /home/abox/.config/boxctl/config.yml"
+            container_name, "grep TEST_MARKER_12345 /home/abox/.config/boxctl/config.yml"
         )
 
         assert result.returncode == 0, "Config modifications should persist"
@@ -539,30 +422,19 @@ class TestServiceIntegration:
         container_name = f"boxctl-{test_project.name}"
 
         # First install
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         result1 = exec_in_container(
-            container_name,
-            "cat /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "cat /home/abox/.config/systemd/user/boxctld.service"
         )
         content1 = result1.stdout
 
         # Uninstall and reinstall
-        exec_in_container(
-            container_name,
-            "boxctl service uninstall 2>&1 || true"
-        )
-        exec_in_container(
-            container_name,
-            "boxctl service install 2>&1 || true"
-        )
+        exec_in_container(container_name, "boxctl service uninstall 2>&1 || true")
+        exec_in_container(container_name, "boxctl service install 2>&1 || true")
 
         result2 = exec_in_container(
-            container_name,
-            "cat /home/abox/.config/systemd/user/boxctld.service"
+            container_name, "cat /home/abox/.config/systemd/user/boxctld.service"
         )
         content2 = result2.stdout
 

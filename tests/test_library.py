@@ -42,7 +42,8 @@ def mock_library(tmp_path):
     # Create test skill (SKILL.md format)
     test_skill = skills_dir / "test-skill"
     test_skill.mkdir()
-    (test_skill / "SKILL.md").write_text("""---
+    (test_skill / "SKILL.md").write_text(
+        """---
 name: test-skill
 description: A test skill for testing.
 ---
@@ -50,7 +51,8 @@ description: A test skill for testing.
 # Test Skill
 
 A test skill.
-""")
+"""
+    )
 
     # Create config directory structure
     config_dir = library_root / "config"
@@ -91,12 +93,15 @@ def test_list_mcp_servers_empty():
     """Test listing MCP servers when directory doesn't exist."""
     import tempfile
     from unittest.mock import patch
+
     with tempfile.TemporaryDirectory() as tmpdir:
         empty_lib = Path(tmpdir) / "empty_library"
         empty_user = Path(tmpdir) / "empty_user"
         # Patch user directories to avoid picking up real user config
-        with patch('boxctl.library.HostPaths.user_mcp_dir', return_value=empty_user / "mcp"):
-            with patch('boxctl.library.HostPaths.user_skills_dir', return_value=empty_user / "skills"):
+        with patch("boxctl.library.HostPaths.user_mcp_dir", return_value=empty_user / "mcp"):
+            with patch(
+                "boxctl.library.HostPaths.user_skills_dir", return_value=empty_user / "skills"
+            ):
                 lm = LibraryManager(library_root=empty_lib)
                 servers = lm.list_mcp_servers()
                 assert servers == []
@@ -106,11 +111,14 @@ def test_list_mcp_servers(mock_library):
     """Test listing MCP servers."""
     from unittest.mock import patch
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         empty_user = Path(tmpdir) / "empty_user"
         # Patch user directories to isolate test
-        with patch('boxctl.library.HostPaths.user_mcp_dir', return_value=empty_user / "mcp"):
-            with patch('boxctl.library.HostPaths.user_skills_dir', return_value=empty_user / "skills"):
+        with patch("boxctl.library.HostPaths.user_mcp_dir", return_value=empty_user / "mcp"):
+            with patch(
+                "boxctl.library.HostPaths.user_skills_dir", return_value=empty_user / "skills"
+            ):
                 lm = LibraryManager(library_root=mock_library)
                 servers = lm.list_mcp_servers()
                 assert len(servers) == 2
@@ -133,7 +141,7 @@ def test_list_mcp_servers_malformed_json(mock_library):
     # Create MCP with malformed package.json
     bad_mcp = mock_library / "mcp" / "bad-server"
     bad_mcp.mkdir()
-    (bad_mcp / "package.json").write_text('{ invalid json }')
+    (bad_mcp / "package.json").write_text("{ invalid json }")
 
     servers = lm.list_mcp_servers()
 
@@ -147,12 +155,15 @@ def test_list_skills_empty():
     """Test listing skills when directory doesn't exist."""
     import tempfile
     from unittest.mock import patch
+
     with tempfile.TemporaryDirectory() as tmpdir:
         empty_lib = Path(tmpdir) / "empty_library"
         empty_user = Path(tmpdir) / "empty_user"
         # Patch user directories to avoid picking up real user config
-        with patch('boxctl.library.HostPaths.user_mcp_dir', return_value=empty_user / "mcp"):
-            with patch('boxctl.library.HostPaths.user_skills_dir', return_value=empty_user / "skills"):
+        with patch("boxctl.library.HostPaths.user_mcp_dir", return_value=empty_user / "mcp"):
+            with patch(
+                "boxctl.library.HostPaths.user_skills_dir", return_value=empty_user / "skills"
+            ):
                 lm = LibraryManager(library_root=empty_lib)
                 skills = lm.list_skills()
                 assert skills == []
@@ -162,11 +173,14 @@ def test_list_skills(mock_library):
     """Test listing skills."""
     import tempfile
     from unittest.mock import patch
+
     with tempfile.TemporaryDirectory() as tmpdir:
         empty_user = Path(tmpdir) / "empty_user"
         # Patch user directories to isolate test
-        with patch('boxctl.library.HostPaths.user_mcp_dir', return_value=empty_user / "mcp"):
-            with patch('boxctl.library.HostPaths.user_skills_dir', return_value=empty_user / "skills"):
+        with patch("boxctl.library.HostPaths.user_mcp_dir", return_value=empty_user / "mcp"):
+            with patch(
+                "boxctl.library.HostPaths.user_skills_dir", return_value=empty_user / "skills"
+            ):
                 lm = LibraryManager(library_root=mock_library)
                 skills = lm.list_skills()
                 assert len(skills) == 1
@@ -183,12 +197,14 @@ def test_list_skills_without_description(mock_library):
     # Create skill without description
     no_desc = mock_library / "skills" / "no-desc"
     no_desc.mkdir()
-    (no_desc / "SKILL.md").write_text("""---
+    (no_desc / "SKILL.md").write_text(
+        """---
 name: no-desc
 ---
 
 # No Description Skill
-""")
+"""
+    )
 
     skills = lm.list_skills()
 
@@ -200,6 +216,7 @@ name: no-desc
 def test_list_configs_empty():
     """Test listing configs when directory doesn't exist."""
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         empty_lib = Path(tmpdir) / "empty_library"
         lm = LibraryManager(library_root=empty_lib)
@@ -241,14 +258,15 @@ def test_list_configs_without_config_file(mock_library):
 def test_print_mcp_table_no_servers(mock_library, capsys):
     """Test printing MCP table when no servers exist."""
     from unittest.mock import patch
+
     # Create empty library
     empty_lib = mock_library.parent / "empty"
     empty_lib.mkdir()
 
     empty_user = mock_library.parent / "empty_user"
     # Patch user directories to avoid picking up real user config
-    with patch('boxctl.library.HostPaths.user_mcp_dir', return_value=empty_user / "mcp"):
-        with patch('boxctl.library.HostPaths.user_skills_dir', return_value=empty_user / "skills"):
+    with patch("boxctl.library.HostPaths.user_mcp_dir", return_value=empty_user / "mcp"):
+        with patch("boxctl.library.HostPaths.user_skills_dir", return_value=empty_user / "skills"):
             lm = LibraryManager(library_root=empty_lib)
             lm.print_mcp_table()
 
@@ -270,14 +288,15 @@ def test_print_mcp_table_with_servers(mock_library, capsys):
 def test_print_skills_table_no_skills(mock_library, capsys):
     """Test printing skills table when no skills exist."""
     from unittest.mock import patch
+
     # Create empty library
     empty_lib = mock_library.parent / "empty_skills"
     empty_lib.mkdir()
 
     empty_user = mock_library.parent / "empty_user_skills"
     # Patch user directories to avoid picking up real user config
-    with patch('boxctl.library.HostPaths.user_mcp_dir', return_value=empty_user / "mcp"):
-        with patch('boxctl.library.HostPaths.user_skills_dir', return_value=empty_user / "skills"):
+    with patch("boxctl.library.HostPaths.user_mcp_dir", return_value=empty_user / "mcp"):
+        with patch("boxctl.library.HostPaths.user_skills_dir", return_value=empty_user / "skills"):
             lm = LibraryManager(library_root=empty_lib)
             lm.print_skills_table()
 
@@ -388,18 +407,12 @@ def test_mcp_table_shows_added_status(mock_library, tmp_path, capsys):
     claude_dir.mkdir()
 
     # Add test-server to project
-    mcp_config = {
-        "mcpServers": {
-            "test-server": {
-                "command": "node",
-                "args": ["index.js"]
-            }
-        }
-    }
+    mcp_config = {"mcpServers": {"test-server": {"command": "node", "args": ["index.js"]}}}
     (claude_dir / "mcp.json").write_text(json.dumps(mcp_config))
 
     # Set environment variable to point to test project
     import os
+
     old_env = os.environ.get("BOXCTL_PROJECT_DIR")
     os.environ["BOXCTL_PROJECT_DIR"] = str(project_dir)
 
@@ -431,7 +444,8 @@ def test_list_skills_recursive(mock_library):
 
     nested_skill = cloned_repo / "my-skill"
     nested_skill.mkdir()
-    (nested_skill / "SKILL.md").write_text("""---
+    (nested_skill / "SKILL.md").write_text(
+        """---
 name: my-skill
 description: A skill in a cloned repo.
 ---
@@ -439,7 +453,8 @@ description: A skill in a cloned repo.
 # My Skill
 
 A nested skill.
-""")
+"""
+    )
 
     skills = lm.list_skills()
 
@@ -462,13 +477,15 @@ def test_list_skills_skips_hidden_dirs(mock_library):
     hidden_dir.mkdir()
     hidden_skill = hidden_dir / "hidden-skill"
     hidden_skill.mkdir()
-    (hidden_skill / "SKILL.md").write_text("""---
+    (hidden_skill / "SKILL.md").write_text(
+        """---
 name: hidden-skill
 description: Should not be found.
 ---
 
 Hidden skill.
-""")
+"""
+    )
 
     skills = lm.list_skills()
 

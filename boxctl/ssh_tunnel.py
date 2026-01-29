@@ -35,6 +35,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 try:
     import asyncssh
+
     ASYNCSSH_AVAILABLE = True
     _SSHServerBase = asyncssh.SSHServer
 except ImportError:
@@ -82,7 +83,9 @@ class ContainerConnection:
     control_task: Optional[asyncio.Task] = None  # Control channel loop task
     local_forwards: List[Dict[str, Any]] = field(default_factory=list)
     remote_forwards: List[Dict[str, Any]] = field(default_factory=list)
-    sessions: Dict[str, Dict[str, Any]] = field(default_factory=dict)  # session_name -> session_data
+    sessions: Dict[str, Dict[str, Any]] = field(
+        default_factory=dict
+    )  # session_name -> session_data
 
 
 class ControlChannel:
@@ -153,7 +156,9 @@ class ControlChannel:
             try:
                 return json.loads(data.decode("utf-8"))
             except UnicodeDecodeError as e:
-                logger.error(f"UTF-8 decode error from {self.container_name}: {e}, header={header.hex()}, data[:20]={data[:20].hex()}")
+                logger.error(
+                    f"UTF-8 decode error from {self.container_name}: {e}, header={header.hex()}, data[:20]={data[:20].hex()}"
+                )
                 return None
 
         except asyncio.IncompleteReadError:
@@ -190,8 +195,14 @@ class ControlChannel:
         finally:
             self._pending_requests.pop(request_id, None)
 
-    async def respond(self, request_id: str, msg_type: str, ok: bool,
-                     error: Optional[str] = None, data: Optional[dict] = None) -> None:
+    async def respond(
+        self,
+        request_id: str,
+        msg_type: str,
+        ok: bool,
+        error: Optional[str] = None,
+        data: Optional[dict] = None,
+    ) -> None:
         """Send a response to a request."""
         payload = {"ok": ok}
         if error:
@@ -317,7 +328,7 @@ class SSHTunnelServer:
 
     def _generate_host_key(self) -> asyncssh.SSHKey:
         """Generate an SSH host key."""
-        return asyncssh.generate_private_key('ssh-ed25519')
+        return asyncssh.generate_private_key("ssh-ed25519")
 
     async def _start_server(self) -> None:
         """Start the SSH server (runs in asyncio loop)."""
@@ -333,6 +344,7 @@ class SSHTunnelServer:
         # Create and bind Unix socket manually since asyncssh.create_server
         # doesn't support 'path' parameter directly
         import socket as sock_module
+
         unix_sock = sock_module.socket(sock_module.AF_UNIX, sock_module.SOCK_STREAM)
         unix_sock.bind(str(self.socket_path))
         unix_sock.listen(100)
@@ -380,6 +392,7 @@ class SSHTunnelServer:
     async def _call_handler(self, handler: Callable, *args) -> Any:
         """Call a handler, handling both sync and async handlers."""
         import inspect
+
         if inspect.iscoroutinefunction(handler):
             return await handler(*args)
         else:
@@ -493,9 +506,7 @@ class SSHTunnelServer:
 
         self._running = True
         self._thread = threading.Thread(
-            target=self._run_in_thread,
-            daemon=True,
-            name="ssh-tunnel-server"
+            target=self._run_in_thread, daemon=True, name="ssh-tunnel-server"
         )
         self._thread.start()
 
@@ -533,7 +544,7 @@ class SSHTunnelServer:
                         "has_control_channel": conn.control_channel is not None,
                     }
                     for name, conn in self.connections.items()
-                }
+                },
             }
 
     def get_connection(self, container: str) -> Optional[ContainerConnection]:
@@ -560,8 +571,7 @@ class SSHTunnelServer:
             return False
 
         future = asyncio.run_coroutine_threadsafe(
-            self.send_to_container(container, msg_type, payload),
-            self._loop
+            self.send_to_container(container, msg_type, payload), self._loop
         )
         try:
             return future.result(timeout=5.0)
@@ -590,8 +600,7 @@ class SSHTunnelServer:
             return None
 
         future = asyncio.run_coroutine_threadsafe(
-            self.request_to_container(container, msg_type, payload, timeout),
-            self._loop
+            self.request_to_container(container, msg_type, payload, timeout), self._loop
         )
         try:
             return future.result(timeout=timeout + 1.0)
@@ -750,24 +759,24 @@ class SSHTunnelServerConnection(_SSHServerBase):
             return False
 
         # Allow asyncssh to handle the port binding - just return True
-        logger.info(f"Remote forward approved: {listen_host or '*'}:{listen_port} -> {self.container_name}")
+        logger.info(
+            f"Remote forward approved: {listen_host or '*'}:{listen_port} -> {self.container_name}"
+        )
 
         # Track the forward
         with self.server.connections_lock:
             if self.container_name in self.server.connections:
-                self.server.connections[self.container_name].remote_forwards.append({
-                    "host_port": listen_port,
-                    "listen_host": listen_host,
-                })
+                self.server.connections[self.container_name].remote_forwards.append(
+                    {
+                        "host_port": listen_port,
+                        "listen_host": listen_host,
+                    }
+                )
 
         return True
 
     def connection_requested(
-        self,
-        dest_host: str,
-        dest_port: int,
-        orig_host: str,
-        orig_port: int
+        self, dest_host: str, dest_port: int, orig_host: str, orig_port: int
     ) -> bool:
         """Handle local port forward request (container→host)."""
         if not self.server.is_host_allowed(dest_host):
@@ -782,10 +791,12 @@ class SSHTunnelServerConnection(_SSHServerBase):
 
         with self.server.connections_lock:
             if self.container_name in self.server.connections:
-                self.server.connections[self.container_name].local_forwards.append({
-                    "host": dest_host,
-                    "port": dest_port,
-                })
+                self.server.connections[self.container_name].local_forwards.append(
+                    {
+                        "host": dest_host,
+                        "port": dest_port,
+                    }
+                )
 
         return True
 
@@ -849,6 +860,7 @@ class SSHTunnelClient:
     async def _call_handler(self, handler: Callable, *args) -> Any:
         """Call a handler, handling both sync and async handlers."""
         import inspect
+
         if inspect.iscoroutinefunction(handler):
             return await handler(*args)
         else:
@@ -874,6 +886,7 @@ class SSHTunnelClient:
             # Create Unix socket connection manually since asyncssh.connect
             # doesn't support 'path' parameter directly
             import socket as sock_module
+
             unix_sock = sock_module.socket(sock_module.AF_UNIX, sock_module.SOCK_STREAM)
             unix_sock.setblocking(False)
 
@@ -939,19 +952,26 @@ class SSHTunnelClient:
                     dest_port=config.host_port,
                 )
                 self._local_listeners[config.container_port] = listener
-                local_forwards_info.append({
-                    "host_port": config.host_port,
-                    "container_port": config.container_port,
-                })
-                logger.info(f"Local forward: 127.0.0.1:{config.container_port} -> host:{config.host_port}")
+                local_forwards_info.append(
+                    {
+                        "host_port": config.host_port,
+                        "container_port": config.container_port,
+                    }
+                )
+                logger.info(
+                    f"Local forward: 127.0.0.1:{config.container_port} -> host:{config.host_port}"
+                )
             except Exception as e:
                 logger.error(f"Failed to create local forward for {config.name}: {e}")
 
         # Notify daemon about local forwards (so it can track them for display)
         if local_forwards_info:
-            await self.send_event_async("local_forwards_registered", {
-                "forwards": local_forwards_info,
-            })
+            await self.send_event_async(
+                "local_forwards_registered",
+                {
+                    "forwards": local_forwards_info,
+                },
+            )
 
         # Set up remote forwards (host→container)
         for config in self.remote_forwards:
@@ -964,7 +984,9 @@ class SSHTunnelClient:
                 )
                 if listener:
                     self._remote_listeners[config.host_port] = listener
-                logger.info(f"Remote forward: host:{config.host_port} -> 127.0.0.1:{config.container_port}")
+                logger.info(
+                    f"Remote forward: host:{config.host_port} -> 127.0.0.1:{config.container_port}"
+                )
             except Exception as e:
                 logger.error(f"Failed to create remote forward for {config.name}: {e}")
 
@@ -1001,12 +1023,16 @@ class SSHTunnelClient:
                                 ok = True
                                 error = None
                                 data = None
-                            await self._control_channel.respond(request_id, msg_type, ok, error, data)
+                            await self._control_channel.respond(
+                                request_id, msg_type, ok, error, data
+                            )
                         except Exception as e:
                             logger.error(f"Request handler error: {e}")
                             await self._control_channel.respond(request_id, msg_type, False, str(e))
                     else:
-                        await self._control_channel.respond(request_id, msg_type, False, f"Unknown: {msg_type}")
+                        await self._control_channel.respond(
+                            request_id, msg_type, False, f"Unknown: {msg_type}"
+                        )
 
                 elif kind == "event":
                     handler = self._event_handlers.get(msg_type)
@@ -1047,8 +1073,7 @@ class SSHTunnelClient:
                 else:
                     await asyncio.sleep(self._reconnect_delay)
                     self._reconnect_delay = min(
-                        self._reconnect_delay * 2,
-                        self._max_reconnect_delay
+                        self._reconnect_delay * 2, self._max_reconnect_delay
                     )
                     continue
 
@@ -1101,9 +1126,7 @@ class SSHTunnelClient:
 
         self._running = True
         self._thread = threading.Thread(
-            target=self._run_in_thread,
-            daemon=True,
-            name="ssh-tunnel-client"
+            target=self._run_in_thread, daemon=True, name="ssh-tunnel-client"
         )
         self._thread.start()
 
@@ -1117,10 +1140,7 @@ class SSHTunnelClient:
         self._running = False
 
         if self._loop and self._conn:
-            asyncio.run_coroutine_threadsafe(
-                self._close_connection(),
-                self._loop
-            )
+            asyncio.run_coroutine_threadsafe(self._close_connection(), self._loop)
 
         if self._thread:
             self._thread.join(timeout=5.0)
@@ -1147,7 +1167,9 @@ class SSHTunnelClient:
         except Exception:
             return False
 
-    async def request_async(self, msg_type: str, payload: dict, timeout: float = 30.0) -> Optional[dict]:
+    async def request_async(
+        self, msg_type: str, payload: dict, timeout: float = 30.0
+    ) -> Optional[dict]:
         """Send a request and wait for response (async version)."""
         if not self._control_channel:
             return None
@@ -1156,7 +1178,9 @@ class SSHTunnelClient:
         except Exception:
             return None
 
-    async def add_local_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+    async def add_local_forward_async(
+        self, config: PortForwardConfig
+    ) -> Tuple[bool, Optional[str]]:
         """Dynamically add a local forward (async version for use in event loop).
 
         Returns:
@@ -1164,7 +1188,9 @@ class SSHTunnelClient:
         """
         return await self._add_local_forward_async(config)
 
-    async def add_remote_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+    async def add_remote_forward_async(
+        self, config: PortForwardConfig
+    ) -> Tuple[bool, Optional[str]]:
         """Dynamically add a remote forward (async version for use in event loop).
 
         Returns:
@@ -1197,8 +1223,7 @@ class SSHTunnelClient:
             return False
 
         future = asyncio.run_coroutine_threadsafe(
-            self._control_channel.send_event(msg_type, payload),
-            self._loop
+            self._control_channel.send_event(msg_type, payload), self._loop
         )
         try:
             future.result(timeout=5.0)
@@ -1214,8 +1239,7 @@ class SSHTunnelClient:
             return None
 
         future = asyncio.run_coroutine_threadsafe(
-            self._control_channel.request(msg_type, payload, timeout),
-            self._loop
+            self._control_channel.request(msg_type, payload, timeout), self._loop
         )
         try:
             return future.result(timeout=timeout + 1)
@@ -1233,16 +1257,15 @@ class SSHTunnelClient:
         if not self._check_not_on_loop("add_local_forward"):
             return False, "Called from event loop thread"
 
-        future = asyncio.run_coroutine_threadsafe(
-            self._add_local_forward_async(config),
-            self._loop
-        )
+        future = asyncio.run_coroutine_threadsafe(self._add_local_forward_async(config), self._loop)
         try:
             return future.result(timeout=5.0)
         except Exception as e:
             return False, str(e)
 
-    async def _add_local_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+    async def _add_local_forward_async(
+        self, config: PortForwardConfig
+    ) -> Tuple[bool, Optional[str]]:
         """Add a local forward (async version).
 
         Returns:
@@ -1278,15 +1301,16 @@ class SSHTunnelClient:
             return False, "Called from event loop thread"
 
         future = asyncio.run_coroutine_threadsafe(
-            self._add_remote_forward_async(config),
-            self._loop
+            self._add_remote_forward_async(config), self._loop
         )
         try:
             return future.result(timeout=5.0)
         except Exception as e:
             return False, str(e)
 
-    async def _add_remote_forward_async(self, config: PortForwardConfig) -> Tuple[bool, Optional[str]]:
+    async def _add_remote_forward_async(
+        self, config: PortForwardConfig
+    ) -> Tuple[bool, Optional[str]]:
         """Add a remote forward (async version).
 
         Returns:
@@ -1336,11 +1360,14 @@ class SSHTunnelClient:
             # Remove from config list
             self.local_forwards = [f for f in self.local_forwards if f.host_port != host_port]
             # Notify server to update its tracking
-            await self.send_event_async("forward_removed", {
-                "direction": "local",
-                "host_port": host_port,
-                "container_port": container_port,
-            })
+            await self.send_event_async(
+                "forward_removed",
+                {
+                    "direction": "local",
+                    "host_port": host_port,
+                    "container_port": container_port,
+                },
+            )
             logger.info(f"Removed local forward: container:{container_port} -> host:{host_port}")
             return True
         except Exception as e:
@@ -1369,11 +1396,14 @@ class SSHTunnelClient:
             # Remove from config list
             self.remote_forwards = [f for f in self.remote_forwards if f.host_port != host_port]
             # Notify server to update its tracking
-            await self.send_event_async("forward_removed", {
-                "direction": "remote",
-                "host_port": host_port,
-                "container_port": container_port,
-            })
+            await self.send_event_async(
+                "forward_removed",
+                {
+                    "direction": "remote",
+                    "host_port": host_port,
+                    "container_port": container_port,
+                },
+            )
             logger.info(f"Removed remote forward: host:{host_port}")
             return True
         except Exception as e:

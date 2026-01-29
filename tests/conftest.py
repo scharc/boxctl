@@ -44,7 +44,7 @@ def run_abox(*args, cwd=None, check=True, capture_output=True, text=True):
         check=check,
         capture_output=capture_output,
         text=text,
-        env=env
+        env=env,
     )
 
 
@@ -77,9 +77,7 @@ def test_project(tmp_path_factory, docker_available):
     # Cleanup: stop and remove container
     container_name = f"boxctl-{project_dir.name}"
     subprocess.run(
-        ["docker", "rm", "-f", container_name],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
+        ["docker", "rm", "-f", container_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
 
 

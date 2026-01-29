@@ -118,11 +118,17 @@ class TestStartCommand:
         result = runner.invoke(cli, ["start"])
 
         # Should fail because .boxctl doesn't exist
-        assert result.exit_code != 0 or "not initialized" in result.output.lower() or "boxctl" in result.output.lower()
+        assert (
+            result.exit_code != 0
+            or "not initialized" in result.output.lower()
+            or "boxctl" in result.output.lower()
+        )
 
     @patch("boxctl.cli.commands.project.ContainerManager")
     @patch("boxctl.cli.commands.project._get_project_context")
-    def test_start_after_init(self, mock_get_ctx, mock_manager_class, runner, temp_project, monkeypatch):
+    def test_start_after_init(
+        self, mock_get_ctx, mock_manager_class, runner, temp_project, monkeypatch
+    ):
         """Test start works after init."""
         monkeypatch.chdir(temp_project)
 
@@ -316,7 +322,11 @@ class TestConfigCommands:
         result = runner.invoke(cli, ["config", "migrate", "--dry-run"])
 
         # Should handle gracefully when nothing to migrate (exit 0) or indicate no changes needed
-        assert result.exit_code == 0 or "nothing" in result.output.lower() or "no" in result.output.lower()
+        assert (
+            result.exit_code == 0
+            or "nothing" in result.output.lower()
+            or "no" in result.output.lower()
+        )
 
 
 class TestSessionCommands:
@@ -348,7 +358,9 @@ class TestInfoCommand:
 
     @patch("boxctl.cli.commands.project._get_project_context")
     @patch("boxctl.cli.commands.project.ContainerManager")
-    def test_info_shows_details(self, mock_manager_class, mock_get_ctx, runner, temp_project, monkeypatch):
+    def test_info_shows_details(
+        self, mock_manager_class, mock_get_ctx, runner, temp_project, monkeypatch
+    ):
         """Test info shows container details."""
         monkeypatch.chdir(temp_project)
         (temp_project / ".boxctl").mkdir()

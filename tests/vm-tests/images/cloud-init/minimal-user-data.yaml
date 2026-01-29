@@ -1,0 +1,68 @@
+#cloud-config
+# Minimal VM configuration for zero-to-hero installation testing
+# This image has NO Docker pre-installed - tests install everything from scratch
+#
+# NOTE: This config is Ubuntu-specific. For Fedora, use minimal-fedora-user-data.yaml
+
+users:
+  - name: testuser
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: [sudo]
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+# Package update and minimal dependencies
+package_update: true
+package_upgrade: false
+
+packages:
+  # Python for testing
+  - python3
+  - python3-pip
+  - python3-venv
+  # Git for cloning boxctl
+  - git
+  # Common utilities
+  - curl
+  - wget
+  - jq
+  - vim
+  - tmux
+  # Required for building Python packages (Ubuntu names)
+  - build-essential
+  - python3-dev
+  # Docker is NOT installed - tests will install it!
+
+# System configuration
+timezone: UTC
+
+# Create test workspace
+runcmd:
+  # Create test directories
+  - mkdir -p /test-workspace
+  - chown testuser:testuser /test-workspace
+  # Configure git for testuser
+  - su - testuser -c 'git config --global user.email "test@example.com"'
+  - su - testuser -c 'git config --global user.name "Test User"'
+  - su - testuser -c 'git config --global init.defaultBranch main'
+  # Signal cloud-init completion
+  - touch /var/lib/cloud/instance/boot-finished
+  - echo "cloud-init-complete" > /tmp/cloud-init-status
+
+# Write files
+write_files:
+  # Helper script to check cloud-init status
+  - path: /usr/local/bin/check-cloud-init
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      if [ -f /var/lib/cloud/instance/boot-finished ]; then
+        echo "complete"
+        exit 0
+      else
+        echo "running"
+        exit 1
+      fi
+
+final_message: "Minimal VM ready for zero-to-hero testing after $UPTIME seconds"

@@ -38,8 +38,7 @@ class TestBaseImageDockerfile:
 
         # Check if Dockerfile.base exists (should be in /workspace from volume mount)
         result = exec_in_container(
-            container_name,
-            "test -f /workspace/Dockerfile.base && echo 'EXISTS'"
+            container_name, "test -f /workspace/Dockerfile.base && echo 'EXISTS'"
         )
 
         # May or may not exist depending on where tests run
@@ -53,7 +52,7 @@ class TestBaseImageDockerfile:
         # Try to read Dockerfile.base
         result = exec_in_container(
             container_name,
-            "test -f /workspace/Dockerfile.base && head -5 /workspace/Dockerfile.base || echo 'NOT_FOUND'"
+            "test -f /workspace/Dockerfile.base && head -5 /workspace/Dockerfile.base || echo 'NOT_FOUND'",
         )
 
         assert result.returncode == 0
@@ -70,8 +69,7 @@ class TestBaseImageBuildArgs:
         container_name = f"boxctl-{test_project.name}"
 
         result = exec_in_container(
-            container_name,
-            "python3 -c 'from boxctl import __version__; print(__version__)'"
+            container_name, "python3 -c 'from boxctl import __version__; print(__version__)'"
         )
 
         assert result.returncode == 0
@@ -85,7 +83,7 @@ class TestBaseImageBuildArgs:
         result = exec_in_container(
             container_name,
             "python3 -c 'from boxctl.container import ContainerManager; "
-            "print(ContainerManager.BASE_IMAGE)'"
+            "print(ContainerManager.BASE_IMAGE)'",
         )
 
         assert result.returncode == 0
@@ -102,7 +100,7 @@ class TestBaseImageList:
 
         result = exec_in_container(
             container_name,
-            "docker images --format '{{.Repository}}:{{.Tag}}' | grep boxctl-base || echo 'NO_BASE_IMAGE'"
+            "docker images --format '{{.Repository}}:{{.Tag}}' | grep boxctl-base || echo 'NO_BASE_IMAGE'",
         )
 
         assert result.returncode == 0
@@ -116,7 +114,7 @@ class TestBaseImageList:
         # Try to inspect boxctl-base:latest
         result = exec_in_container(
             container_name,
-            "docker image inspect boxctl-base:latest --format '{{.Id}}' 2>&1 || echo 'NOT_FOUND'"
+            "docker image inspect boxctl-base:latest --format '{{.Id}}' 2>&1 || echo 'NOT_FOUND'",
         )
 
         assert result.returncode == 0
@@ -142,10 +140,7 @@ class TestBaseImageErrorHandling:
         """Test that docker is available for base image operations."""
         container_name = f"boxctl-{test_project.name}"
 
-        result = exec_in_container(
-            container_name,
-            "which docker"
-        )
+        result = exec_in_container(container_name, "which docker")
 
         assert result.returncode == 0
         assert "docker" in result.stdout
@@ -162,7 +157,7 @@ class TestBaseImageVerification:
         # Get the image of the current container
         result = exec_in_container(
             container_name,
-            "docker inspect $(hostname) --format '{{.Config.Image}}' 2>&1 || echo 'INSPECT_FAILED'"
+            "docker inspect $(hostname) --format '{{.Config.Image}}' 2>&1 || echo 'INSPECT_FAILED'",
         )
 
         assert result.returncode == 0
@@ -175,7 +170,7 @@ class TestBaseImageVerification:
 
         result = exec_in_container(
             container_name,
-            "docker image history boxctl-base:latest --format '{{.CreatedBy}}' 2>&1 | head -5 || echo 'NOT_FOUND'"
+            "docker image history boxctl-base:latest --format '{{.CreatedBy}}' 2>&1 | head -5 || echo 'NOT_FOUND'",
         )
 
         assert result.returncode == 0
@@ -193,7 +188,7 @@ class TestBaseImageIntegration:
         # Check if base image exists
         result = exec_in_container(
             container_name,
-            "docker image inspect boxctl-base:latest >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_FOUND'"
+            "docker image inspect boxctl-base:latest >/dev/null 2>&1 && echo 'EXISTS' || echo 'NOT_FOUND'",
         )
 
         assert result.returncode == 0
@@ -205,7 +200,7 @@ class TestBaseImageIntegration:
 
         result = exec_in_container(
             container_name,
-            "docker image inspect boxctl-base:latest --format '{{.Size}}' 2>&1 || echo 'NOT_FOUND'"
+            "docker image inspect boxctl-base:latest --format '{{.Size}}' 2>&1 || echo 'NOT_FOUND'",
         )
 
         assert result.returncode == 0
@@ -216,7 +211,7 @@ class TestBaseImageIntegration:
 
         result = exec_in_container(
             container_name,
-            "docker image inspect boxctl-base:latest --format '{{.Created}}' 2>&1 || echo 'NOT_FOUND'"
+            "docker image inspect boxctl-base:latest --format '{{.Created}}' 2>&1 || echo 'NOT_FOUND'",
         )
 
         assert result.returncode == 0
@@ -250,10 +245,7 @@ class TestBaseImageCleaning:
         """Test listing dangling images."""
         container_name = f"boxctl-{test_project.name}"
 
-        result = exec_in_container(
-            container_name,
-            "docker images -f 'dangling=true' -q | wc -l"
-        )
+        result = exec_in_container(container_name, "docker images -f 'dangling=true' -q | wc -l")
 
         assert result.returncode == 0
         # Should return a count (could be 0)
@@ -264,8 +256,7 @@ class TestBaseImageCleaning:
 
         # Check what would be pruned (no actual pruning)
         result = exec_in_container(
-            container_name,
-            "docker system df 2>&1 || echo 'COMMAND_AVAILABLE'"
+            container_name, "docker system df 2>&1 || echo 'COMMAND_AVAILABLE'"
         )
 
         assert result.returncode == 0
@@ -281,7 +272,7 @@ class TestBaseImageTagging:
 
         result = exec_in_container(
             container_name,
-            "docker images | grep boxctl | awk '{print $1\":\"$2}' || echo 'NO_IMAGES'"
+            "docker images | grep boxctl | awk '{print $1\":\"$2}' || echo 'NO_IMAGES'",
         )
 
         assert result.returncode == 0
@@ -291,8 +282,7 @@ class TestBaseImageTagging:
         container_name = f"boxctl-{test_project.name}"
 
         result = exec_in_container(
-            container_name,
-            "docker images boxctl-base:latest -q 2>&1 || echo 'NOT_FOUND'"
+            container_name, "docker images boxctl-base:latest -q 2>&1 || echo 'NOT_FOUND'"
         )
 
         assert result.returncode == 0
@@ -307,8 +297,7 @@ class TestBaseImageBuildCache:
         container_name = f"boxctl-{test_project.name}"
 
         result = exec_in_container(
-            container_name,
-            "docker system df -v 2>&1 | grep -i cache || echo 'CACHE_INFO'"
+            container_name, "docker system df -v 2>&1 | grep -i cache || echo 'CACHE_INFO'"
         )
 
         assert result.returncode == 0
@@ -318,8 +307,7 @@ class TestBaseImageBuildCache:
         container_name = f"boxctl-{test_project.name}"
 
         result = exec_in_container(
-            container_name,
-            "docker buildx version 2>&1 || echo 'BUILDX_NOT_AVAILABLE'"
+            container_name, "docker buildx version 2>&1 || echo 'BUILDX_NOT_AVAILABLE'"
         )
 
         assert result.returncode == 0
@@ -351,18 +339,15 @@ with tempfile.TemporaryDirectory() as tmpdir:
     print(f"AFTER_SET:{config.boxctl_version}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "INITIAL:None" in result.stdout, (
-            f"Expected initial version to be None. Output: {result.stdout}"
-        )
-        assert "AFTER_SET:1.2.3" in result.stdout, (
-            f"Expected version to be set to 1.2.3. Output: {result.stdout}"
-        )
+        assert (
+            "INITIAL:None" in result.stdout
+        ), f"Expected initial version to be None. Output: {result.stdout}"
+        assert (
+            "AFTER_SET:1.2.3" in result.stdout
+        ), f"Expected version to be set to 1.2.3. Output: {result.stdout}"
 
     def test_is_version_outdated_same_version(self, running_container, test_project):
         """Test is_version_outdated returns False for same version."""
@@ -385,15 +370,12 @@ with tempfile.TemporaryDirectory() as tmpdir:
     print(f"OUTDATED:{result}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "OUTDATED:False" in result.stdout, (
-            f"Expected is_version_outdated to return False for same version. Output: {result.stdout}"
-        )
+        assert (
+            "OUTDATED:False" in result.stdout
+        ), f"Expected is_version_outdated to return False for same version. Output: {result.stdout}"
 
     def test_is_version_outdated_different_version(self, running_container, test_project):
         """Test is_version_outdated returns True for different version."""
@@ -415,15 +397,12 @@ with tempfile.TemporaryDirectory() as tmpdir:
     print(f"OUTDATED:{result}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "OUTDATED:True" in result.stdout, (
-            f"Expected is_version_outdated to return True for different version. Output: {result.stdout}"
-        )
+        assert (
+            "OUTDATED:True" in result.stdout
+        ), f"Expected is_version_outdated to return True for different version. Output: {result.stdout}"
 
     def test_is_version_outdated_no_version(self, running_container, test_project):
         """Test is_version_outdated returns False when no version stored."""
@@ -443,15 +422,12 @@ with tempfile.TemporaryDirectory() as tmpdir:
     print(f"OUTDATED:{result}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "OUTDATED:False" in result.stdout, (
-            f"Expected is_version_outdated to return False when no version stored. Output: {result.stdout}"
-        )
+        assert (
+            "OUTDATED:False" in result.stdout
+        ), f"Expected is_version_outdated to return False when no version stored. Output: {result.stdout}"
 
     def test_version_saved_to_file(self, running_container, test_project):
         """Test that version is persisted to config file."""
@@ -481,15 +457,12 @@ with tempfile.TemporaryDirectory() as tmpdir:
     print(f"VERSION_IN_FILE:{version}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "VERSION_IN_FILE:2.0.0" in result.stdout, (
-            f"Expected version 2.0.0 to be saved in config file. Output: {result.stdout}"
-        )
+        assert (
+            "VERSION_IN_FILE:2.0.0" in result.stdout
+        ), f"Expected version 2.0.0 to be saved in config file. Output: {result.stdout}"
 
 
 @pytest.mark.integration
@@ -508,15 +481,12 @@ has_method = hasattr(ContainerManager, method_name)
 print(f"HAS_METHOD:{has_method}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "HAS_METHOD:True" in result.stdout, (
-            f"Expected ContainerManager to have is_base_image_outdated method. Output: {result.stdout}"
-        )
+        assert (
+            "HAS_METHOD:True" in result.stdout
+        ), f"Expected ContainerManager to have is_base_image_outdated method. Output: {result.stdout}"
 
     def test_is_base_image_outdated_nonexistent_container(self, running_container, test_project):
         """Test is_base_image_outdated returns False for non-existent container."""
@@ -538,17 +508,14 @@ except Exception as e:
         raise
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         if "DOCKER_NOT_AVAILABLE" in result.stdout:
             pytest.skip("Docker socket not available in container")
-        assert "RESULT:False" in result.stdout, (
-            f"Expected is_base_image_outdated to return False for non-existent container. Output: {result.stdout}"
-        )
+        assert (
+            "RESULT:False" in result.stdout
+        ), f"Expected is_base_image_outdated to return False for non-existent container. Output: {result.stdout}"
 
     def test_is_base_image_outdated_current_container(self, running_container, test_project):
         """Test is_base_image_outdated on the current running container."""
@@ -572,20 +539,17 @@ except Exception as e:
         raise
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         if "DOCKER_NOT_AVAILABLE" in result.stdout:
             pytest.skip("Docker socket not available in container")
-        assert "RESULT_TYPE:bool" in result.stdout, (
-            f"Expected is_base_image_outdated to return a bool. Output: {result.stdout}"
-        )
-        assert "RESULT_BOOL:True" in result.stdout, (
-            f"Expected result to be a boolean instance. Output: {result.stdout}"
-        )
+        assert (
+            "RESULT_TYPE:bool" in result.stdout
+        ), f"Expected is_base_image_outdated to return a bool. Output: {result.stdout}"
+        assert (
+            "RESULT_BOOL:True" in result.stdout
+        ), f"Expected result to be a boolean instance. Output: {result.stdout}"
 
     def test_is_base_image_outdated_returns_bool(self, running_container, test_project):
         """Test that is_base_image_outdated always returns a boolean."""
@@ -617,17 +581,14 @@ except Exception as e:
         raise
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         if "DOCKER_NOT_AVAILABLE" in result.stdout:
             pytest.skip("Docker socket not available in container")
-        assert "ALL_BOOL:True" in result.stdout, (
-            f"Expected all results to be booleans. Output: {result.stdout}"
-        )
+        assert (
+            "ALL_BOOL:True" in result.stdout
+        ), f"Expected all results to be booleans. Output: {result.stdout}"
 
     def test_base_image_comparison_logic(self, running_container, test_project):
         """Test the image ID comparison logic."""
@@ -681,19 +642,16 @@ except Exception as e:
         raise
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         if "DOCKER_NOT_AVAILABLE" in result.stdout:
             pytest.skip("Docker socket not available in container")
         # Should have container image ID (we're running in it)
-        assert "CONTAINER_IMAGE_ID:" in result.stdout, (
-            f"Failed to get container image ID. Output: {result.stdout}"
-        )
+        assert (
+            "CONTAINER_IMAGE_ID:" in result.stdout
+        ), f"Failed to get container image ID. Output: {result.stdout}"
         # Base image may or may not exist, but should not have unexpected errors
-        assert "ERRORS:" not in result.stdout or "NOT_FOUND" in result.stdout, (
-            f"Unexpected errors: {result.stdout}"
-        )
+        assert (
+            "ERRORS:" not in result.stdout or "NOT_FOUND" in result.stdout
+        ), f"Unexpected errors: {result.stdout}"

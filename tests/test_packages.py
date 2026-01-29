@@ -169,15 +169,9 @@ def test_packages_list_empty(test_project):
     # Create a config with empty packages
     config_content = {
         "container_name": test_project.name,
-        "packages": {
-            "npm": [],
-            "pip": [],
-            "apt": [],
-            "cargo": [],
-            "post": []
-        }
+        "packages": {"npm": [], "pip": [], "apt": [], "cargo": [], "post": []},
     }
-    with open(config_file, 'w') as f:
+    with open(config_file, "w") as f:
         yaml.dump(config_content, f)
 
     result = run_abox("packages", "list", cwd=test_project)
@@ -226,9 +220,7 @@ def test_packages_install_in_container(test_project):
 
     # Check if tree command is available
     result = subprocess.run(
-        ["docker", "exec", container_name, "which", "tree"],
-        capture_output=True,
-        text=True
+        ["docker", "exec", container_name, "which", "tree"], capture_output=True, text=True
     )
 
     assert result.returncode == 0, "tree should be installed in container"
@@ -250,9 +242,7 @@ def test_packages_install_pip_in_container(test_project):
 
     # Check if httpie is installed
     result = subprocess.run(
-        ["docker", "exec", container_name, "which", "http"],
-        capture_output=True,
-        text=True
+        ["docker", "exec", container_name, "which", "http"], capture_output=True, text=True
     )
 
     assert result.returncode == 0, "httpie should be installed"
@@ -276,26 +266,31 @@ def test_packages_install_npm_in_container(test_project):
     # Wait for container initialization to complete (npm install takes a few seconds)
     # Check for "Container initialization complete!" in logs
     for _ in range(30):  # Max 30 seconds
-        result = subprocess.run(
-            ["docker", "logs", container_name],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(["docker", "logs", container_name], capture_output=True, text=True)
         if "Container initialization complete!" in result.stdout:
             break
         time.sleep(1)
 
     # Check if cowsay is available - need bash -lc to get PATH from .bashrc
     result = subprocess.run(
-        ["docker", "exec", "-u", "abox", container_name,
-         "bash", "-lc", "which cowsay || cowsay --version"],
+        [
+            "docker",
+            "exec",
+            "-u",
+            "abox",
+            container_name,
+            "bash",
+            "-lc",
+            "which cowsay || cowsay --version",
+        ],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     # cowsay should be available
-    assert result.returncode == 0 or "cowsay" in result.stdout, \
-        f"cowsay should be installed. stdout: {result.stdout}, stderr: {result.stderr}"
+    assert (
+        result.returncode == 0 or "cowsay" in result.stdout
+    ), f"cowsay should be installed. stdout: {result.stdout}, stderr: {result.stderr}"
 
 
 def test_packages_post_command_runs(test_project):
@@ -313,11 +308,7 @@ def test_packages_post_command_runs(test_project):
 
     # Wait for container initialization to complete
     for _ in range(30):  # Max 30 seconds
-        result = subprocess.run(
-            ["docker", "logs", container_name],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(["docker", "logs", container_name], capture_output=True, text=True)
         if "Container initialization complete!" in result.stdout:
             break
         time.sleep(1)
@@ -326,7 +317,7 @@ def test_packages_post_command_runs(test_project):
     result = subprocess.run(
         ["docker", "exec", container_name, "test", "-f", "/tmp/packages-test-marker"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, "post-install command should have created marker file"

@@ -76,9 +76,12 @@ def _run_session_agent(session_name: str, agent_type: str):
         label = f"Claude Code ({full_session_name})"
         instructions = _read_agent_instructions()
         extra_args = [
-            "--settings", ContainerPaths.claude_settings(),
-            "--mcp-config", ContainerPaths.mcp_config(),
-            "--append-system-prompt", instructions,
+            "--settings",
+            ContainerPaths.claude_settings(),
+            "--mcp-config",
+            ContainerPaths.mcp_config(),
+            "--append-system-prompt",
+            instructions,
         ]
         if _has_vscode():
             extra_args.append("--ide")
@@ -88,10 +91,13 @@ def _run_session_agent(session_name: str, agent_type: str):
         label = f"Claude Code (auto-approve, {full_session_name})"
         prompt = _read_super_prompt()
         extra_args = [
-            "--settings", ContainerPaths.claude_super_settings(),
-            "--mcp-config", ContainerPaths.mcp_config(),
+            "--settings",
+            ContainerPaths.claude_super_settings(),
+            "--mcp-config",
+            ContainerPaths.mcp_config(),
             "--dangerously-skip-permissions",
-            "--append-system-prompt", prompt,
+            "--append-system-prompt",
+            prompt,
         ]
         if _has_vscode():
             extra_args.append("--ide")
@@ -168,7 +174,9 @@ def _complete_list_scope(ctx, param, incomplete):
 
 
 @session_group.command(name="list")
-@click.argument("scope", required=False, type=click.Choice(["all"]), shell_complete=_complete_list_scope)
+@click.argument(
+    "scope", required=False, type=click.Choice(["all"]), shell_complete=_complete_list_scope
+)
 @handle_errors
 def session_list(scope: Optional[str]):
     """List tmux sessions.
@@ -214,12 +222,14 @@ def session_list(scope: Optional[str]):
 
                 sessions = _get_tmux_sessions(pctx.manager, cname)
                 for sess in sessions:
-                    all_sessions.append({
-                        "project": project_name,
-                        "session": sess["name"],
-                        "status": "attached" if sess["attached"] else "detached",
-                        "windows": sess["windows"]
-                    })
+                    all_sessions.append(
+                        {
+                            "project": project_name,
+                            "session": sess["name"],
+                            "status": "attached" if sess["attached"] else "detached",
+                            "windows": sess["windows"],
+                        }
+                    )
 
         if not all_sessions:
             console.print("[yellow]No tmux sessions found in any container[/yellow]")
@@ -232,12 +242,7 @@ def session_list(scope: Optional[str]):
         table.add_column("Windows", style="blue")
 
         for sess in all_sessions:
-            table.add_row(
-                sess["project"],
-                sess["session"],
-                sess["status"],
-                str(sess["windows"])
-            )
+            table.add_row(sess["project"], sess["session"], sess["status"], str(sess["windows"]))
 
         console.print(table)
         console.print("\n[blue]Connect:[/blue] abox connect <project> <session>")
@@ -356,7 +361,15 @@ def session_rename(session_name: str, new_name: str):
     socket_path = _get_tmux_socket(pctx.manager, pctx.container_name)
     tmux_cmd = [BinPaths.TMUX, "rename-session", "-t", session_name, full_new_name]
     if socket_path:
-        tmux_cmd = [BinPaths.TMUX, "-S", socket_path, "rename-session", "-t", session_name, full_new_name]
+        tmux_cmd = [
+            BinPaths.TMUX,
+            "-S",
+            socket_path,
+            "rename-session",
+            "-t",
+            session_name,
+            full_new_name,
+        ]
 
     exit_code, output = pctx.manager.exec_command(
         pctx.container_name,
@@ -401,7 +414,9 @@ def session_add(name: Optional[str]):
         _run_session_agent(name, "shell")
     else:
         # Auto-generate name
-        session_name = _generate_session_name(pctx.manager, pctx.container_name, "shell", identifier=None)
+        session_name = _generate_session_name(
+            pctx.manager, pctx.container_name, "shell", identifier=None
+        )
         identifier = session_name.split("-", 1)[1] if "-" in session_name else "1"
         _run_session_agent(identifier, "shell")
 
@@ -431,6 +446,8 @@ def session_new(agent: str, name: Optional[str]):
         _run_session_agent(name, agent)
     else:
         # Auto-generate name
-        session_name = _generate_session_name(pctx.manager, pctx.container_name, agent, identifier=None)
+        session_name = _generate_session_name(
+            pctx.manager, pctx.container_name, agent, identifier=None
+        )
         identifier = session_name.split("-", 1)[1] if "-" in session_name else "1"
         _run_session_agent(identifier, agent)

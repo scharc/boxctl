@@ -67,7 +67,7 @@ def _check_worktree_uncommitted_changes(manager, container_name: str) -> list[di
 
     # Single combined script that lists worktrees AND checks their status
     # This combines what was previously 2 docker exec calls into 1
-    combined_script = '''
+    combined_script = """
 # Get worktree paths from /git-worktrees/
 git -C /workspace worktree list --porcelain 2>/dev/null | while read line; do
     case "$line" in
@@ -83,7 +83,7 @@ git -C /workspace worktree list --porcelain 2>/dev/null | while read line; do
             ;;
     esac
 done
-'''
+"""
 
     exit_code, output = manager.exec_command(
         container_name,
@@ -150,6 +150,7 @@ def _require_config_migrated(project_dir: Path) -> bool:
     console.print("[yellow]Your .boxctl/config.yml uses deprecated settings:[/yellow]\n")
 
     from boxctl.migrations import get_migration
+
     for result in applicable:
         migration = get_migration(result.migration_id)
         console.print(f"  • {migration.description}")
@@ -253,6 +254,7 @@ logs/
 
     class _InitPctx:
         """Minimal context for _add_mcp during init."""
+
         def __init__(self, boxctl_dir: Path, project_dir: Path):
             self.boxctl_dir = boxctl_dir
             self.project_dir = project_dir
@@ -276,7 +278,9 @@ logs/
                 if skill_source.exists():
                     copied = _copy_commands(skill_source, project_dir, "skill", skill_dir.name)
                     if copied:
-                        console.print(f"  [green]Added commands for skill: {skill_dir.name}[/green]")
+                        console.print(
+                            f"  [green]Added commands for skill: {skill_dir.name}[/green]"
+                        )
 
     # Create .boxctl/config.yml template if it doesn't exist
     project_config = ProjectConfig(project_dir)
@@ -293,8 +297,12 @@ logs/
     console.print("  .boxctl/skills/ (installed skills)")
     console.print("  .boxctl/LOG.md")
     console.print("  .boxctl/.gitignore")
-    console.print("\n[dim]Agent configs created at container startup in ~/.claude/, ~/.codex/, etc.[/dim]")
-    console.print("\n[yellow]Tip: Edit .boxctl/config.yml to configure ports, volumes, etc.[/yellow]")
+    console.print(
+        "\n[dim]Agent configs created at container startup in ~/.claude/, ~/.codex/, etc.[/dim]"
+    )
+    console.print(
+        "\n[yellow]Tip: Edit .boxctl/config.yml to configure ports, volumes, etc.[/yellow]"
+    )
     console.print("[yellow]Tip: Create PLAN.md in project root for planning context[/yellow]")
     console.print("\n[blue]Next: boxctl start[/blue]")
 
@@ -378,9 +386,13 @@ def _send_test_notification(project_name: str) -> None:
             error = result.get("error", "unknown error")
             console.print(f"[red]✗ Notification failed: {error}[/red]")
     except FileNotFoundError:
-        console.print("[yellow]⚠ boxctld socket not found - start with 'boxctl service start'[/yellow]")
+        console.print(
+            "[yellow]⚠ boxctld socket not found - start with 'boxctl service start'[/yellow]"
+        )
     except ConnectionRefusedError:
-        console.print("[yellow]⚠ boxctld not accepting connections - restart with 'boxctl service restart'[/yellow]")
+        console.print(
+            "[yellow]⚠ boxctld not accepting connections - restart with 'boxctl service restart'[/yellow]"
+        )
     except Exception as e:
         console.print(f"[red]✗ Failed to send notification: {e}[/red]")
 
@@ -462,7 +474,9 @@ def reconfigure():
     current_model = claude_config.get("model", "")
     model_choices = ["sonnet", "opus", "haiku", "(empty - use default)"]
     console.print(f"\n[dim]Current model: {current_model or '(not set)'}[/dim]")
-    new_model = _prompt_choice("Default model", model_choices, current_model or "(empty - use default)")
+    new_model = _prompt_choice(
+        "Default model", model_choices, current_model or "(empty - use default)"
+    )
 
     if new_model == "(empty - use default)":
         new_model = ""
@@ -494,7 +508,9 @@ def reconfigure():
 
     # Notifications (super config only)
     has_hooks = "hooks" in claude_super
-    new_hooks = _prompt_bool(f"Enable notifications for super agents? (current: {has_hooks})", has_hooks)
+    new_hooks = _prompt_bool(
+        f"Enable notifications for super agents? (current: {has_hooks})", has_hooks
+    )
     if new_hooks != has_hooks:
         if new_hooks:
             # Add default hooks
@@ -505,7 +521,7 @@ def reconfigure():
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "/usr/local/bin/abox-notify '' 'Task completed' 'normal' \"${BOXCTL_CONTAINER}\" \"${BOXCTL_SESSION_NAME}\""
+                                "command": "/usr/local/bin/abox-notify '' 'Task completed' 'normal' \"${BOXCTL_CONTAINER}\" \"${BOXCTL_SESSION_NAME}\"",
                             }
                         ]
                     }
@@ -516,11 +532,11 @@ def reconfigure():
                         "hooks": [
                             {
                                 "type": "command",
-                                "command": "/usr/local/bin/abox-notify '' 'Needs permission' 'critical' \"${BOXCTL_CONTAINER}\" \"${BOXCTL_SESSION_NAME}\""
+                                "command": "/usr/local/bin/abox-notify '' 'Needs permission' 'critical' \"${BOXCTL_CONTAINER}\" \"${BOXCTL_SESSION_NAME}\"",
                             }
-                        ]
+                        ],
                     }
-                ]
+                ],
             }
         else:
             claude_super.pop("hooks", None)
@@ -535,8 +551,7 @@ def reconfigure():
     console.print(f"\n[dim]AI-enhanced notifications analyze terminal output to provide[/dim]")
     console.print(f"[dim]context-aware summaries (uses ~0.01$ per notification)[/dim]")
     new_ai_enabled = _prompt_bool(
-        f"Enable AI-enhanced notifications? (current: {current_ai_enabled})",
-        current_ai_enabled
+        f"Enable AI-enhanced notifications? (current: {current_ai_enabled})", current_ai_enabled
     )
 
     ai_changed = False
@@ -558,7 +573,7 @@ def reconfigure():
     current_stall_enabled = current_stall.get("enabled", True)  # Default is enabled
     new_stall_enabled = _prompt_bool(
         f"Enable stall detection notifications? (current: {current_stall_enabled})",
-        current_stall_enabled
+        current_stall_enabled,
     )
 
     stall_changed = False
@@ -571,13 +586,16 @@ def reconfigure():
     if new_stall_enabled:
         threshold_choices = ["30", "60", "120", "300"]
         console.print(f"\n[dim]Current stall threshold: {current_threshold}s[/dim]")
-        new_threshold_str = _prompt_choice("Stall threshold (seconds)", threshold_choices, str(current_threshold))
+        new_threshold_str = _prompt_choice(
+            "Stall threshold (seconds)", threshold_choices, str(current_threshold)
+        )
         new_threshold = int(float(new_threshold_str))  # Handle both "30" and "30.0"
         if new_threshold != current_threshold:
             stall_changed = True
 
     # Test notification (only if service is running)
     from boxctl.host_config import get_config as get_host_config
+
     host_config = get_host_config()
     if host_config.socket_path.exists():
         test_notif = _prompt_bool("Send a test notification?", False)
@@ -603,7 +621,9 @@ def reconfigure():
         ssh_changed = True
 
     current_forwarding = config.ssh_forward_agent
-    new_forwarding = _prompt_bool(f"Forward SSH agent? (current: {current_forwarding})", current_forwarding)
+    new_forwarding = _prompt_bool(
+        f"Forward SSH agent? (current: {current_forwarding})", current_forwarding
+    )
     if new_forwarding != current_forwarding:
         ssh_changed = True
 
@@ -615,8 +635,7 @@ def reconfigure():
     console.print(f"\n[dim]Docker socket access allows the container to run Docker commands.[/dim]")
     console.print(f"[dim]Current: {'enabled' if current_docker_enabled else 'disabled'}[/dim]")
     new_docker_enabled = _prompt_bool(
-        f"Enable Docker socket access? (current: {current_docker_enabled})",
-        current_docker_enabled
+        f"Enable Docker socket access? (current: {current_docker_enabled})", current_docker_enabled
     )
 
     docker_changed = False
@@ -631,8 +650,7 @@ def reconfigure():
     console.print(f"\n[dim]Mount GitHub CLI (gh) credentials from ~/.config/gh[/dim]")
     console.print(f"[dim]Allows 'gh' commands in container to use your GitHub auth.[/dim]")
     new_gh_enabled = _prompt_bool(
-        f"Enable GitHub CLI credentials? (current: {current_gh_enabled})",
-        current_gh_enabled
+        f"Enable GitHub CLI credentials? (current: {current_gh_enabled})", current_gh_enabled
     )
 
     # GitLab CLI (glab)
@@ -640,8 +658,7 @@ def reconfigure():
     console.print(f"\n[dim]Mount GitLab CLI (glab) credentials from ~/.config/glab-cli[/dim]")
     console.print(f"[dim]Allows 'glab' commands in container to use your GitLab auth.[/dim]")
     new_glab_enabled = _prompt_bool(
-        f"Enable GitLab CLI credentials? (current: {current_glab_enabled})",
-        current_glab_enabled
+        f"Enable GitLab CLI credentials? (current: {current_glab_enabled})", current_glab_enabled
     )
 
     credentials_changed = False
@@ -656,7 +673,14 @@ def reconfigure():
         claude_super_path.write_text(json.dumps(claude_super, indent=2) + "\n")
         console.print(f"  [green]✓[/green] {claude_super_path.relative_to(project_dir)}")
 
-    if ssh_changed or stall_changed or ai_changed or docker_changed or credentials_changed or project_config_changed:
+    if (
+        ssh_changed
+        or stall_changed
+        or ai_changed
+        or docker_changed
+        or credentials_changed
+        or project_config_changed
+    ):
         console.print("\n[bold]─── Saving project config ───[/bold]")
         if ssh_changed:
             config.ssh_mode = new_ssh_mode
@@ -680,7 +704,15 @@ def reconfigure():
         config.save()
         console.print(f"  [green]✓[/green] .boxctl/config.yml")
 
-    if not changes_made and not ssh_changed and not stall_changed and not ai_changed and not docker_changed and not credentials_changed and not project_config_changed:
+    if (
+        not changes_made
+        and not ssh_changed
+        and not stall_changed
+        and not ai_changed
+        and not docker_changed
+        and not credentials_changed
+        and not project_config_changed
+    ):
         console.print("\n[dim]No changes made.[/dim]")
     else:
         console.print("\n[green]✓ Configuration updated[/green]")
@@ -828,20 +860,29 @@ def connect(project_name: Optional[str], session: Optional[str]):
     sessions = _get_tmux_sessions(pctx.manager, pctx.container_name)
     if sessions:
         first_session = sessions[0]["name"]
-        console.print(f"[green]Attaching to existing session '{first_session}' in {pctx.container_name}...[/green]")
+        console.print(
+            f"[green]Attaching to existing session '{first_session}' in {pctx.container_name}...[/green]"
+        )
         console.print("[dim]Tip: Use 'boxctl session list' to see all sessions[/dim]")
         _attach_tmux_session(pctx.manager, pctx.container_name, first_session)
 
     # No sessions found - start interactive shell
     console.print(f"[green]Connecting to {pctx.container_name}...[/green]")
     console.print("[dim]No tmux sessions found. Starting shell.[/dim]")
-    os.execvp("docker", [
-        "docker", "exec", "-it",
-        "-u", "abox",
-        "-w", "/workspace",
-        pctx.container_name,
-        "/bin/bash"
-    ])
+    os.execvp(
+        "docker",
+        [
+            "docker",
+            "exec",
+            "-it",
+            "-u",
+            "abox",
+            "-w",
+            "/workspace",
+            pctx.container_name,
+            "/bin/bash",
+        ],
+    )
 
 
 @project.command(options_metavar="")
@@ -883,7 +924,9 @@ def info(project_name: Optional[str]):
         if sessions:
             console.print(f"\n[bold]Sessions[/bold]")
             for sess in sessions:
-                status = "[green]attached[/green]" if sess.get("attached") else "[dim]detached[/dim]"
+                status = (
+                    "[green]attached[/green]" if sess.get("attached") else "[dim]detached[/dim]"
+                )
                 console.print(f"  - {sess['name']} ({status})")
 
     # Load project config
@@ -900,12 +943,16 @@ def info(project_name: Optional[str]):
         console.print("  Mode: [dim]disabled[/dim]")
     else:
         console.print(f"  Mode: {ssh_mode}")
-        console.print(f"  Agent forwarding: {'[green]enabled[/green]' if forward_agent else '[dim]disabled[/dim]'}")
+        console.print(
+            f"  Agent forwarding: {'[green]enabled[/green]' if forward_agent else '[dim]disabled[/dim]'}"
+        )
 
     # Docker configuration
     console.print(f"\n[bold]Docker[/bold]")
     docker_enabled = config.docker_enabled
-    console.print(f"  Socket: {'[green]enabled[/green]' if docker_enabled else '[dim]disabled[/dim]'}")
+    console.print(
+        f"  Socket: {'[green]enabled[/green]' if docker_enabled else '[dim]disabled[/dim]'}"
+    )
 
     # Port forwarding
     ports_config = config.ports
@@ -914,7 +961,10 @@ def info(project_name: Optional[str]):
     if forwarded or exposed:
         console.print(f"\n[bold]Ports[/bold]")
         if forwarded:
-            port_strs = [str(p) if isinstance(p, int) else f"{p.get('host', '?')}:{p.get('container', '?')}" for p in forwarded]
+            port_strs = [
+                str(p) if isinstance(p, int) else f"{p.get('host', '?')}:{p.get('container', '?')}"
+                for p in forwarded
+            ]
             console.print(f"  Forward: {', '.join(port_strs)}")
         if exposed:
             console.print(f"  Expose: {', '.join(str(p) for p in exposed)}")
@@ -1062,6 +1112,7 @@ def _rebase_all_containers(manager: ContainerManager) -> None:
     for c in containers:
         if c["status"] == "running":
             from boxctl.cli.helpers import _get_tmux_sessions
+
             sessions = _get_tmux_sessions(manager, c["name"])
             if sessions:
                 running_with_agents.append((c, sessions))
@@ -1178,7 +1229,9 @@ def config_migrate(dry_run: bool, auto: bool):
                 if r.action == MigrationAction.AUTO:
                     status = "[green]auto-apply[/green]"
                 elif r.action == MigrationAction.PROMPT:
-                    status = "[yellow]will prompt[/yellow]" if not auto else "[green]auto-apply[/green]"
+                    status = (
+                        "[yellow]will prompt[/yellow]" if not auto else "[green]auto-apply[/green]"
+                    )
                 else:  # SUGGEST
                     status = "[dim]suggestion only[/dim]"
                 console.print(f"  - {r.description} ({status})")

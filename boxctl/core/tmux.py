@@ -110,12 +110,14 @@ def list_tmux_sessions(manager: "ContainerManager", container_name: str) -> List
             continue
 
         name, windows, attached, created = parts
-        sessions.append({
-            "name": name,
-            "windows": windows,
-            "attached": attached == "1",
-            "created": created,
-        })
+        sessions.append(
+            {
+                "name": name,
+                "windows": windows,
+                "attached": attached == "1",
+                "created": created,
+            }
+        )
 
     return sessions
 
@@ -160,7 +162,17 @@ def capture_pane(
     socket_path = get_tmux_socket_path(manager, container_name)
     tmux_cmd = [BinPaths.TMUX, "capture-pane", "-t", session_name, "-p", "-S", f"-{lines}"]
     if socket_path:
-        tmux_cmd = [BinPaths.TMUX, "-S", socket_path, "capture-pane", "-t", session_name, "-p", "-S", f"-{lines}"]
+        tmux_cmd = [
+            BinPaths.TMUX,
+            "-S",
+            socket_path,
+            "capture-pane",
+            "-t",
+            session_name,
+            "-p",
+            "-S",
+            f"-{lines}",
+        ]
 
     exit_code, output = manager.exec_command(
         container_name,
@@ -234,7 +246,16 @@ def resize_window(
     from boxctl.container import get_abox_environment
 
     socket_path = get_tmux_socket_path(manager, container_name)
-    tmux_cmd = [BinPaths.TMUX, "resize-window", "-t", session_name, "-x", str(width), "-y", str(height)]
+    tmux_cmd = [
+        BinPaths.TMUX,
+        "resize-window",
+        "-t",
+        session_name,
+        "-x",
+        str(width),
+        "-y",
+        str(height),
+    ]
     if socket_path:
         tmux_cmd = [BinPaths.TMUX, "-S", socket_path] + tmux_cmd[1:]
 
@@ -271,9 +292,16 @@ def create_session(
 
     socket_path = get_tmux_socket_path(manager, container_name)
     tmux_cmd = [
-        BinPaths.TMUX, "new-session", "-d", "-s", session_name,
-        "-c", working_dir,
-        "/bin/bash", "-lc", command
+        BinPaths.TMUX,
+        "new-session",
+        "-d",
+        "-s",
+        session_name,
+        "-c",
+        working_dir,
+        "/bin/bash",
+        "-lc",
+        command,
     ]
     if socket_path:
         tmux_cmd = [BinPaths.TMUX, "-S", socket_path] + tmux_cmd[1:]

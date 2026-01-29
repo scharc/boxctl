@@ -93,8 +93,16 @@ def get_status_summary() -> list[dict]:
         List of dicts with agent, status, and resets_in info.
     """
     state = load_state()
-    agents = ["superclaude", "supercodex", "supergemini", "superqwen",
-              "claude", "codex", "gemini", "qwen"]
+    agents = [
+        "superclaude",
+        "supercodex",
+        "supergemini",
+        "superqwen",
+        "claude",
+        "codex",
+        "gemini",
+        "qwen",
+    ]
 
     summary = []
     now = datetime.now(timezone.utc)

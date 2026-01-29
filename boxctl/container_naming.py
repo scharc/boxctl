@@ -38,9 +38,9 @@ def sanitize_name(name: str) -> str:
         Sanitized name safe for Docker (lowercase, alphanumeric + hyphens)
     """
     # Convert to lowercase, replace invalid chars with hyphens
-    sanitized = re.sub(r'[^a-z0-9_-]', '-', name.lower())
+    sanitized = re.sub(r"[^a-z0-9_-]", "-", name.lower())
     # Remove leading/trailing hyphens
-    sanitized = sanitized.strip('-')
+    sanitized = sanitized.strip("-")
     return sanitized
 
 
@@ -79,9 +79,16 @@ def get_container_workspace(container_name: str) -> Optional[Path]:
     """
     try:
         result = subprocess.run(
-            ["docker", "inspect", container_name, "--format",
-             '{{range .Mounts}}{{if eq .Destination "/workspace"}}{{.Source}}{{end}}{{end}}'],
-            capture_output=True, text=True, timeout=5
+            [
+                "docker",
+                "inspect",
+                container_name,
+                "--format",
+                '{{range .Mounts}}{{if eq .Destination "/workspace"}}{{.Source}}{{end}}{{end}}',
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             return Path(result.stdout.strip())
@@ -107,14 +114,23 @@ def find_container_by_workspace(project_dir: Path) -> Optional[str]:
     try:
         # List all boxctl containers
         result = subprocess.run(
-            ["docker", "ps", "-a", "--filter", f"name={CONTAINER_PREFIX}",
-             "--format", "{{.Names}}"],
-            capture_output=True, text=True, timeout=10
+            [
+                "docker",
+                "ps",
+                "-a",
+                "--filter",
+                f"name={CONTAINER_PREFIX}",
+                "--format",
+                "{{.Names}}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         if result.returncode != 0:
             return None
 
-        for name in result.stdout.strip().split('\n'):
+        for name in result.stdout.strip().split("\n"):
             if not name:
                 continue
             workspace = get_container_workspace(name)
@@ -205,13 +221,11 @@ def extract_project_name(container_name: str) -> Optional[str]:
     if not container_name.startswith(CONTAINER_PREFIX):
         return None
 
-    name = container_name[len(CONTAINER_PREFIX):]
+    name = container_name[len(CONTAINER_PREFIX) :]
 
     # Check if it has a hash suffix (4 hex chars at end after hyphen)
-    if re.match(r'.+-[a-f0-9]{4}$', name):
+    if re.match(r".+-[a-f0-9]{4}$", name):
         # Remove the hash suffix
-        name = name.rsplit('-', 1)[0]
+        name = name.rsplit("-", 1)[0]
 
     return name
-
-

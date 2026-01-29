@@ -60,6 +60,7 @@ def status():
         source = "local"
         try:
             from boxctl.usage.client import get_usage_status
+
             agents_data = get_usage_status()
         except ImportError:
             console.print("[red]Usage module not available[/red]")

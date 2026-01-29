@@ -13,10 +13,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 # Allows version specifiers like ==, >=, @version, and extras like [dev]
 # Examples: requests, requests==2.31.0, @scope/pkg, @scope/pkg@1.2.3, pkg[extra]
 VALID_PACKAGE_PATTERN = re.compile(
-    r'^(?:@[a-zA-Z0-9_-]+/)?'          # Optional npm scope like @scope/
-    r'[a-zA-Z0-9][a-zA-Z0-9._+-]*'     # Package name
-    r'(?:\[[a-zA-Z0-9,_-]+\])?'        # Optional extras like [dev,test]
-    r'(?:[@=<>~!][a-zA-Z0-9._,<>=~!*+-]+)?$'  # Optional version specifier (requires chars after operator)
+    r"^(?:@[a-zA-Z0-9_-]+/)?"  # Optional npm scope like @scope/
+    r"[a-zA-Z0-9][a-zA-Z0-9._+-]*"  # Package name
+    r"(?:\[[a-zA-Z0-9,_-]+\])?"  # Optional extras like [dev,test]
+    r"(?:[@=<>~!][a-zA-Z0-9._,<>=~!*+-]+)?$"  # Optional version specifier (requires chars after operator)
 )
 
 
@@ -148,8 +148,7 @@ class PackagesConfig(BaseModel):
                 raise ValueError(f"Invalid package name: {pkg}")
             if not VALID_PACKAGE_PATTERN.match(pkg):
                 raise ValueError(
-                    f"Invalid package name '{pkg}'. "
-                    "Must be alphanumeric with ._+- allowed."
+                    f"Invalid package name '{pkg}'. " "Must be alphanumeric with ._+- allowed."
                 )
         return packages
 
@@ -202,8 +201,7 @@ class ProjectConfigModel(BaseModel):
                 raise ValueError(f"Invalid package name: {pkg}")
             if not VALID_PACKAGE_PATTERN.match(pkg):
                 raise ValueError(
-                    f"Invalid package name '{pkg}'. "
-                    "Must be alphanumeric with ._+- allowed."
+                    f"Invalid package name '{pkg}'. " "Must be alphanumeric with ._+- allowed."
                 )
         return packages
 

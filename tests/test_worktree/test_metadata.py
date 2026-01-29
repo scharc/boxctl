@@ -162,7 +162,7 @@ class TestWorktreeMetadata:
 
         # Create corrupted metadata file
         Path(temp_agentbox_dir).mkdir(parents=True, exist_ok=True)
-        with open(metadata.metadata_file, 'w') as f:
+        with open(metadata.metadata_file, "w") as f:
             f.write("invalid json {{{")
 
         # Should return empty list instead of crashing

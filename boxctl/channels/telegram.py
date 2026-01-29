@@ -181,4 +181,5 @@ class TelegramChannel(NotificationChannel):
     def _encode_params(params: dict) -> str:
         """URL encode parameters."""
         from urllib.parse import urlencode
+
         return urlencode(params)

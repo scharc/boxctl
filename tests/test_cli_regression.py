@@ -57,7 +57,9 @@ def test_project(tmp_path):
     project = tmp_path / "test-project"
     project.mkdir()
     subprocess.run(["git", "init"], cwd=project, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=project, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@test.com"], cwd=project, capture_output=True
+    )
     subprocess.run(["git", "config", "user.name", "Test"], cwd=project, capture_output=True)
     return project
 
@@ -73,6 +75,7 @@ def initialized_project(test_project):
 # =============================================================================
 # PORTS COMMAND TESTS
 # =============================================================================
+
 
 class TestPortsExpose:
     """Test ports expose command."""
@@ -107,7 +110,10 @@ class TestPortsExpose:
         """expose privileged port (<1024) should fail."""
         result = run_abox("ports", "expose", "80", cwd=initialized_project)
         assert result.returncode != 0
-        assert "1024" in (result.stdout + result.stderr) or "privileged" in (result.stdout + result.stderr).lower()
+        assert (
+            "1024" in (result.stdout + result.stderr)
+            or "privileged" in (result.stdout + result.stderr).lower()
+        )
 
     def test_expose_invalid_port_fails(self, initialized_project):
         """expose invalid port should fail."""
@@ -199,6 +205,7 @@ class TestPortsList:
 # MCP COMMAND TESTS
 # =============================================================================
 
+
 class TestMcpList:
     """Test mcp list command."""
 
@@ -250,6 +257,7 @@ class TestMcpShow:
 # WORKSPACE COMMAND TESTS
 # =============================================================================
 
+
 class TestWorkspaceList:
     """Test workspace list command."""
 
@@ -283,6 +291,7 @@ class TestWorkspaceAdd:
 # =============================================================================
 # PACKAGES COMMAND TESTS
 # =============================================================================
+
 
 class TestPackagesList:
     """Test packages list command."""
@@ -351,6 +360,7 @@ class TestPackagesRemove:
 # SKILL COMMAND TESTS
 # =============================================================================
 
+
 class TestSkillList:
     """Test skill list command."""
 
@@ -379,6 +389,7 @@ class TestSkillAddRemove:
 # NETWORK COMMAND TESTS
 # =============================================================================
 
+
 class TestNetworkList:
     """Test network list command."""
 
@@ -398,6 +409,7 @@ class TestNetworkList:
 # CONFIG COMMAND TESTS
 # =============================================================================
 
+
 class TestConfigMigrate:
     """Test config migrate command."""
 
@@ -410,6 +422,7 @@ class TestConfigMigrate:
 # =============================================================================
 # PROJECT COMMAND TESTS
 # =============================================================================
+
 
 class TestProjectInit:
     """Test project init command."""
@@ -446,6 +459,7 @@ class TestProjectList:
 # COMMAND ALIASES TESTS
 # =============================================================================
 
+
 class TestAliases:
     """Test command aliases work correctly."""
 
@@ -475,15 +489,23 @@ class TestAliases:
 # AGENT COMMAND TESTS
 # =============================================================================
 
+
 class TestAgentCommands:
     """Test agent launch commands have correct help."""
 
-    @pytest.mark.parametrize("agent", [
-        "claude", "superclaude",
-        "codex", "supercodex",
-        "gemini", "supergemini",
-        "qwen", "superqwen",
-    ])
+    @pytest.mark.parametrize(
+        "agent",
+        [
+            "claude",
+            "superclaude",
+            "codex",
+            "supercodex",
+            "gemini",
+            "supergemini",
+            "qwen",
+            "superqwen",
+        ],
+    )
     def test_agent_help(self, agent):
         """Agent command should have help."""
         result = run_abox(agent, "--help")
@@ -494,6 +516,7 @@ class TestAgentCommands:
 # =============================================================================
 # ERROR HANDLING TESTS
 # =============================================================================
+
 
 class TestErrorHandling:
     """Test proper error handling."""
@@ -529,6 +552,7 @@ class TestErrorHandling:
 # =============================================================================
 # SUBCOMMAND EXISTENCE TESTS
 # =============================================================================
+
 
 class TestSubcommandsExist:
     """Test all subcommands exist and have help."""
@@ -620,6 +644,7 @@ class TestSubcommandsExist:
 # VERSION AND HELP TESTS
 # =============================================================================
 
+
 class TestVersionAndHelp:
     """Test version and help work."""
 
@@ -641,6 +666,7 @@ class TestVersionAndHelp:
 # =============================================================================
 # MULTI-PROJECT TESTS (config isolation)
 # =============================================================================
+
 
 class TestMultiProject:
     """Test multi-project scenarios."""

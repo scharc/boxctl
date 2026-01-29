@@ -21,8 +21,9 @@ def test_mcp_list_shows_library(test_project):
     # Should have headers or meaningful content (more than just empty/error message)
     assert len(output) > 100, "Output should have substantial content"
     # Should have table-like structure or list format
-    assert "name" in output.lower() or "mcp" in output.lower() or "\n" in output, \
-        "Output should be formatted (table or list)"
+    assert (
+        "name" in output.lower() or "mcp" in output.lower() or "\n" in output
+    ), "Output should be formatted (table or list)"
 
 
 def test_mcp_add_creates_config(test_project):
@@ -35,8 +36,9 @@ def test_mcp_add_creates_config(test_project):
     result = run_abox("mcp", "add", "fetch", cwd=test_project, check=False)
 
     # Should succeed (or warn if already exists)
-    assert result.returncode == 0 or "already" in result.stdout.lower(), \
-        "abox mcp add should succeed or warn if exists"
+    assert (
+        result.returncode == 0 or "already" in result.stdout.lower()
+    ), "abox mcp add should succeed or warn if exists"
 
     # Check mcp.json was created/updated
     assert mcp_file.exists(), "mcp.json should exist after adding MCP"
@@ -65,7 +67,7 @@ def test_mcp_add_triggers_rebuild(test_project):
     created_result = subprocess.run(
         ["docker", "inspect", "--format", "{{.Created}}", container_name],
         capture_output=True,
-        text=True
+        text=True,
     )
     assert created_result.returncode == 0, f"Container {container_name} should exist"
     original_created = created_result.stdout.strip()
@@ -79,12 +81,13 @@ def test_mcp_add_triggers_rebuild(test_project):
             # Remove it first to ensure we can test the add behavior
             run_abox("mcp", "remove", "docker", cwd=test_project, check=False)
             import time
+
             time.sleep(2)
             # Get new timestamp after removal rebuild
             created_result = subprocess.run(
                 ["docker", "inspect", "--format", "{{.Created}}", container_name],
                 capture_output=True,
-                text=True
+                text=True,
             )
             original_created = created_result.stdout.strip()
 
@@ -94,22 +97,24 @@ def test_mcp_add_triggers_rebuild(test_project):
 
     # Wait a moment for rebuild to complete
     import time
+
     time.sleep(2)
 
     # Container should have been rebuilt (new creation time)
     new_created_result = subprocess.run(
         ["docker", "inspect", "--format", "{{.Created}}", container_name],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert new_created_result.returncode == 0, "Container should still exist after MCP add"
     new_created = new_created_result.stdout.strip()
 
     # Creation time should be different (container was rebuilt)
-    assert new_created != original_created, \
-        f"Container should be rebuilt when adding MCP with install requirements. " \
+    assert new_created != original_created, (
+        f"Container should be rebuilt when adding MCP with install requirements. "
         f"Original: {original_created}, New: {new_created}"
+    )
 
 
 def test_mcp_remove_cleans_config(test_project):
@@ -134,7 +139,9 @@ def test_mcp_remove_cleans_config(test_project):
     with open(mcp_file) as f:
         mcp_config = json.load(f)
 
-    assert "sqlite" not in mcp_config.get("mcpServers", {}), "sqlite should be removed from mcpServers"
+    assert "sqlite" not in mcp_config.get(
+        "mcpServers", {}
+    ), "sqlite should be removed from mcpServers"
 
 
 # Package installation tests have been moved to tests/dind/test_mcp_packages.py

@@ -46,7 +46,10 @@ class TestDistributeMcpConfig:
         """Script handles missing mcp.json gracefully."""
         result = self.run_script(temp_home)
         assert result.returncode == 0
-        assert "nothing to distribute" in result.stderr.lower() or "no mcp servers" in result.stderr.lower()
+        assert (
+            "nothing to distribute" in result.stderr.lower()
+            or "no mcp servers" in result.stderr.lower()
+        )
 
     def test_distributes_servers_to_gemini(self, temp_home):
         """MCP servers are distributed to Gemini settings."""
@@ -100,7 +103,7 @@ class TestDistributeMcpConfig:
         existing_settings = {
             "theme": "dark",
             "fontSize": 14,
-            "mcpServers": {"old-server": {"command": "old"}}
+            "mcpServers": {"old-server": {"command": "old"}},
         }
         (gemini_dir / "settings.json").write_text(json.dumps(existing_settings))
 

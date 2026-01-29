@@ -68,12 +68,14 @@ def test_init_idempotent(tmp_path, docker_available):
     result2 = run_abox("init", cwd=tmp_path, check=False)
 
     # Should succeed idempotently (may show warning but still returns 0)
-    assert result2.returncode == 0, \
-        f"Second init should succeed idempotently. stderr: {result2.stderr}"
+    assert (
+        result2.returncode == 0
+    ), f"Second init should succeed idempotently. stderr: {result2.stderr}"
 
     # Should show warning about already existing
-    assert "already" in result2.stdout.lower(), \
-        "Second init should warn that directory already exists"
+    assert (
+        "already" in result2.stdout.lower()
+    ), "Second init should warn that directory already exists"
 
     # Directory should still exist
     assert boxctl_dir.exists(), ".boxctl should still exist after second init"

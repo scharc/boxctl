@@ -31,9 +31,11 @@ class TestSkillShow:
         result = run_abox("skill", "show", "nonexistent-skill-xyz", cwd=test_project)
 
         # Should fail or indicate skill not found
-        assert result.returncode != 0 or "not found" in result.stdout.lower() or "not found" in result.stderr.lower(), (
-            f"Should fail for non-existent skill. Got: {result.stdout} {result.stderr}"
-        )
+        assert (
+            result.returncode != 0
+            or "not found" in result.stdout.lower()
+            or "not found" in result.stderr.lower()
+        ), f"Should fail for non-existent skill. Got: {result.stdout} {result.stderr}"
 
 
 @pytest.mark.integration
@@ -56,7 +58,7 @@ class TestSkillAdd:
         result = exec_in_container(
             container_name,
             "mkdir -p /boxctl/library/skills/test-skill && "
-            "echo '# Test Skill' > /boxctl/library/skills/test-skill/SKILL.md"
+            "echo '# Test Skill' > /boxctl/library/skills/test-skill/SKILL.md",
         )
         assert result.returncode == 0, "Failed to create test skill"
 
@@ -64,21 +66,17 @@ class TestSkillAdd:
         result = run_abox("skill", "add", "test-skill", cwd=test_project)
 
         assert result.returncode == 0, f"skill add failed: {result.stderr}"
-        assert "Added" in result.stdout or "added" in result.stdout.lower(), (
-            f"Expected success message: {result.stdout}"
-        )
+        assert (
+            "Added" in result.stdout or "added" in result.stdout.lower()
+        ), f"Expected success message: {result.stdout}"
 
         # Verify skill directory exists (skills are now project-level, shared by all agents)
-        result = exec_in_container(
-            container_name,
-            "test -d /workspace/.boxctl/skills/test-skill"
-        )
+        result = exec_in_container(container_name, "test -d /workspace/.boxctl/skills/test-skill")
         assert result.returncode == 0, "Skill should exist in skills directory"
 
         # Verify SKILL.md exists
         result = exec_in_container(
-            container_name,
-            "test -f /workspace/.boxctl/skills/test-skill/SKILL.md"
+            container_name, "test -f /workspace/.boxctl/skills/test-skill/SKILL.md"
         )
         assert result.returncode == 0, "SKILL.md should exist in skill directory"
 
@@ -90,9 +88,9 @@ class TestSkillAdd:
         result = run_abox("skill", "add", "definitely-nonexistent-skill-xyz", cwd=test_project)
 
         assert result.returncode != 0, "Should fail for non-existent skill"
-        assert "not found" in result.stdout.lower() or "not found" in result.stderr.lower(), (
-            f"Expected 'not found' error"
-        )
+        assert (
+            "not found" in result.stdout.lower() or "not found" in result.stderr.lower()
+        ), f"Expected 'not found' error"
 
     def test_add_duplicate_skill_warns(self, running_container, test_project):
         """Test adding already-installed skill shows warning."""
@@ -102,7 +100,7 @@ class TestSkillAdd:
         exec_in_container(
             container_name,
             "mkdir -p /boxctl/library/skills/dup-test && "
-            "echo '# Dup Test' > /boxctl/library/skills/dup-test/SKILL.md"
+            "echo '# Dup Test' > /boxctl/library/skills/dup-test/SKILL.md",
         )
 
         # Add skill first time
@@ -114,9 +112,9 @@ class TestSkillAdd:
 
         # Should succeed but warn (implementation returns 0 and shows warning)
         assert result.returncode == 0, "Should not fail for duplicate"
-        assert "already exists" in result.stdout.lower(), (
-            f"Expected 'already exists' message: {result.stdout}"
-        )
+        assert (
+            "already exists" in result.stdout.lower()
+        ), f"Expected 'already exists' message: {result.stdout}"
 
         # Cleanup
         run_abox("skill", "remove", "dup-test", cwd=test_project)
@@ -134,31 +132,25 @@ class TestSkillRemove:
         exec_in_container(
             container_name,
             "mkdir -p /boxctl/library/skills/remove-test && "
-            "echo '# Remove Test' > /boxctl/library/skills/remove-test/SKILL.md"
+            "echo '# Remove Test' > /boxctl/library/skills/remove-test/SKILL.md",
         )
         result = run_abox("skill", "add", "remove-test", cwd=test_project)
         assert result.returncode == 0, "Add should succeed"
 
         # Verify skill exists
-        result = exec_in_container(
-            container_name,
-            "test -d /workspace/.boxctl/skills/remove-test"
-        )
+        result = exec_in_container(container_name, "test -d /workspace/.boxctl/skills/remove-test")
         assert result.returncode == 0, "Skill should exist before removal"
 
         # Remove skill
         result = run_abox("skill", "remove", "remove-test", cwd=test_project)
 
         assert result.returncode == 0, f"skill remove failed: {result.stderr}"
-        assert "Removed" in result.stdout or "removed" in result.stdout.lower(), (
-            f"Expected success message: {result.stdout}"
-        )
+        assert (
+            "Removed" in result.stdout or "removed" in result.stdout.lower()
+        ), f"Expected success message: {result.stdout}"
 
         # Verify skill is gone
-        result = exec_in_container(
-            container_name,
-            "test -d /workspace/.boxctl/skills/remove-test"
-        )
+        result = exec_in_container(container_name, "test -d /workspace/.boxctl/skills/remove-test")
         assert result.returncode != 0, "Skill should be removed from skills directory"
 
     def test_remove_nonexistent_skill(self, test_project):
@@ -167,9 +159,9 @@ class TestSkillRemove:
 
         # Should succeed but warn (implementation returns 0 and shows warning)
         assert result.returncode == 0, "Should not fail for non-existent skill"
-        assert "not found" in result.stdout.lower(), (
-            f"Expected 'not found' message: {result.stdout}"
-        )
+        assert (
+            "not found" in result.stdout.lower()
+        ), f"Expected 'not found' message: {result.stdout}"
 
 
 @pytest.mark.integration
@@ -187,7 +179,7 @@ class TestSkillIntegration:
             container_name,
             f"mkdir -p /boxctl/library/skills/{skill_name} && "
             f"echo '# Lifecycle Skill' > /boxctl/library/skills/{skill_name}/SKILL.md && "
-            f"echo 'Test content' > /boxctl/library/skills/{skill_name}/config.json"
+            f"echo 'Test content' > /boxctl/library/skills/{skill_name}/config.json",
         )
         assert result.returncode == 0
 
@@ -202,15 +194,13 @@ class TestSkillIntegration:
 
         # 3. Verify skill files exist
         result = exec_in_container(
-            container_name,
-            f"cat /workspace/.boxctl/skills/{skill_name}/SKILL.md"
+            container_name, f"cat /workspace/.boxctl/skills/{skill_name}/SKILL.md"
         )
         assert result.returncode == 0
         assert "Lifecycle Skill" in result.stdout
 
         result = exec_in_container(
-            container_name,
-            f"cat /workspace/.boxctl/skills/{skill_name}/config.json"
+            container_name, f"cat /workspace/.boxctl/skills/{skill_name}/config.json"
         )
         assert result.returncode == 0
         assert "Test content" in result.stdout
@@ -222,8 +212,7 @@ class TestSkillIntegration:
 
         # 5. Verify removal
         result = exec_in_container(
-            container_name,
-            f"test -d /workspace/.boxctl/skills/{skill_name}"
+            container_name, f"test -d /workspace/.boxctl/skills/{skill_name}"
         )
         assert result.returncode != 0, "Skill should be removed"
 
@@ -238,7 +227,7 @@ class TestSkillIntegration:
             exec_in_container(
                 container_name,
                 f"mkdir -p /boxctl/library/skills/{skill} && "
-                f"echo '# {skill}' > /boxctl/library/skills/{skill}/SKILL.md"
+                f"echo '# {skill}' > /boxctl/library/skills/{skill}/SKILL.md",
             )
 
         # Add all skills
@@ -249,8 +238,7 @@ class TestSkillIntegration:
         # Verify all exist
         for skill in skills:
             result = exec_in_container(
-                container_name,
-                f"test -f /workspace/.boxctl/skills/{skill}/SKILL.md"
+                container_name, f"test -f /workspace/.boxctl/skills/{skill}/SKILL.md"
             )
             assert result.returncode == 0, f"{skill} should exist in Claude skills"
 
@@ -261,10 +249,7 @@ class TestSkillIntegration:
 
         # Verify all removed
         for skill in skills:
-            result = exec_in_container(
-                container_name,
-                f"test -d /workspace/.boxctl/skills/{skill}"
-            )
+            result = exec_in_container(container_name, f"test -d /workspace/.boxctl/skills/{skill}")
             assert result.returncode != 0, f"{skill} should be removed"
 
     def test_skill_persists_across_rebuild(self, running_container, test_project):
@@ -277,15 +262,14 @@ class TestSkillIntegration:
         exec_in_container(
             container_name,
             f"mkdir -p /boxctl/library/skills/{skill_name} && "
-            f"echo '# Persist Test' > /boxctl/library/skills/{skill_name}/SKILL.md"
+            f"echo '# Persist Test' > /boxctl/library/skills/{skill_name}/SKILL.md",
         )
         result = run_abox("skill", "add", skill_name, cwd=test_project)
         assert result.returncode == 0
 
         # Verify skill exists
         result = exec_in_container(
-            container_name,
-            f"test -f /workspace/.boxctl/skills/{skill_name}/SKILL.md"
+            container_name, f"test -f /workspace/.boxctl/skills/{skill_name}/SKILL.md"
         )
         assert result.returncode == 0
 
@@ -294,18 +278,17 @@ class TestSkillIntegration:
         assert result.returncode == 0, f"Rebuild failed: {result.stderr}"
 
         from helpers.docker import wait_for_container_ready
+
         wait_for_container_ready(container_name, timeout=120)
 
         # Verify skill still exists after rebuild
         result = exec_in_container(
-            container_name,
-            f"test -f /workspace/.boxctl/skills/{skill_name}/SKILL.md"
+            container_name, f"test -f /workspace/.boxctl/skills/{skill_name}/SKILL.md"
         )
         assert result.returncode == 0, "Skill should persist after rebuild"
 
         result = exec_in_container(
-            container_name,
-            f"cat /workspace/.boxctl/skills/{skill_name}/SKILL.md"
+            container_name, f"cat /workspace/.boxctl/skills/{skill_name}/SKILL.md"
         )
         assert result.returncode == 0
         assert "Persist Test" in result.stdout, "Skill content should be preserved"

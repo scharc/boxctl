@@ -135,8 +135,7 @@ class boxctld:
         # Handles all container communication via SSH control channel and port forwarding
         if not check_asyncssh_available():
             raise RuntimeError(
-                "asyncssh is required but not available. "
-                "Install it with: pip install asyncssh"
+                "asyncssh is required but not available. " "Install it with: pip install asyncssh"
             )
         self.ssh_tunnel_server = SSHTunnelServer(
             socket_path=_ssh_socket_path(),
@@ -277,6 +276,7 @@ class boxctld:
         """
         try:
             import requests
+
             bot_token = config.get("bot_token")
             chat_id = config.get("chat_id")
             if not bot_token or not chat_id:
@@ -288,11 +288,15 @@ class boxctld:
             text = f"{emoji} *{project}* | {session}\n\n{message}"
 
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            resp = requests.post(url, json={
-                "chat_id": chat_id,
-                "text": text,
-                "parse_mode": "Markdown",
-            }, timeout=10)
+            resp = requests.post(
+                url,
+                json={
+                    "chat_id": chat_id,
+                    "text": text,
+                    "parse_mode": "Markdown",
+                },
+                timeout=10,
+            )
             if resp.status_code == 200:
                 data = resp.json()
                 result = data.get("result", {})
@@ -373,7 +377,7 @@ class boxctld:
         if docker_container:
             return {
                 "ok": False,
-                "error": f"Port {host_port} is already bound by Docker container '{docker_container}'"
+                "error": f"Port {host_port} is already bound by Docker container '{docker_container}'",
             }
 
         # Send request to container to set up remote forward via SSH
@@ -577,6 +581,7 @@ class boxctld:
             # Query MCP servers on demand (fast: ~1ms)
             try:
                 from boxctl.library import LibraryManager
+
                 lib = LibraryManager()
                 servers = lib.list_mcp_servers()
                 names = [s["name"] for s in servers]
@@ -589,6 +594,7 @@ class boxctld:
             # Query skills on demand (fast: ~23ms)
             try:
                 from boxctl.library import LibraryManager
+
                 lib = LibraryManager()
                 skills = lib.list_skills()
                 names = [s["name"] for s in skills]
@@ -602,6 +608,7 @@ class boxctld:
             include_boxctl = payload.get("include_boxctl", False)
             try:
                 from boxctl.container import ContainerManager
+
                 manager = ContainerManager()
                 containers = manager.get_all_containers(include_boxctl=include_boxctl)
                 names = [c["name"] for c in containers]
@@ -628,11 +635,13 @@ class boxctld:
                 # The host_port is the port on host, container_port is same (or from config)
                 for fwd in conn.remote_forwards:
                     hp = fwd.get("host_port", 0)
-                    host_ports.append({
-                        "host_port": hp,
-                        "container_port": fwd.get("container_port", hp),
-                        "container": container,
-                    })
+                    host_ports.append(
+                        {
+                            "host_port": hp,
+                            "container_port": fwd.get("container_port", hp),
+                            "container": container,
+                        }
+                    )
                 # Local forwards = forwarded ports (host -> container listening)
                 # Stored as: {"host": dest_host, "port": dest_port} OR
                 # {"host_port": ..., "container_port": ...} depending on source
@@ -640,11 +649,13 @@ class boxctld:
                     # Handle both storage formats
                     hp = fwd.get("host_port") or fwd.get("port", 0)
                     cp = fwd.get("container_port") or fwd.get("port", hp)
-                    container_ports.append({
-                        "host_port": hp,
-                        "container_port": cp,
-                        "container": container,
-                    })
+                    container_ports.append(
+                        {
+                            "host_port": hp,
+                            "container_port": cp,
+                            "container": container,
+                        }
+                    )
 
         return {
             "ok": True,
@@ -728,6 +739,7 @@ class boxctld:
                     # Try to extract process info from users:(...) field
                     if "users:" in line:
                         import re
+
                         match = re.search(r'users:\(\("([^"]+)",pid=(\d+)', line)
                         if match:
                             process_info = match.group(1)
@@ -815,28 +827,50 @@ class boxctld:
         # Request handlers (expect response)
         self.ssh_tunnel_server.register_request_handler("notify", self._ssh_handle_notify)
         self.ssh_tunnel_server.register_request_handler("clipboard_set", self._ssh_handle_clipboard)
-        self.ssh_tunnel_server.register_request_handler("get_completions", self._ssh_handle_get_completions)
+        self.ssh_tunnel_server.register_request_handler(
+            "get_completions", self._ssh_handle_get_completions
+        )
         self.ssh_tunnel_server.register_request_handler("port_add", self._ssh_handle_port_add)
         self.ssh_tunnel_server.register_request_handler("port_remove", self._ssh_handle_port_remove)
         self.ssh_tunnel_server.register_request_handler("ping", self._ssh_handle_ping)
         # Usage/rate limit handlers
         self.ssh_tunnel_server.register_request_handler("check_agent", self._ssh_handle_check_agent)
-        self.ssh_tunnel_server.register_request_handler("get_usage_status", self._ssh_handle_get_usage_status)
-        self.ssh_tunnel_server.register_request_handler("clear_rate_limit", self._ssh_handle_clear_rate_limit)
+        self.ssh_tunnel_server.register_request_handler(
+            "get_usage_status", self._ssh_handle_get_usage_status
+        )
+        self.ssh_tunnel_server.register_request_handler(
+            "clear_rate_limit", self._ssh_handle_clear_rate_limit
+        )
 
         # Event handlers (no response)
-        self.ssh_tunnel_server.register_event_handler("stream_register", self._ssh_handle_stream_register)
+        self.ssh_tunnel_server.register_event_handler(
+            "stream_register", self._ssh_handle_stream_register
+        )
         self.ssh_tunnel_server.register_event_handler("stream_data", self._ssh_handle_stream_data)
-        self.ssh_tunnel_server.register_event_handler("stream_unregister", self._ssh_handle_stream_unregister)
+        self.ssh_tunnel_server.register_event_handler(
+            "stream_unregister", self._ssh_handle_stream_unregister
+        )
         self.ssh_tunnel_server.register_event_handler("state_update", self._ssh_handle_state_update)
-        self.ssh_tunnel_server.register_event_handler("forward_removed", self._ssh_handle_forward_removed)
-        self.ssh_tunnel_server.register_event_handler("session_resumed", self._ssh_handle_session_resumed)
-        self.ssh_tunnel_server.register_event_handler("report_rate_limit", self._ssh_handle_report_rate_limit)
-        self.ssh_tunnel_server.register_event_handler("local_forwards_registered", self._ssh_handle_local_forwards_registered)
+        self.ssh_tunnel_server.register_event_handler(
+            "forward_removed", self._ssh_handle_forward_removed
+        )
+        self.ssh_tunnel_server.register_event_handler(
+            "session_resumed", self._ssh_handle_session_resumed
+        )
+        self.ssh_tunnel_server.register_event_handler(
+            "report_rate_limit", self._ssh_handle_report_rate_limit
+        )
+        self.ssh_tunnel_server.register_event_handler(
+            "local_forwards_registered", self._ssh_handle_local_forwards_registered
+        )
 
         # Internal events for connection lifecycle
-        self.ssh_tunnel_server.register_event_handler("_container_connect", self._ssh_on_container_connect)
-        self.ssh_tunnel_server.register_event_handler("_container_disconnect", self._ssh_on_container_disconnect)
+        self.ssh_tunnel_server.register_event_handler(
+            "_container_connect", self._ssh_on_container_connect
+        )
+        self.ssh_tunnel_server.register_event_handler(
+            "_container_disconnect", self._ssh_on_container_disconnect
+        )
 
         logger.debug("Registered SSH control channel handlers")
 
@@ -877,13 +911,17 @@ class boxctld:
             # Host→Container: container is requesting a remote forward
             # The SSH protocol handles the actual binding; we just need to allow it
             # The container will call forward_remote_port() after this returns
-            logger.info(f"Container {container} requesting remote forward: host:{host_port} -> container:{container_port}")
+            logger.info(
+                f"Container {container} requesting remote forward: host:{host_port} -> container:{container_port}"
+            )
             return {"ok": True, "data": {"host_port": host_port, "container_port": container_port}}
         else:
             # Container→Host: add to allowed ports so SSH accepts the forward
             if self.ssh_tunnel_server:
                 self.ssh_tunnel_server.add_allowed_port(host_port)
-            logger.info(f"Container {container} requesting local forward: container:{container_port} -> host:{host_port}")
+            logger.info(
+                f"Container {container} requesting local forward: container:{container_port} -> host:{host_port}"
+            )
             return {"ok": True}
 
     def _ssh_handle_port_remove(self, container: str, payload: dict) -> dict:
@@ -892,10 +930,12 @@ class boxctld:
         host_port = payload.get("host_port")
 
         if direction == "remote":
-            return self._handle_remove_host_port({
-                "container": container,
-                "host_port": host_port,
-            })
+            return self._handle_remove_host_port(
+                {
+                    "container": container,
+                    "host_port": host_port,
+                }
+            )
         else:
             if self.ssh_tunnel_server:
                 self.ssh_tunnel_server.remove_allowed_port(host_port)
@@ -948,8 +988,14 @@ class boxctld:
 
         # All known agents
         agents = [
-            "superclaude", "supercodex", "supergemini", "superqwen",
-            "claude", "codex", "gemini", "qwen",
+            "superclaude",
+            "supercodex",
+            "supergemini",
+            "superqwen",
+            "claude",
+            "codex",
+            "gemini",
+            "qwen",
         ]
 
         with self.rate_limit_lock:
@@ -1162,20 +1208,29 @@ class boxctld:
         telegram_data = notification_data.get("telegram")
         if telegram_data:
             self._dismiss_telegram_notification(
-                telegram_data.get("chat_id"),
-                telegram_data.get("message_id")
+                telegram_data.get("chat_id"), telegram_data.get("message_id")
             )
 
     def _dismiss_desktop_notification(self, notification_id: int) -> bool:
         """Dismiss a desktop notification via gdbus."""
         try:
-            result = subprocess.run([
-                "gdbus", "call", "--session",
-                "--dest", "org.freedesktop.Notifications",
-                "--object-path", "/org/freedesktop/Notifications",
-                "--method", "org.freedesktop.Notifications.CloseNotification",
-                str(notification_id)
-            ], check=False, capture_output=True, timeout=5)
+            result = subprocess.run(
+                [
+                    "gdbus",
+                    "call",
+                    "--session",
+                    "--dest",
+                    "org.freedesktop.Notifications",
+                    "--object-path",
+                    "/org/freedesktop/Notifications",
+                    "--method",
+                    "org.freedesktop.Notifications.CloseNotification",
+                    str(notification_id),
+                ],
+                check=False,
+                capture_output=True,
+                timeout=5,
+            )
             if result.returncode == 0:
                 logger.debug(f"Dismissed desktop notification {notification_id}")
             return result.returncode == 0
@@ -1189,7 +1244,9 @@ class boxctld:
             logger.debug(f"Failed to dismiss notification {notification_id}: {e}")
             return False
 
-    def _dismiss_telegram_notification(self, chat_id: Optional[str], message_id: Optional[int]) -> bool:
+    def _dismiss_telegram_notification(
+        self, chat_id: Optional[str], message_id: Optional[int]
+    ) -> bool:
         """Delete a Telegram message."""
         if not chat_id or not message_id:
             return False
@@ -1204,11 +1261,16 @@ class boxctld:
 
         try:
             import requests
+
             url = f"https://api.telegram.org/bot{bot_token}/deleteMessage"
-            resp = requests.post(url, json={
-                "chat_id": chat_id,
-                "message_id": message_id,
-            }, timeout=5)
+            resp = requests.post(
+                url,
+                json={
+                    "chat_id": chat_id,
+                    "message_id": message_id,
+                },
+                timeout=5,
+            )
             if resp.status_code == 200:
                 logger.debug(f"Deleted Telegram message {message_id}")
             return resp.status_code == 200
@@ -1319,9 +1381,7 @@ class boxctld:
 
         self.tailscale_monitor_running = True
         self.tailscale_monitor_thread = threading.Thread(
-            target=self._tailscale_monitor_loop,
-            daemon=True,
-            name="tailscale-monitor"
+            target=self._tailscale_monitor_loop, daemon=True, name="tailscale-monitor"
         )
         self.tailscale_monitor_thread.start()
         logger.info(f"Tailscale monitor started (current IP: {self._current_tailscale_ip})")
@@ -1353,7 +1413,7 @@ class boxctld:
                     data.get("cursor_x", 0),
                     data.get("cursor_y", 0),
                     data.get("pane_width", 0),
-                    data.get("pane_height", 0)
+                    data.get("pane_height", 0),
                 )
             return (0, 0, 0, 0)
 
@@ -1393,7 +1453,9 @@ class boxctld:
             except Exception as e:
                 logger.error(f"Stream subscriber callback error: {e}")
 
-    def send_input_to_daemon(self, container: str, session: str, keys: str, literal: bool = True) -> bool:
+    def send_input_to_daemon(
+        self, container: str, session: str, keys: str, literal: bool = True
+    ) -> bool:
         """Send input to a container's streaming daemon via SSH control channel."""
         payload = {
             "session": session,
@@ -1465,7 +1527,9 @@ class boxctld:
 
                         # Check if we timed out without getting complete data
                         if data and b"\n" not in data:
-                            logger.warning(f"Connection timed out waiting for newline, got {len(data)} bytes")
+                            logger.warning(
+                                f"Connection timed out waiting for newline, got {len(data)} bytes"
+                            )
                             conn.close()
                             continue
 
@@ -1486,7 +1550,12 @@ class boxctld:
                                 try:
                                     c.settimeout(5.0)  # Timeout for send
                                     c.sendall((json.dumps(responses[-1]) + "\n").encode("utf-8"))
-                                except (BrokenPipeError, ConnectionResetError, OSError, socket.timeout) as e:
+                                except (
+                                    BrokenPipeError,
+                                    ConnectionResetError,
+                                    OSError,
+                                    socket.timeout,
+                                ) as e:
                                     logger.warning(f"Send failed: {e}")
                             except Exception as e:
                                 logger.error(f"Request handler error: {e}")
@@ -1496,11 +1565,7 @@ class boxctld:
                                 except Exception:
                                     pass
 
-                        t = threading.Thread(
-                            target=handle_request,
-                            args=(conn, data),
-                            daemon=True
-                        )
+                        t = threading.Thread(target=handle_request, args=(conn, data), daemon=True)
                         t.start()
 
                     except Exception as e:
@@ -1576,11 +1641,13 @@ def add_host_port(container: str, host_port: int, container_port: int = 0) -> Tu
     """
     if not _instance:
         return False, "boxctld not running"
-    result = _instance._handle_add_host_port({
-        "container": container,
-        "host_port": host_port,
-        "container_port": container_port or host_port,
-    })
+    result = _instance._handle_add_host_port(
+        {
+            "container": container,
+            "host_port": host_port,
+            "container_port": container_port or host_port,
+        }
+    )
     return result.get("ok", False), result.get("message", result.get("error", "unknown error"))
 
 
@@ -1610,10 +1677,12 @@ def remove_host_port(host_port: int) -> Tuple[bool, str]:
     if not container:
         return False, f"no forward found for host port {host_port}"
 
-    result = _instance._handle_remove_host_port({
-        "container": container,
-        "host_port": host_port,
-    })
+    result = _instance._handle_remove_host_port(
+        {
+            "container": container,
+            "host_port": host_port,
+        }
+    )
     return result.get("ok", False), result.get("message", result.get("error", "unknown error"))
 
 
@@ -1630,12 +1699,14 @@ def get_host_ports() -> list:
     with _instance.ssh_tunnel_server.connections_lock:
         for container, conn in _instance.ssh_tunnel_server.connections.items():
             for fwd in conn.remote_forwards:
-                result.append({
-                    "host_port": fwd.get("host_port", 0),
-                    "container_port": fwd.get("container_port", fwd.get("host_port", 0)),
-                    "container": container,
-                    "active": True,
-                })
+                result.append(
+                    {
+                        "host_port": fwd.get("host_port", 0),
+                        "container_port": fwd.get("container_port", fwd.get("host_port", 0)),
+                        "container": container,
+                        "active": True,
+                    }
+                )
     return result
 
 
@@ -1696,7 +1767,9 @@ def get_connected_containers() -> list:
         return list(_instance.ssh_tunnel_server.connections.keys())
 
 
-def get_session_metadata(container: str = None, max_age: float = 30.0) -> Optional[Dict[str, List[Dict]]]:
+def get_session_metadata(
+    container: str = None, max_age: float = 30.0
+) -> Optional[Dict[str, List[Dict]]]:
     """Get cached session metadata from containers.
 
     Args:
@@ -1747,8 +1820,14 @@ def get_usage_status() -> Optional[Dict[str, Any]]:
     result = {}
 
     agents = [
-        "superclaude", "supercodex", "supergemini", "superqwen",
-        "claude", "codex", "gemini", "qwen",
+        "superclaude",
+        "supercodex",
+        "supergemini",
+        "superqwen",
+        "claude",
+        "codex",
+        "gemini",
+        "qwen",
     ]
 
     with _instance.rate_limit_lock:
@@ -1905,7 +1984,9 @@ def run_boxctld(socket_path: Optional[str] = None) -> None:
         start_web_server()
 
         # Start restart monitor thread
-        restart_thread = threading.Thread(target=restart_monitor, daemon=True, name="web-restart-monitor")
+        restart_thread = threading.Thread(
+            target=restart_monitor, daemon=True, name="web-restart-monitor"
+        )
         restart_thread.start()
 
     try:

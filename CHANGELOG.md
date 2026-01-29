@@ -2,6 +2,18 @@
 
 All notable changes to Boxctl are documented here.
 
+## [0.3.6] - 2026-01-29
+
+### Fixed
+
+- **Superqwen environment loading** - Now properly loads `~/.qwen/.env` for API keys
+- **Superqwen model selection** - Fixed env loading and model selection issues
+- **Error messages** - Updated superqwen error message to include `~/.qwen/.env` path
+
+### Changed
+
+- **Dependencies updated** - Updated project dependencies and applied Black 24 formatting
+
 ## [0.3.3] - 2026-01-27
 
 ### Fixed
@@ -632,6 +644,7 @@ Boxctl is built on top of amazing open source projects:
 
 **Thank you for using Boxctl!** 🚀
 
+[0.3.6]: https://github.com/scharc/boxctl/compare/v0.3.3...v0.3.6
 [0.3.3]: https://github.com/scharc/boxctl/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/scharc/boxctl/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/scharc/boxctl/compare/v0.3.0...v0.3.1

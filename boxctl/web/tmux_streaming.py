@@ -37,28 +37,39 @@ class TmuxStreamSession:
         # Start tmux pipe-pane to capture output
         # -O: pipe output to file/fifo
         # -o: only capture new output (don't replay history)
-        subprocess.run([
-            BinPaths.TMUX, "pipe-pane", "-O", "-o",
-            "-t", self.session_name,
-            f"cat > {self.output_fifo}"
-        ], check=False)
+        subprocess.run(
+            [
+                BinPaths.TMUX,
+                "pipe-pane",
+                "-O",
+                "-o",
+                "-t",
+                self.session_name,
+                f"cat > {self.output_fifo}",
+            ],
+            check=False,
+        )
 
         # Open FIFOs for async reading/writing
         # Open output FIFO for reading (non-blocking)
         loop = asyncio.get_event_loop()
         self.output_pipe = await loop.run_in_executor(
-            None, lambda: open(self.output_fifo, 'rb', buffering=0)
+            None, lambda: open(self.output_fifo, "rb", buffering=0)
         )
 
         # Open input FIFO for writing (non-blocking)
         self.input_pipe = await loop.run_in_executor(
-            None, lambda: open(self.input_fifo, 'wb', buffering=0)
+            None, lambda: open(self.input_fifo, "wb", buffering=0)
         )
 
         # Start background process to pipe input FIFO to tmux
         # This continuously reads from input_fifo and sends to tmux
         self._pipe_pane_proc = subprocess.Popen(
-            ["sh", "-c", f"tail -f {self.input_fifo} | BinPaths.TMUX load-buffer -b stream-input - && BinPaths.TMUX paste-buffer -b stream-input -t {self.session_name}"],
+            [
+                "sh",
+                "-c",
+                f"tail -f {self.input_fifo} | BinPaths.TMUX load-buffer -b stream-input - && BinPaths.TMUX paste-buffer -b stream-input -t {self.session_name}",
+            ],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -84,8 +95,7 @@ class TmuxStreamSession:
             loop = asyncio.get_event_loop()
             # Non-blocking read with timeout
             data = await asyncio.wait_for(
-                loop.run_in_executor(None, self.output_pipe.read, 4096),
-                timeout=timeout
+                loop.run_in_executor(None, self.output_pipe.read, 4096), timeout=timeout
             )
             return data if data else None
         except asyncio.TimeoutError:
@@ -100,9 +110,9 @@ class TmuxStreamSession:
         self._cleanup_done = True
 
         # Stop tmux pipe-pane
-        subprocess.run([
-            BinPaths.TMUX, "pipe-pane", "-t", self.session_name
-        ], check=False, capture_output=True)
+        subprocess.run(
+            [BinPaths.TMUX, "pipe-pane", "-t", self.session_name], check=False, capture_output=True
+        )
 
         # Kill background process
         if self._pipe_pane_proc:
@@ -132,5 +142,9 @@ class TmuxStreamSession:
         if not self._cleanup_done:
             # Sync cleanup in destructor
             import subprocess
-            subprocess.run([BinPaths.TMUX, "pipe-pane", "-t", self.session_name],
-                         check=False, capture_output=True)
+
+            subprocess.run(
+                [BinPaths.TMUX, "pipe-pane", "-t", self.session_name],
+                check=False,
+                capture_output=True,
+            )

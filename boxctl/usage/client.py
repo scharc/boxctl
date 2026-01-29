@@ -119,12 +119,15 @@ def report_rate_limit(
         resets_at = (now + timedelta(seconds=resets_in_seconds)).isoformat()
 
     # Try service first
-    response = _send_to_service("report_rate_limit", {
-        "agent": agent,
-        "limited": True,
-        "resets_at": resets_at,
-        "error_type": error_type,
-    })
+    response = _send_to_service(
+        "report_rate_limit",
+        {
+            "agent": agent,
+            "limited": True,
+            "resets_at": resets_at,
+            "error_type": error_type,
+        },
+    )
 
     if response and response.get("ok"):
         return True

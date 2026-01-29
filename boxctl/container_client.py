@@ -47,6 +47,7 @@ LOCAL_IPC_SOCKET_PATH = Path(TempPaths.LOCAL_IPC_SOCKET)
 
 class SessionState(Enum):
     """State of a session for stall detection."""
+
     IDLE = "idle"
     ACTIVE = "active"
     STALE = "stale"
@@ -56,6 +57,7 @@ class SessionState(Enum):
 @dataclass
 class SessionStallState:
     """Track stall detection state for a session."""
+
     state: SessionState = SessionState.IDLE
     last_activity_time: Optional[float] = None
     last_buffer_content: str = ""
@@ -65,6 +67,7 @@ class SessionStallState:
 @dataclass
 class TmuxSession:
     """Represents a monitored tmux session."""
+
     name: str
     last_buffer: str = ""
     cursor_x: int = 0
@@ -93,7 +96,9 @@ class ContainerClient:
         local_forwards: Optional[List[PortForwardConfig]] = None,
         remote_forwards: Optional[List[PortForwardConfig]] = None,
     ):
-        self.container_name = container_name or os.environ.get("BOXCTL_CONTAINER") or socket.gethostname()
+        self.container_name = (
+            container_name or os.environ.get("BOXCTL_CONTAINER") or socket.gethostname()
+        )
         self.local_forwards = local_forwards or []
         self.remote_forwards = remote_forwards or []
 
@@ -160,12 +165,13 @@ class ContainerClient:
 
         try:
             import yaml
+
             with open(config_path) as f:
                 config = yaml.safe_load(f) or {}
-            stall_config = config.get('stall_detection', {})
-            self._stall_enabled = stall_config.get('enabled', True)
-            self._stall_threshold = stall_config.get('threshold_seconds', 30.0)
-            self._stall_check_interval = stall_config.get('check_interval_seconds', 5.0)
+            stall_config = config.get("stall_detection", {})
+            self._stall_enabled = stall_config.get("enabled", True)
+            self._stall_threshold = stall_config.get("threshold_seconds", 30.0)
+            self._stall_check_interval = stall_config.get("check_interval_seconds", 5.0)
         except Exception as e:
             logger.warning(f"Failed to load stall config: {e}")
 
@@ -175,10 +181,13 @@ class ContainerClient:
         """Get list of tmux session names."""
         try:
             proc = await asyncio.create_subprocess_exec(
-                BinPaths.TMUX, "list-sessions", "-F", "#{session_name}",
+                BinPaths.TMUX,
+                "list-sessions",
+                "-F",
+                "#{session_name}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
-                env=self._tmux_env
+                env=self._tmux_env,
             )
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2.0)
             if proc.returncode == 0:
@@ -191,14 +200,19 @@ class ContainerClient:
         """Capture tmux pane buffer with ANSI codes."""
         try:
             proc = await asyncio.create_subprocess_exec(
-                BinPaths.TMUX, "capture-pane", "-e", "-p", "-t", session_name,
+                BinPaths.TMUX,
+                "capture-pane",
+                "-e",
+                "-p",
+                "-t",
+                session_name,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
-                env=self._tmux_env
+                env=self._tmux_env,
             )
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2.0)
             if proc.returncode == 0:
-                return stdout.decode('utf-8', errors='replace')
+                return stdout.decode("utf-8", errors="replace")
             return None
         except (asyncio.TimeoutError, OSError):
             return None
@@ -207,11 +221,15 @@ class ContainerClient:
         """Get cursor position and pane size."""
         try:
             proc = await asyncio.create_subprocess_exec(
-                BinPaths.TMUX, "display-message", "-p", "-t", session_name,
+                BinPaths.TMUX,
+                "display-message",
+                "-p",
+                "-t",
+                session_name,
                 "#{cursor_x} #{cursor_y} #{pane_width} #{pane_height}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
-                env=self._tmux_env
+                env=self._tmux_env,
             )
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=1.0)
             if proc.returncode == 0:
@@ -234,7 +252,7 @@ class ContainerClient:
                 *cmd,
                 stdout=asyncio.subprocess.DEVNULL,
                 stderr=asyncio.subprocess.DEVNULL,
-                env=self._tmux_env
+                env=self._tmux_env,
             )
             await asyncio.wait_for(proc.wait(), timeout=1.0)
             return proc.returncode == 0
@@ -264,14 +282,17 @@ class ContainerClient:
                     session.cursor_x = cursor_x
                     session.cursor_y = cursor_y
 
-            await self._ssh_client.send_event_async("stream_data", {
-                "session": session_name,
-                "data": buffer,
-                "cursor_x": cursor_x,
-                "cursor_y": cursor_y,
-                "pane_width": width,
-                "pane_height": height,
-            })
+            await self._ssh_client.send_event_async(
+                "stream_data",
+                {
+                    "session": session_name,
+                    "data": buffer,
+                    "cursor_x": cursor_x,
+                    "cursor_y": cursor_y,
+                    "pane_width": width,
+                    "pane_height": height,
+                },
+            )
 
     async def _unregister_session(self, session_name: str) -> None:
         """Unregister a session."""
@@ -306,7 +327,11 @@ class ContainerClient:
 
             cursor_x, cursor_y, width, height = await self._get_cursor_and_size(session_name)
 
-            if buffer != session.last_buffer or cursor_x != session.cursor_x or cursor_y != session.cursor_y:
+            if (
+                buffer != session.last_buffer
+                or cursor_x != session.cursor_x
+                or cursor_y != session.cursor_y
+            ):
                 session.last_buffer = buffer
                 session.cursor_x = cursor_x
                 session.cursor_y = cursor_y
@@ -319,9 +344,12 @@ class ContainerClient:
 
                     # Always notify host of activity - allows dismissing any pending
                     # notifications (stall, needs-permission, etc.)
-                    await self._ssh_client.send_event_async("session_resumed", {
-                        "session": session_name,
-                    })
+                    await self._ssh_client.send_event_async(
+                        "session_resumed",
+                        {
+                            "session": session_name,
+                        },
+                    )
 
                     if session.stall_state.state in (SessionState.STALE, SessionState.NOTIFIED):
                         session.stall_state.state = SessionState.ACTIVE
@@ -329,14 +357,17 @@ class ContainerClient:
                     elif session.stall_state.state == SessionState.IDLE:
                         session.stall_state.state = SessionState.ACTIVE
 
-                await self._ssh_client.send_event_async("stream_data", {
-                    "session": session_name,
-                    "data": buffer,
-                    "cursor_x": cursor_x,
-                    "cursor_y": cursor_y,
-                    "pane_width": width,
-                    "pane_height": height,
-                })
+                await self._ssh_client.send_event_async(
+                    "stream_data",
+                    {
+                        "session": session_name,
+                        "data": buffer,
+                        "cursor_x": cursor_x,
+                        "cursor_y": cursor_y,
+                        "pane_width": width,
+                        "pane_height": height,
+                    },
+                )
 
     # ========== Stall Detection ==========
 
@@ -363,11 +394,15 @@ class ContainerClient:
                         state.state = SessionState.STALE
 
                     if state.state == SessionState.STALE:
-                        await self._send_stall_notification(session_name, idle_time, session.last_buffer)
+                        await self._send_stall_notification(
+                            session_name, idle_time, session.last_buffer
+                        )
                         state.state = SessionState.NOTIFIED
                         state.notification_sent_time = now
 
-    async def _send_stall_notification(self, session_name: str, idle_seconds: float, buffer: str) -> None:
+    async def _send_stall_notification(
+        self, session_name: str, idle_seconds: float, buffer: str
+    ) -> None:
         """Send stall notification via abox-notify (for AI enhancement)."""
         # Use abox-notify directly for AI-enhanced notifications
         # Pass buffer via env var so it can be used for AI summary/auto-answer
@@ -398,16 +433,20 @@ class ContainerClient:
             logger.warning(f"abox-notify failed for {session_name}: {e}")
 
         # Fallback to SSH control channel (no AI enhancement)
-        result = await self._ssh_client.request_async("notify", {
-            "title": "Session stalled",
-            "message": f"No output for {int(idle_seconds)}s",
-            "urgency": "normal",
-            "metadata": {
-                "container": self.container_name,
-                "session": session_name,
-                "buffer": buffer,
-            }
-        }, timeout=30.0)
+        result = await self._ssh_client.request_async(
+            "notify",
+            {
+                "title": "Session stalled",
+                "message": f"No output for {int(idle_seconds)}s",
+                "urgency": "normal",
+                "metadata": {
+                    "container": self.container_name,
+                    "session": session_name,
+                    "buffer": buffer,
+                },
+            },
+            timeout=30.0,
+        )
 
         if not result or not result.get("ok"):
             logger.warning(f"Failed to send stall notification for {session_name}")
@@ -421,11 +460,13 @@ class ContainerClient:
         """
         try:
             proc = await asyncio.create_subprocess_exec(
-                BinPaths.TMUX, "list-sessions", "-F",
+                BinPaths.TMUX,
+                "list-sessions",
+                "-F",
                 "#{session_name}\t#{session_windows}\t#{session_attached}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
-                env=self._tmux_env
+                env=self._tmux_env,
             )
             stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=2.0)
             if proc.returncode != 0:
@@ -449,17 +490,19 @@ class ContainerClient:
                         # Split on last dash to handle identifiers with dashes
                         idx = name.rfind("-")
                         identifier = name[:idx]
-                        agent_type = name[idx + 1:]
+                        agent_type = name[idx + 1 :]
                     else:
                         identifier = name
 
-                    sessions.append({
-                        "name": name,
-                        "windows": windows,
-                        "attached": attached,
-                        "agent_type": agent_type,
-                        "identifier": identifier,
-                    })
+                    sessions.append(
+                        {
+                            "name": name,
+                            "windows": windows,
+                            "attached": attached,
+                            "agent_type": agent_type,
+                            "identifier": identifier,
+                        }
+                    )
             return sessions
         except (asyncio.TimeoutError, OSError):
             return []
@@ -472,7 +515,7 @@ class ContainerClient:
                 capture_output=True,
                 text=True,
                 cwd=ContainerPaths.WORKSPACE,
-                timeout=5
+                timeout=5,
             )
             if result.returncode != 0:
                 return []
@@ -561,7 +604,10 @@ class ContainerClient:
 
         if success:
             return {"ok": True}
-        return {"ok": False, "error": error or f"failed to add {direction} forward for port {host_port}"}
+        return {
+            "ok": False,
+            "error": error or f"failed to add {direction} forward for port {host_port}",
+        }
 
     async def _handle_port_remove(self, payload: dict) -> dict:
         """Handle dynamic port remove request."""
@@ -591,15 +637,13 @@ class ContainerClient:
 
         try:
             proc = await asyncio.create_subprocess_exec(
-                base_command, "-p",
+                base_command,
+                "-p",
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(input=b"ping"),
-                timeout=30.0
-            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(input=b"ping"), timeout=30.0)
 
             output = f"{stdout.decode()}\n{stderr.decode()}"
             output_lower = output.lower()
@@ -608,8 +652,11 @@ class ContainerClient:
             is_limited = any(
                 phrase in output_lower
                 for phrase in [
-                    "rate limit", "usage limit", "quota exceeded",
-                    "too many requests", "usage_limit_reached",
+                    "rate limit",
+                    "usage limit",
+                    "quota exceeded",
+                    "too many requests",
+                    "usage_limit_reached",
                 ]
             )
 
@@ -630,12 +677,15 @@ class ContainerClient:
                     error_type = "quota_exceeded"
 
                 # Report to service
-                await self._ssh_client.send_event_async("report_rate_limit", {
-                    "agent": agent,
-                    "limited": True,
-                    "resets_in_seconds": resets_in_seconds,
-                    "error_type": error_type,
-                })
+                await self._ssh_client.send_event_async(
+                    "report_rate_limit",
+                    {
+                        "agent": agent,
+                        "limited": True,
+                        "resets_in_seconds": resets_in_seconds,
+                        "error_type": error_type,
+                    },
+                )
 
             return {
                 "ok": True,
@@ -763,6 +813,7 @@ class ContainerClient:
             # Keep running until stopped
             while self._running:
                 import time
+
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
@@ -798,10 +849,14 @@ class ContainerClient:
         if not self._ssh_client or not self._ssh_client.is_connected:
             return False
 
-        result = self._ssh_client.request("clipboard_set", {
-            "data": data,
-            "selection": selection,
-        }, timeout=5.0)
+        result = self._ssh_client.request(
+            "clipboard_set",
+            {
+                "data": data,
+                "selection": selection,
+            },
+            timeout=5.0,
+        )
         return result is not None and result.get("ok", False)
 
     # ========== Local IPC for abox-notify ==========
@@ -969,9 +1024,13 @@ class ContainerClient:
             if not self._ssh_client or not self._ssh_client.is_connected:
                 return {"ok": False, "available": None, "error": "not_connected"}
 
-            result = self._ssh_client.request("check_agent", {
-                "agent": request.get("agent"),
-            }, timeout=5.0)
+            result = self._ssh_client.request(
+                "check_agent",
+                {
+                    "agent": request.get("agent"),
+                },
+                timeout=5.0,
+            )
 
             if result:
                 return result
@@ -993,9 +1052,13 @@ class ContainerClient:
             if not self._ssh_client or not self._ssh_client.is_connected:
                 return {"ok": False, "error": "not_connected"}
 
-            result = self._ssh_client.request("clear_rate_limit", {
-                "agent": request.get("agent"),
-            }, timeout=5.0)
+            result = self._ssh_client.request(
+                "clear_rate_limit",
+                {
+                    "agent": request.get("agent"),
+                },
+                timeout=5.0,
+            )
 
             if result:
                 return result
@@ -1018,16 +1081,17 @@ def load_config_from_yaml() -> tuple:
 
     try:
         import yaml
+
         with open(config_path) as f:
             config = yaml.safe_load(f) or {}
 
-        ports_config = config.get('ports', {})
+        ports_config = config.get("ports", {})
 
         # Host ports (remote forwards: host→container)
-        for port_spec in ports_config.get('host', []):
+        for port_spec in ports_config.get("host", []):
             if isinstance(port_spec, str):
-                if ':' in port_spec:
-                    host_port, container_port = port_spec.split(':')
+                if ":" in port_spec:
+                    host_port, container_port = port_spec.split(":")
                     host_port = int(host_port)
                     container_port = int(container_port)
                 else:
@@ -1035,29 +1099,33 @@ def load_config_from_yaml() -> tuple:
             else:
                 host_port = container_port = int(port_spec)
 
-            remote_forwards.append(PortForwardConfig(
-                name=f"host-{host_port}",
-                host_port=host_port,
-                container_port=container_port,
-                direction="remote",
-            ))
+            remote_forwards.append(
+                PortForwardConfig(
+                    name=f"host-{host_port}",
+                    host_port=host_port,
+                    container_port=container_port,
+                    direction="remote",
+                )
+            )
 
         # Container ports (local forwards: container→host)
-        for port_config in ports_config.get('container', []):
+        for port_config in ports_config.get("container", []):
             if isinstance(port_config, dict):
-                name = port_config.get('name', f"port-{port_config.get('port')}")
-                host_port = port_config.get('port')
-                container_port = port_config.get('container_port', host_port)
+                name = port_config.get("name", f"port-{port_config.get('port')}")
+                host_port = port_config.get("port")
+                container_port = port_config.get("container_port", host_port)
             else:
                 host_port = container_port = int(port_config)
                 name = f"port-{host_port}"
 
-            local_forwards.append(PortForwardConfig(
-                name=name,
-                host_port=host_port,
-                container_port=container_port,
-                direction="local",
-            ))
+            local_forwards.append(
+                PortForwardConfig(
+                    name=name,
+                    host_port=host_port,
+                    container_port=container_port,
+                    direction="local",
+                )
+            )
 
     except Exception as e:
         logger.warning(f"Failed to load config: {e}")

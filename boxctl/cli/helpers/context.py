@@ -135,6 +135,7 @@ def _parse_skill_frontmatter(skill_path: Path) -> dict:
         # Try PyYAML if available (most robust)
         try:
             import yaml
+
             parsed = yaml.safe_load(frontmatter)
             # Ensure we return a dict (YAML could be a list or scalar)
             return parsed if isinstance(parsed, dict) else {}
@@ -224,6 +225,7 @@ def _get_ssh_context(project_dir: Path, config: Optional["ProjectConfig"] = None
     try:
         if config is None:
             from boxctl.config import ProjectConfig
+
             config = ProjectConfig(project_dir)
 
         if not config.ssh_enabled:
@@ -257,12 +259,18 @@ def _get_ssh_context(project_dir: Path, config: Optional["ProjectConfig"] = None
                 lines.append("  - Git operations using SSH will use the forwarded agent")
                 lines.append("  - This works with passphrase-protected keys")
             else:
-                lines.append("- **Agent Forwarding:** Configured but `SSH_AUTH_SOCK` not found on host")
+                lines.append(
+                    "- **Agent Forwarding:** Configured but `SSH_AUTH_SOCK` not found on host"
+                )
         else:
             if ssh_mode == "config":
-                lines.append("- **Agent Forwarding:** Disabled (WARNING: mode=config without forwarding means no key access)")
+                lines.append(
+                    "- **Agent Forwarding:** Disabled (WARNING: mode=config without forwarding means no key access)"
+                )
             elif ssh_mode != "none":
-                lines.append("- **Agent Forwarding:** Disabled (using keys directly from container)")
+                lines.append(
+                    "- **Agent Forwarding:** Disabled (using keys directly from container)"
+                )
 
         lines.append("")
 
@@ -288,6 +296,7 @@ def _get_docker_context(project_dir: Path, config: Optional["ProjectConfig"] = N
     try:
         if config is None:
             from boxctl.config import ProjectConfig
+
             config = ProjectConfig(project_dir)
 
         docker_enabled = config.docker_enabled
@@ -295,7 +304,9 @@ def _get_docker_context(project_dir: Path, config: Optional["ProjectConfig"] = N
         if docker_enabled:
             lines.append("### Docker Access")
             lines.append("- Docker socket is **enabled** and mounted at `/var/run/docker.sock`")
-            lines.append("- You can run `docker` commands directly (e.g., `docker ps`, `docker build`)")
+            lines.append(
+                "- You can run `docker` commands directly (e.g., `docker ps`, `docker build`)"
+            )
             lines.append("- The container has access to the host's Docker daemon")
             lines.append("")
 
@@ -305,7 +316,9 @@ def _get_docker_context(project_dir: Path, config: Optional["ProjectConfig"] = N
     return lines
 
 
-def _get_credentials_context(project_dir: Path, config: Optional["ProjectConfig"] = None) -> list[str]:
+def _get_credentials_context(
+    project_dir: Path, config: Optional["ProjectConfig"] = None
+) -> list[str]:
     """Get CLI credentials context lines for agents.
 
     Args:
@@ -320,6 +333,7 @@ def _get_credentials_context(project_dir: Path, config: Optional["ProjectConfig"
     try:
         if config is None:
             from boxctl.config import ProjectConfig
+
             config = ProjectConfig(project_dir)
 
         gh_enabled = config.gh_enabled
@@ -331,7 +345,9 @@ def _get_credentials_context(project_dir: Path, config: Optional["ProjectConfig"
                 lines.append("- **GitHub CLI (gh):** Credentials from `~/.config/gh` are mounted")
                 lines.append("  - `gh` commands can use your GitHub authentication")
             if glab_enabled:
-                lines.append("- **GitLab CLI (glab):** Credentials from `~/.config/glab-cli` are mounted")
+                lines.append(
+                    "- **GitLab CLI (glab):** Credentials from `~/.config/glab-cli` are mounted"
+                )
                 lines.append("  - `glab` commands can use your GitLab authentication")
             lines.append("")
 
@@ -356,6 +372,7 @@ def _get_ports_context(project_dir: Path, config: Optional["ProjectConfig"] = No
     try:
         if config is None:
             from boxctl.config import ProjectConfig
+
             config = ProjectConfig(project_dir)
 
         host_ports = config.ports_host
@@ -387,7 +404,9 @@ def _get_ports_context(project_dir: Path, config: Optional["ProjectConfig"] = No
     return lines
 
 
-def _get_containers_context(project_dir: Path, config: Optional["ProjectConfig"] = None) -> list[str]:
+def _get_containers_context(
+    project_dir: Path, config: Optional["ProjectConfig"] = None
+) -> list[str]:
     """Get connected containers context lines for agents.
 
     Args:
@@ -402,6 +421,7 @@ def _get_containers_context(project_dir: Path, config: Optional["ProjectConfig"]
     try:
         if config is None:
             from boxctl.config import ProjectConfig
+
             config = ProjectConfig(project_dir)
 
         containers = config.containers
@@ -438,6 +458,7 @@ def _get_devices_context(project_dir: Path, config: Optional["ProjectConfig"] = 
     try:
         if config is None:
             from boxctl.config import ProjectConfig
+
             config = ProjectConfig(project_dir)
 
         devices = config.devices
@@ -472,6 +493,7 @@ def _build_dynamic_context(boxctl_dir: Path) -> str:
     project_dir = boxctl_dir.parent
     try:
         from boxctl.config import ProjectConfig
+
         project_config = ProjectConfig(project_dir)
     except Exception:
         project_config = None
@@ -599,7 +621,9 @@ def _build_dynamic_context(boxctl_dir: Path) -> str:
     if all_skills or slash_commands:
         lines.append("### Using Skills and Commands")
         lines.append("")
-        lines.append("**IMPORTANT:** Proactively use available skills and slash commands when they match the task at hand.")
+        lines.append(
+            "**IMPORTANT:** Proactively use available skills and slash commands when they match the task at hand."
+        )
         lines.append("- Skills provide specialized capabilities - invoke them with the Skill tool")
         lines.append("- Slash commands are quick actions - they appear in autocomplete with `/`")
         lines.append("- Don't wait to be asked - if a skill/command fits the situation, use it")

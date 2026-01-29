@@ -47,7 +47,7 @@ def get_tmux_sessions() -> List[Dict[str, any]]:
             capture_output=True,
             text=True,
             check=False,
-            timeout=TMUX_TIMEOUT
+            timeout=TMUX_TIMEOUT,
         )
         if result.returncode != 0:
             return []
@@ -58,12 +58,14 @@ def get_tmux_sessions() -> List[Dict[str, any]]:
                 continue
             parts = line.split("\t")
             if len(parts) >= 3:
-                sessions.append({
-                    "name": parts[0],
-                    "windows": int(parts[1]),
-                    "attached": parts[2] == "1",
-                    "created": parts[3] if len(parts) > 3 else ""
-                })
+                sessions.append(
+                    {
+                        "name": parts[0],
+                        "windows": int(parts[1]),
+                        "attached": parts[2] == "1",
+                        "created": parts[3] if len(parts) > 3 else "",
+                    }
+                )
         return sessions
     except Exception:
         return []
@@ -83,7 +85,7 @@ def session_exists(name: str) -> bool:
             _tmux_cmd(["has-session", "-t", name]),
             capture_output=True,
             check=False,
-            timeout=TMUX_TIMEOUT
+            timeout=TMUX_TIMEOUT,
         )
         return result.returncode == 0
     except subprocess.TimeoutExpired:
@@ -106,7 +108,7 @@ def capture_pane(session: str, lines: int) -> str:
             capture_output=True,
             text=True,
             check=False,
-            timeout=TMUX_TIMEOUT
+            timeout=TMUX_TIMEOUT,
         )
         return result.stdout if result.returncode == 0 else ""
     except subprocess.TimeoutExpired:
@@ -129,7 +131,7 @@ def get_agent_command(agent: str) -> str:
         "supercodex": "/usr/local/bin/codex",
         "gemini": "/usr/local/bin/gemini",
         "supergemini": "/usr/local/bin/gemini",
-        "shell": "/bin/bash"
+        "shell": "/bin/bash",
     }
     return agent_commands.get(agent, "/bin/bash")
 
@@ -148,7 +150,7 @@ def kill_session(name: str) -> bool:
             _tmux_cmd(["kill-session", "-t", name]),
             capture_output=True,
             check=False,
-            timeout=TMUX_TIMEOUT
+            timeout=TMUX_TIMEOUT,
         )
         if result.returncode == 0:
             # Reset terminal to disable mouse mode in case caller was attached
@@ -166,10 +168,7 @@ def detach_client() -> bool:
     """
     try:
         result = subprocess.run(
-            _tmux_cmd(["detach-client"]),
-            capture_output=True,
-            check=False,
-            timeout=TMUX_TIMEOUT
+            _tmux_cmd(["detach-client"]), capture_output=True, check=False, timeout=TMUX_TIMEOUT
         )
         return result.returncode == 0
     except subprocess.TimeoutExpired:
@@ -193,7 +192,9 @@ def send_keys_to_session(session: str, keys: str, literal: bool = False) -> bool
     args.append(keys)
 
     try:
-        result = subprocess.run(_tmux_cmd(args), capture_output=True, check=False, timeout=TMUX_TIMEOUT)
+        result = subprocess.run(
+            _tmux_cmd(args), capture_output=True, check=False, timeout=TMUX_TIMEOUT
+        )
         return result.returncode == 0
     except subprocess.TimeoutExpired:
         return False
@@ -217,7 +218,7 @@ def get_current_tmux_session() -> Optional[str]:
             capture_output=True,
             text=True,
             check=False,
-            timeout=TMUX_TIMEOUT
+            timeout=TMUX_TIMEOUT,
         )
         if result.returncode == 0:
             return result.stdout.strip()

@@ -52,6 +52,7 @@ def _set_cached_completion(cache_key: str, results: List[str]) -> None:
 def _get_boxctld_socket() -> Path:
     """Get the boxctld socket path (platform-aware: macOS vs Linux)."""
     from boxctl.host_config import get_config
+
     return get_config().socket_path
 
 
@@ -84,6 +85,7 @@ def _query_boxctld(action: str, **params) -> Optional[dict]:
 # Fallback functions (used when boxctld is not running)
 # =============================================================================
 
+
 def _complete_project_name_fallback(incomplete: str) -> list[str]:
     """Fallback: complete project names via Docker API (slow).
 
@@ -98,6 +100,7 @@ def _complete_project_name_fallback(incomplete: str) -> list[str]:
 
     try:
         from boxctl.container import ContainerManager
+
         manager = ContainerManager()
         containers = manager.list_containers(all_containers=False)
         project_names = []
@@ -201,7 +204,10 @@ def _complete_worktree_fallback(incomplete: str) -> list[str]:
 # Main completion functions (fast path via boxctld, fallback to slow path)
 # =============================================================================
 
-def _complete_session_name(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+
+def _complete_session_name(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete session names for current project."""
     # Get current project name for context (used for boxctld query filtering)
     try:
@@ -221,7 +227,9 @@ def _complete_session_name(ctx: click.Context, param: click.Parameter, incomplet
     return _complete_session_name_fallback(incomplete, project=project)
 
 
-def _complete_project_name(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_project_name(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete project names from running boxctl containers."""
     # Try boxctld first (fast)
     result = _query_boxctld("get_completions", type="projects")
@@ -233,7 +241,9 @@ def _complete_project_name(ctx: click.Context, param: click.Parameter, incomplet
     return _complete_project_name_fallback(incomplete)
 
 
-def _complete_connect_session(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_connect_session(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete session names for connect command, using project from first arg if provided."""
     # Support both "project" and "project_name" parameter names
     project = ctx.params.get("project_name") or ctx.params.get("project")
@@ -268,6 +278,7 @@ def _complete_mcp_names(ctx: click.Context, param: click.Parameter, incomplete: 
     # Direct fallback (also fast)
     try:
         from boxctl.library import LibraryManager
+
         lib = LibraryManager()
         servers = lib.list_mcp_servers()
         names = [s["name"] for s in servers]
@@ -276,7 +287,9 @@ def _complete_mcp_names(ctx: click.Context, param: click.Parameter, incomplete: 
         return []
 
 
-def _complete_worktree_branch(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_worktree_branch(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete worktree branch names from existing worktrees."""
     # Get current project name for context (used for boxctld query filtering)
     try:
@@ -307,6 +320,7 @@ def _complete_skill_names(ctx: click.Context, param: click.Parameter, incomplete
     # Direct fallback (also fast)
     try:
         from boxctl.library import LibraryManager
+
         lib = LibraryManager()
         skills = lib.list_skills()
         names = [s["name"] for s in skills]
@@ -315,7 +329,9 @@ def _complete_skill_names(ctx: click.Context, param: click.Parameter, incomplete
         return []
 
 
-def _complete_workspace_names(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_workspace_names(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete workspace mount names for current project."""
     try:
         from boxctl.cli.helpers import _load_workspaces_config
@@ -330,10 +346,13 @@ def _complete_workspace_names(ctx: click.Context, param: click.Parameter, incomp
         return []
 
 
-def _complete_config_names(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_config_names(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete config names from the library."""
     try:
         from boxctl.library import LibraryManager
+
         lib = LibraryManager()
         configs = lib.list_configs()
         names = [c["name"] for c in configs]
@@ -342,7 +361,9 @@ def _complete_config_names(ctx: click.Context, param: click.Parameter, incomplet
         return []
 
 
-def _complete_docker_containers(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_docker_containers(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete docker container names (non-boxctl containers)."""
     # Try boxctld first (queries Docker API but via persistent daemon)
     result = _query_boxctld("get_completions", type="docker_containers", include_boxctl=False)
@@ -353,6 +374,7 @@ def _complete_docker_containers(ctx: click.Context, param: click.Parameter, inco
     # Fallback to Docker API directly
     try:
         from boxctl.container import ContainerManager
+
         manager = ContainerManager()
         containers = manager.get_all_containers(include_boxctl=False)
         names = [c["name"] for c in containers]
@@ -361,7 +383,9 @@ def _complete_docker_containers(ctx: click.Context, param: click.Parameter, inco
         return []
 
 
-def _complete_connected_containers(ctx: click.Context, param: click.Parameter, incomplete: str) -> list[str]:
+def _complete_connected_containers(
+    ctx: click.Context, param: click.Parameter, incomplete: str
+) -> list[str]:
     """Complete connected container names for current project."""
     try:
         from boxctl.cli.helpers import _load_containers_config

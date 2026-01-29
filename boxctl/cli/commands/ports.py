@@ -20,6 +20,7 @@ from boxctl.utils.project import resolve_project_dir
 def _get_boxctld_socket_path() -> Path:
     """Get the boxctld socket path (platform-aware: macOS vs Linux)."""
     from boxctl.host_config import get_config
+
     return get_config().socket_path
 
 
@@ -103,7 +104,9 @@ def ports_list(scope: str):
     if scope == "all":
         _list_all_containers_ports()
     elif scope is not None:
-        raise click.ClickException(f"Unknown scope: {scope}. Use 'all' or omit for current project.")
+        raise click.ClickException(
+            f"Unknown scope: {scope}. Use 'all' or omit for current project."
+        )
     else:
         _list_current_project_ports()
 
@@ -137,6 +140,7 @@ def _list_current_project_ports():
 
     # Check container status
     from boxctl.container import ContainerManager
+
     cm = ContainerManager()
     is_running = cm.is_running(container_name)
 
@@ -262,7 +266,9 @@ def _list_all_containers_ports():
             continue  # Skip containers with no ports
 
         found_any = True
-        console.print(f"[{status_color}]{status_icon}[/{status_color}] [bold cyan]{project_name}[/bold cyan] [dim]({status})[/dim]")
+        console.print(
+            f"[{status_color}]{status_icon}[/{status_color}] [bold cyan]{project_name}[/bold cyan] [dim]({status})[/dim]"
+        )
 
         # Show Docker port bindings
         if docker_ports:
@@ -300,6 +306,7 @@ def _get_docker_port_bindings(container_name: str) -> list:
     """
     try:
         import docker
+
         client = docker.from_env()
         container = client.containers.get(container_name)
         port_bindings = container.attrs.get("NetworkSettings", {}).get("Ports", {})
@@ -341,7 +348,9 @@ def expose(port_spec: str):
         container_port = int(parts[0])
         host_port = int(parts[1])
     else:
-        raise click.ClickException(f"Invalid port format: {port_spec}. Use 'port' or 'container:host'")
+        raise click.ClickException(
+            f"Invalid port format: {port_spec}. Use 'port' or 'container:host'"
+        )
 
     # Validate host port
     validate_host_port(host_port)
@@ -366,8 +375,12 @@ def expose(port_spec: str):
     active_ports = _get_active_ports()
     for port_info in active_ports["host_ports"]:
         if port_info["host_port"] == host_port and port_info["container"] != container_name:
-            other_project = port_info["container"].replace(ContainerDefaults.CONTAINER_PREFIX, "", 1)
-            console.print(f"[red]Error: Host port {host_port} is already exposed by project '{other_project}'[/red]")
+            other_project = port_info["container"].replace(
+                ContainerDefaults.CONTAINER_PREFIX, "", 1
+            )
+            console.print(
+                f"[red]Error: Host port {host_port} is already exposed by project '{other_project}'[/red]"
+            )
             return
 
     # Update config - store in host:container format for backward compatibility
@@ -386,19 +399,23 @@ def expose(port_spec: str):
     config.save()
 
     # Try to add to running proxy (dynamically, no rebuild needed)
-    response = _send_boxctld_command({
-        "action": "add_host_port",
-        "container": container_name,
-        "host_port": host_port,
-        "container_port": container_port,
-    })
+    response = _send_boxctld_command(
+        {
+            "action": "add_host_port",
+            "container": container_name,
+            "host_port": host_port,
+            "container_port": container_port,
+        }
+    )
 
     if response.get("ok"):
         console.print(f"[green]✓ Exposed container:{container_port} → host:{host_port}[/green]")
         if response.get("message"):
             console.print(f"[dim]{response.get('message')}[/dim]")
     elif "No response" in response.get("error", "") or "not running" in response.get("error", ""):
-        console.print("[yellow]Port saved to config. Start proxy with: boxctl service start[/yellow]")
+        console.print(
+            "[yellow]Port saved to config. Start proxy with: boxctl service start[/yellow]"
+        )
     else:
         error = response.get("error", "")
         console.print(f"[yellow]Port saved to config but could not activate now:[/yellow]")
@@ -435,7 +452,9 @@ def forward(port_spec: str):
         port = int(parts[0])
         container_port = int(parts[1])
     else:
-        raise click.ClickException(f"Invalid port format: {port_spec}. Use 'port' or 'host:container'")
+        raise click.ClickException(
+            f"Invalid port format: {port_spec}. Use 'port' or 'host:container'"
+        )
 
     # Load and update config
     project_dir = resolve_project_dir()
@@ -447,7 +466,9 @@ def forward(port_spec: str):
     # Check if already configured in this project
     current_ports = config.ports_container
     for entry in current_ports:
-        existing_port = entry.get("port") if isinstance(entry, dict) else int(str(entry).split(":")[0])
+        existing_port = (
+            entry.get("port") if isinstance(entry, dict) else int(str(entry).split(":")[0])
+        )
         if existing_port == port:
             console.print(f"[yellow]Port {port} already forwarded[/yellow]")
             return
@@ -457,8 +478,12 @@ def forward(port_spec: str):
     active_ports = _get_active_ports()
     for port_info in active_ports["container_ports"]:
         if port_info["host_port"] == port and port_info["container"] != container_name:
-            other_project = port_info["container"].replace(ContainerDefaults.CONTAINER_PREFIX, "", 1)
-            console.print(f"[red]Error: Host port {port} is already forwarded by project '{other_project}'[/red]")
+            other_project = port_info["container"].replace(
+                ContainerDefaults.CONTAINER_PREFIX, "", 1
+            )
+            console.print(
+                f"[red]Error: Host port {port} is already forwarded by project '{other_project}'[/red]"
+            )
             return
 
     # Update config - store as simple port spec string (like host ports)
@@ -475,19 +500,25 @@ def forward(port_spec: str):
     console.print(f"[green]✓ Forwarding host:{port} → container:{container_port}[/green]")
 
     # Try to dynamically add the listener via proxy socket
-    response = _send_boxctld_command({
-        "action": "add_container_port",
-        "container": container_name,
-        "host_port": port,
-        "container_port": container_port,
-    })
+    response = _send_boxctld_command(
+        {
+            "action": "add_container_port",
+            "container": container_name,
+            "host_port": port,
+            "container_port": container_port,
+        }
+    )
 
     if response.get("ok"):
         console.print(f"[green]✓ Listener active now on container:{container_port}[/green]")
     elif "not connected" in response.get("error", ""):
-        console.print("[blue]Tunnel client not connected. Will be active when container starts.[/blue]")
+        console.print(
+            "[blue]Tunnel client not connected. Will be active when container starts.[/blue]"
+        )
     else:
-        console.print("[yellow]Could not add listener dynamically. Will be active on container restart.[/yellow]")
+        console.print(
+            "[yellow]Could not add listener dynamically. Will be active on container restart.[/yellow]"
+        )
 
 
 @ports.command(name="unexpose", options_metavar="")
@@ -528,11 +559,13 @@ def unexpose(port: int):
 
     # Try to remove from running proxy
     container_name = _get_container_name()
-    response = _send_boxctld_command({
-        "action": "remove_host_port",
-        "container": container_name,
-        "host_port": port,
-    })
+    response = _send_boxctld_command(
+        {
+            "action": "remove_host_port",
+            "container": container_name,
+            "host_port": port,
+        }
+    )
 
     if response.get("ok"):
         console.print(f"[green]✓ Unexposed port {port}[/green]")
@@ -591,11 +624,13 @@ def unforward(port: int):
 
     # Try to dynamically remove the listener via proxy socket
     container_name = _get_container_name()
-    response = _send_boxctld_command({
-        "action": "remove_container_port",
-        "container": container_name,
-        "host_port": port,
-    })
+    response = _send_boxctld_command(
+        {
+            "action": "remove_container_port",
+            "container": container_name,
+            "host_port": port,
+        }
+    )
 
     if response.get("ok"):
         console.print(f"[green]✓ Listener stopped[/green]")
@@ -631,13 +666,17 @@ def ports_status():
         container = port_info["container"]
         if container not in exposed_by_container:
             exposed_by_container[container] = []
-        exposed_by_container[container].append((port_info["host_port"], port_info["container_port"]))
+        exposed_by_container[container].append(
+            (port_info["host_port"], port_info["container_port"])
+        )
 
     for port_info in active_ports["container_ports"]:
         container = port_info["container"]
         if container not in forwarded_by_container:
             forwarded_by_container[container] = []
-        forwarded_by_container[container].append((port_info["host_port"], port_info["container_port"]))
+        forwarded_by_container[container].append(
+            (port_info["host_port"], port_info["container_port"])
+        )
 
     # Get all unique containers
     all_containers = set(exposed_by_container.keys()) | set(forwarded_by_container.keys())
@@ -660,7 +699,9 @@ def ports_status():
                 if host_port == container_port:
                     console.print(f"    [green]●[/green] :{host_port}")
                 else:
-                    console.print(f"    [green]●[/green] container:{container_port} → host:{host_port}")
+                    console.print(
+                        f"    [green]●[/green] container:{container_port} → host:{host_port}"
+                    )
 
         if forwarded:
             console.print("  [dim]Forwarded (host → container):[/dim]")
@@ -668,6 +709,8 @@ def ports_status():
                 if host_port == container_port:
                     console.print(f"    [green]●[/green] :{host_port}")
                 else:
-                    console.print(f"    [green]●[/green] host:{host_port} → container:{container_port}")
+                    console.print(
+                        f"    [green]●[/green] host:{host_port} → container:{container_port}"
+                    )
 
         console.print()

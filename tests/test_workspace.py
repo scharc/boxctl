@@ -55,8 +55,9 @@ def test_workspace_list_shows_mounts(test_project, workspace_dir):
     # Output MUST contain the workspace we just added
     # Check for the path we added
     workspace_path_str = str(workspace_dir)
-    assert workspace_path_str in result.stdout or workspace_dir.name in result.stdout, \
-        f"Workspace list must show the added workspace '{workspace_path_str}'. Output: {result.stdout}"
+    assert (
+        workspace_path_str in result.stdout or workspace_dir.name in result.stdout
+    ), f"Workspace list must show the added workspace '{workspace_path_str}'. Output: {result.stdout}"
 
 
 def test_workspace_remove_cleans_config(test_project, workspace_dir):
@@ -121,7 +122,7 @@ def test_workspace_mounted_in_container(test_project, workspace_dir):
     result = subprocess.run(
         ["docker", "exec", container_name, "cat", f"/context/{mount_name}/marker.txt"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, f"Should be able to read file at /context/{mount_name}"
@@ -142,9 +143,10 @@ def test_workspace_self_reference_skipped(test_project):
     # Should either fail with error or show warning
     # Check for common warning/error keywords
     output_lower = output.lower()
-    has_warning_indicator = any(word in output_lower for word in [
-        "warning", "error", "invalid", "cannot", "already", "skip", "same"
-    ])
+    has_warning_indicator = any(
+        word in output_lower
+        for word in ["warning", "error", "invalid", "cannot", "already", "skip", "same"]
+    )
 
     # If no clear warning/error message, verify workspace wasn't added
     if not has_warning_indicator:

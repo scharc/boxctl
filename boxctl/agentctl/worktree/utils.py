@@ -22,13 +22,13 @@ def sanitize_branch_name(branch: str) -> str:
     """
     # Remove refs/heads/ prefix if present
     if branch.startswith("refs/heads/"):
-        branch = branch[len("refs/heads/"):]
+        branch = branch[len("refs/heads/") :]
 
     # Replace special characters with hyphens
-    sanitized = re.sub(r'[/\.]', '-', branch)
+    sanitized = re.sub(r"[/\.]", "-", branch)
 
     # Remove any characters that aren't alphanumeric, hyphens, or underscores
-    sanitized = re.sub(r'[^a-zA-Z0-9\-_]', '', sanitized)
+    sanitized = re.sub(r"[^a-zA-Z0-9\-_]", "", sanitized)
 
     return sanitized
 
@@ -61,13 +61,7 @@ def run_git_command(args: List[str], cwd: Optional[str] = None) -> tuple[int, st
         cwd = "/workspace"
 
     try:
-        result = subprocess.run(
-            ["git"] + args,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
+        result = subprocess.run(["git"] + args, cwd=cwd, capture_output=True, text=True, timeout=30)
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "Git command timed out"

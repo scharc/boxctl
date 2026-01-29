@@ -90,6 +90,7 @@ def parse_port_spec(spec: str) -> Dict[str, Any]:
 
 class ConfigValidationError(Exception):
     """Raised when config validation fails."""
+
     pass
 
 
@@ -458,9 +459,7 @@ class ProjectConfig:
             container_name: Name of container to configure
         """
         if not self.exists():
-            console.print(
-                f"[yellow]No config found in {self.project_dir}[/yellow]"
-            )
+            console.print(f"[yellow]No config found in {self.project_dir}[/yellow]")
             return
 
         console.print(f"[blue]Rebuilding from {self.config_path}...[/blue]")
@@ -470,12 +469,18 @@ class ProjectConfig:
             # Validate all package names before execution
             invalid_packages = [p for p in self.system_packages if not validate_package_name(p)]
             if invalid_packages:
-                console.print(f"[red]Invalid package names (skipping): {', '.join(invalid_packages)}[/red]")
-                console.print("[yellow]Package names must be alphanumeric with ._+- allowed[/yellow]")
+                console.print(
+                    f"[red]Invalid package names (skipping): {', '.join(invalid_packages)}[/red]"
+                )
+                console.print(
+                    "[yellow]Package names must be alphanumeric with ._+- allowed[/yellow]"
+                )
 
             valid_packages = [p for p in self.system_packages if validate_package_name(p)]
             if valid_packages:
-                console.print(f"[blue]Installing system packages: {', '.join(valid_packages)}[/blue]")
+                console.print(
+                    f"[blue]Installing system packages: {', '.join(valid_packages)}[/blue]"
+                )
                 packages = " ".join(valid_packages)
                 exit_code, output = container_manager.exec_command(
                     container_name,
@@ -519,11 +524,13 @@ class ProjectConfig:
 
         # Copy template from library
         from boxctl.library import LibraryManager
+
         lib = LibraryManager()
         template_path = lib.config_dir / "boxctl.yml.template"
 
         if template_path.exists():
             import shutil
+
             shutil.copy(template_path, self.config_path)
         else:
             # Fallback if template not found - use Pydantic model defaults

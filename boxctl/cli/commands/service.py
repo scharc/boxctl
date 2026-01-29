@@ -125,9 +125,15 @@ def service_install():
 
     # Reload, enable, and start
     try:
-        subprocess.run(["systemctl", "--user", "daemon-reload"], check=False, timeout=SYSTEMCTL_TIMEOUT)
-        subprocess.run(["systemctl", "--user", "enable", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT)
-        subprocess.run(["systemctl", "--user", "start", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT)
+        subprocess.run(
+            ["systemctl", "--user", "daemon-reload"], check=False, timeout=SYSTEMCTL_TIMEOUT
+        )
+        subprocess.run(
+            ["systemctl", "--user", "enable", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT
+        )
+        subprocess.run(
+            ["systemctl", "--user", "start", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT
+        )
 
         console.print("[green]Service enabled and started[/green]")
         console.print(f"[blue]Web UI: {_get_web_url()}[/blue]")
@@ -145,8 +151,12 @@ def service_uninstall():
     unit_path = _get_service_unit_path()
 
     try:
-        subprocess.run(["systemctl", "--user", "stop", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT)
-        subprocess.run(["systemctl", "--user", "disable", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT)
+        subprocess.run(
+            ["systemctl", "--user", "stop", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT
+        )
+        subprocess.run(
+            ["systemctl", "--user", "disable", "boxctld"], check=False, timeout=SYSTEMCTL_TIMEOUT
+        )
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
 
@@ -154,7 +164,9 @@ def service_uninstall():
         unit_path.unlink()
         console.print(f"[green]Uninstalled service from {unit_path}[/green]")
         try:
-            subprocess.run(["systemctl", "--user", "daemon-reload"], check=False, timeout=SYSTEMCTL_TIMEOUT)
+            subprocess.run(
+                ["systemctl", "--user", "daemon-reload"], check=False, timeout=SYSTEMCTL_TIMEOUT
+            )
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
     else:
@@ -166,7 +178,9 @@ def service_uninstall():
 def service_start():
     """Start the service."""
     try:
-        subprocess.run(["systemctl", "--user", "start", "boxctld"], check=True, timeout=SYSTEMCTL_TIMEOUT)
+        subprocess.run(
+            ["systemctl", "--user", "start", "boxctld"], check=True, timeout=SYSTEMCTL_TIMEOUT
+        )
         console.print("[green]Service started[/green]")
         console.print(f"[blue]Web UI: {_get_web_url()}[/blue]")
     except subprocess.CalledProcessError:
@@ -182,7 +196,9 @@ def service_start():
 def service_stop():
     """Stop the service."""
     try:
-        subprocess.run(["systemctl", "--user", "stop", "boxctld"], check=True, timeout=SYSTEMCTL_TIMEOUT)
+        subprocess.run(
+            ["systemctl", "--user", "stop", "boxctld"], check=True, timeout=SYSTEMCTL_TIMEOUT
+        )
         console.print("[green]Service stopped[/green]")
     except subprocess.CalledProcessError:
         raise click.ClickException("Failed to stop service")
@@ -197,7 +213,9 @@ def service_stop():
 def service_restart():
     """Restart the service."""
     try:
-        subprocess.run(["systemctl", "--user", "restart", "boxctld"], check=True, timeout=SYSTEMCTL_TIMEOUT)
+        subprocess.run(
+            ["systemctl", "--user", "restart", "boxctld"], check=True, timeout=SYSTEMCTL_TIMEOUT
+        )
         console.print("[green]Service restarted[/green]")
         console.print(f"[blue]Web UI: {_get_web_url()}[/blue]")
     except subprocess.CalledProcessError:
@@ -268,6 +286,7 @@ def service_serve(socket_path: str = None):
         abox service serve /tmp/custom.sock     # Custom socket path
     """
     from boxctl.boxctld import run_boxctld
+
     run_boxctld(socket_path)
 
 

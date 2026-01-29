@@ -1,0 +1,50 @@
+# Ubuntu 24.04 LTS (Noble Numbat) configuration
+# Copyright (c) 2025 Marc Schütze <scharc@gmail.com>
+# SPDX-License-Identifier: MIT
+
+name: ubuntu-24.04
+display_name: Ubuntu 24.04 LTS (Noble Numbat)
+
+# Cloud image source
+cloud_image:
+  url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+  checksum_url: https://cloud-images.ubuntu.com/noble/current/SHA256SUMS
+  format: qcow2
+
+# libvirt os-variant for optimizations
+os_variant: ubuntu24.04
+
+# Package manager
+package_manager: apt
+
+# Docker installation
+docker:
+  package: docker.io
+  service: docker
+  install_cmd: |
+    apt-get update
+    apt-get install -y docker.io
+
+# Python setup
+python:
+  package: python3
+  pip_package: python3-pip
+  version: "3.12"
+
+# Additional packages for testing
+test_packages:
+  - python3-venv
+  - python3-dev
+  - build-essential
+  - git
+  - curl
+  - wget
+  - jq
+  - vim
+  - tmux
+  - pipx
+
+# Boot parameters
+boot:
+  timeout: 120
+  cloud_init_timeout: 600

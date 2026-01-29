@@ -195,14 +195,14 @@ def mcp_manage():
     choices = []
     for mcp_info in available_mcps:
         name = mcp_info["name"]
-        desc = mcp_info["description"][:50] + "..." if len(mcp_info["description"]) > 50 else mcp_info["description"]
+        desc = (
+            mcp_info["description"][:50] + "..."
+            if len(mcp_info["description"]) > 50
+            else mcp_info["description"]
+        )
         source = mcp_info.get("source", "library")
         label = f"{name} ({source}) - {desc}"
-        choices.append(questionary.Choice(
-            title=label,
-            value=name,
-            checked=name in installed
-        ))
+        choices.append(questionary.Choice(title=label, value=name, checked=name in installed))
 
     console.print("[bold]Select MCP servers to enable:[/bold]")
     console.print("[dim]Space to toggle, Enter to confirm, Ctrl+C to cancel[/dim]\n")
@@ -472,7 +472,7 @@ def mcp_init(path: str | None, agent: str):
         ".env.example",
         "claude_desktop_config.example.json",
         "Cargo.toml",  # Rust
-        "go.mod",      # Go
+        "go.mod",  # Go
     ]
 
     file_contents = []
@@ -489,7 +489,18 @@ def mcp_init(path: str | None, agent: str):
                 pass
 
     # List directory structure (skip irrelevant folders)
-    skip_dirs = {".git", ".boxctl", "__pycache__", ".pytest_cache", "node_modules", ".venv", "venv", ".tox", ".mypy_cache", ".ruff_cache"}
+    skip_dirs = {
+        ".git",
+        ".boxctl",
+        "__pycache__",
+        ".pytest_cache",
+        "node_modules",
+        ".venv",
+        "venv",
+        ".tox",
+        ".mypy_cache",
+        ".ruff_cache",
+    }
     dir_listing = []
     for item in sorted(mcp_path.rglob("*")):
         if item.is_file():

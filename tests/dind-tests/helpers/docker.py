@@ -45,9 +45,7 @@ def container_exists(container_name: str) -> bool:
     Returns:
         True if container exists
     """
-    result = run_docker(
-        "ps", "-a", "-f", f"name=^{container_name}$", "--format", "{{.Names}}"
-    )
+    result = run_docker("ps", "-a", "-f", f"name=^{container_name}$", "--format", "{{.Names}}")
     return container_name in result.stdout.strip().split("\n")
 
 
@@ -60,9 +58,7 @@ def container_is_running(container_name: str) -> bool:
     Returns:
         True if container is running
     """
-    result = run_docker(
-        "ps", "-f", f"name=^{container_name}$", "--format", "{{.Names}}"
-    )
+    result = run_docker("ps", "-f", f"name=^{container_name}$", "--format", "{{.Names}}")
     return container_name in result.stdout.strip().split("\n")
 
 
@@ -82,9 +78,7 @@ def wait_for_container_ready(
         True if container is ready, False if timeout
     """
     for _ in range(timeout):
-        result = run_docker(
-            "exec", container_name, "bash", "-c", check_command
-        )
+        result = run_docker("exec", container_name, "bash", "-c", check_command)
         if result.returncode == 0:
             return True
         time.sleep(1)
@@ -101,7 +95,8 @@ def get_container_ip(container_name: str) -> Optional[str]:
         IP address string or None if not found
     """
     result = run_docker(
-        "inspect", "-f",
+        "inspect",
+        "-f",
         "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}",
         container_name,
     )
@@ -132,10 +127,14 @@ def exec_in_container(
     """
     return run_docker(
         "exec",
-        "-u", user,
-        "-w", workdir,
+        "-u",
+        user,
+        "-w",
+        workdir,
         container_name,
-        "bash", "-c", command,
+        "bash",
+        "-c",
+        command,
         timeout=timeout,
     )
 

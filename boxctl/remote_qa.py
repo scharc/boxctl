@@ -80,7 +80,8 @@ class RemoteQAConfig:
             idle_threshold_seconds=float(data.get("idle_threshold_seconds", 5.0)),
             question_ttl_seconds=float(data.get("question_ttl_seconds", 3600.0)),
             dedup_window_seconds=float(data.get("dedup_window_seconds", 30.0)),
-            telegram_bot_token=data.get("telegram_bot_token") or os.environ.get("TELEGRAM_BOT_TOKEN"),
+            telegram_bot_token=data.get("telegram_bot_token")
+            or os.environ.get("TELEGRAM_BOT_TOKEN"),
             telegram_chat_id=data.get("telegram_chat_id") or os.environ.get("TELEGRAM_CHAT_ID"),
             webhook_url=data.get("webhook_url"),
             webhook_headers=data.get("webhook_headers", {}),
@@ -183,10 +184,13 @@ class RemoteQAManager:
         """Initialize built-in notification channels from config."""
         if self.config.telegram_bot_token and self.config.telegram_chat_id:
             from boxctl.channels.telegram import TelegramChannel
-            self._channels.append(TelegramChannel(
-                self.config.telegram_bot_token,
-                self.config.telegram_chat_id,
-            ))
+
+            self._channels.append(
+                TelegramChannel(
+                    self.config.telegram_bot_token,
+                    self.config.telegram_chat_id,
+                )
+            )
             logger.info("Telegram channel initialized")
 
     def register_channel(self, channel: "NotificationChannel") -> None:
@@ -206,7 +210,8 @@ class RemoteQAManager:
         with self.questions_lock:
             now = datetime.now()
             return [
-                q for q in self.pending_questions.values()
+                q
+                for q in self.pending_questions.values()
                 if q.answered_at is None and q.expires_at > now
             ]
 
@@ -324,7 +329,8 @@ class RemoteQAManager:
                 if existing.summary == summarize_question(detected):
                     time_since_notify = (
                         (datetime.now() - existing.notified_at).total_seconds()
-                        if existing.notified_at else float("inf")
+                        if existing.notified_at
+                        else float("inf")
                     )
                     if time_since_notify < self.config.dedup_window_seconds:
                         return  # Already notified recently
@@ -399,10 +405,14 @@ class RemoteQAManager:
             question.answered_at = datetime.now()
             question.answer = answer
             question.auto_answered = True
-            logger.info(f"Auto-answered question for {question.container}/{question.session}: {answer}")
+            logger.info(
+                f"Auto-answered question for {question.container}/{question.session}: {answer}"
+            )
             return True
         else:
-            logger.warning(f"Auto-answer failed for {question.container}/{question.session}, falling back to notification")
+            logger.warning(
+                f"Auto-answer failed for {question.container}/{question.session}, falling back to notification"
+            )
             return False
 
     def _notify_question(self, question: PendingQuestion) -> None:
@@ -440,10 +450,7 @@ class RemoteQAManager:
         """Remove expired questions."""
         now = datetime.now()
         with self.questions_lock:
-            expired = [
-                key for key, q in self.pending_questions.items()
-                if q.expires_at < now
-            ]
+            expired = [key for key, q in self.pending_questions.items() if q.expires_at < now]
             for key in expired:
                 self.pending_questions.pop(key, None)
                 logger.debug(f"Cleaned up expired question: {key}")

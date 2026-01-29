@@ -38,7 +38,15 @@ from boxctl.cli.helpers import (
     get_sessions_from_daemon,
     get_session_counts_from_daemon,
 )
-from boxctl.cli.commands.project import shell, info, stop, rebase, remove, init as project_init, start as project_start
+from boxctl.cli.commands.project import (
+    shell,
+    info,
+    stop,
+    rebase,
+    remove,
+    init as project_init,
+    start as project_start,
+)
 from boxctl.cli.commands.agents import claude, superclaude, codex, supercodex, gemini, supergemini
 from boxctl.cli.commands.mcp import mcp_add, _add_mcp, _get_installed_mcps
 from boxctl.cli.commands.skill import skill_add, _add_skill, _get_installed_skills
@@ -46,7 +54,11 @@ from boxctl.cli.commands.network import connect as network_connect, disconnect a
 from boxctl.cli.commands.workspace import workspace_add
 from boxctl.cli.commands.worktree import worktree_add, _run_worktree_agent, _run_worktree_shell
 from boxctl.cli.commands.ports import expose, forward, unexpose, unforward
-from boxctl.cli.helpers import _load_containers_config, _load_workspaces_config, _ensure_container_running
+from boxctl.cli.helpers import (
+    _load_containers_config,
+    _load_workspaces_config,
+    _ensure_container_running,
+)
 from boxctl.library import LibraryManager
 
 console = Console()
@@ -59,7 +71,7 @@ def clear_screen():
 
 def get_letter(index: int) -> str:
     """Convert index to letter (a-z)."""
-    return chr(ord('a') + index)
+    return chr(ord("a") + index)
 
 
 def paginate(items: list, page: int, items_per_page: int = 20) -> tuple[list, int, int]:
@@ -102,7 +114,11 @@ def show_page_indicator(page: int, total_pages: int) -> None:
         console.print(f"[dim]Page {page + 1}/{total_pages}[/dim]\n")
 
 
-def render_menu(title: str, sections: list[tuple[str, list[tuple[str, str, any]]]], actions: list[tuple[str, str]] = None) -> int:
+def render_menu(
+    title: str,
+    sections: list[tuple[str, list[tuple[str, str, any]]]],
+    actions: list[tuple[str, str]] = None,
+) -> int:
     """Render a menu with sections and actions.
 
     Args:
@@ -133,7 +149,9 @@ def render_menu(title: str, sections: list[tuple[str, list[tuple[str, str, any]]
             for i, (label, desc, _) in enumerate(items):
                 letter = get_letter(total_items + i)
                 if desc:
-                    console.print(f"  [bold yellow]{letter})[/bold yellow] {label} [dim]({desc})[/dim]")
+                    console.print(
+                        f"  [bold yellow]{letter})[/bold yellow] {label} [dim]({desc})[/dim]"
+                    )
                 else:
                     console.print(f"  [bold yellow]{letter})[/bold yellow] {label}")
             total_items += len(items)
@@ -157,7 +175,7 @@ def get_char() -> str:
         tty.setraw(fd)
         ch = sys.stdin.read(1)
         # Handle Ctrl+C
-        if ch == '\x03':
+        if ch == "\x03":
             raise KeyboardInterrupt
         return ch.lower()
     finally:
@@ -282,7 +300,7 @@ def confirm_action(message: str) -> bool:
     """Ask for confirmation with single keypress. Returns True if 'y'."""
     console.print(f"[yellow]{message}[/yellow]")
     choice = get_input("Press 'y' to confirm")
-    return choice == 'y'
+    return choice == "y"
 
 
 def get_system_status() -> Optional[dict]:
@@ -362,11 +380,17 @@ def status_menu() -> Optional[str]:
             tunnel_ok = c.get("tunnel_connected", False)
 
             # Header line with tunnel status
-            tunnel_indicator = "[green]●[/green] tunnel" if tunnel_ok else "[yellow]○[/yellow] no tunnel"
+            tunnel_indicator = (
+                "[green]●[/green] tunnel" if tunnel_ok else "[yellow]○[/yellow] no tunnel"
+            )
             console.print(f"  [bold]{name}[/bold]  {tunnel_indicator}")
 
             # Get port config for this container
-            ports = get_configured_ports(project_path) if project_path else {"host": [], "container": []}
+            ports = (
+                get_configured_ports(project_path)
+                if project_path
+                else {"host": [], "container": []}
+            )
 
             # Exposed ports (container → host)
             exposed = ports.get("host", [])
@@ -444,7 +468,9 @@ def get_all_sessions() -> list[dict]:
     daemon_sessions = get_sessions_from_daemon(timeout=1.0)
     if daemon_sessions is not None:
         # Sort by project name, then session name
-        daemon_sessions.sort(key=lambda s: (s.get("project", "").lower(), s.get("session_name", "").lower()))
+        daemon_sessions.sort(
+            key=lambda s: (s.get("project", "").lower(), s.get("session_name", "").lower())
+        )
         return daemon_sessions
 
     # Fallback to docker exec (slow path)
@@ -459,14 +485,16 @@ def get_all_sessions() -> list[dict]:
 
         sessions = _get_tmux_sessions(manager, container_name)
         for session in sessions:
-            all_sessions.append({
-                "container_name": container_name,
-                "project": project,
-                "project_path": project_path,
-                "session_name": session["name"],
-                "attached": session["attached"],
-                "windows": session["windows"],
-            })
+            all_sessions.append(
+                {
+                    "container_name": container_name,
+                    "project": project,
+                    "project_path": project_path,
+                    "session_name": session["name"],
+                    "attached": session["attached"],
+                    "windows": session["windows"],
+                }
+            )
 
     # Sort by project name, then session name
     all_sessions.sort(key=lambda s: (s["project"].lower(), s["session_name"].lower()))
@@ -497,12 +525,14 @@ def get_running_containers() -> list[dict]:
             sessions = _get_tmux_sessions(manager, container_name)
             count = len(sessions)
 
-        result.append({
-            "container_name": container_name,
-            "project": project,
-            "project_path": project_path,
-            "session_count": count,
-        })
+        result.append(
+            {
+                "container_name": container_name,
+                "project": project,
+                "project_path": project_path,
+                "session_count": count,
+            }
+        )
 
     # Sort by project name
     result.sort(key=lambda c: c["project"].lower())
@@ -513,7 +543,7 @@ def shorten_path(path: str, max_len: int = 30) -> str:
     """Shorten path for display, keeping end visible."""
     if not path or len(path) <= max_len:
         return path or ""
-    return "..." + path[-(max_len - 3):]
+    return "..." + path[-(max_len - 3) :]
 
 
 def new_session_menu(container_data: dict) -> Optional[str]:
@@ -545,7 +575,7 @@ def new_session_menu(container_data: dict) -> Optional[str]:
 
     # Handle agent selection
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(items):
             agent_cmd = items[idx][2]
 
@@ -564,8 +594,8 @@ def manage_select_menu() -> Optional[str]:
     items = []
     for c in containers:
         path_short = shorten_path(c.get("project_path", ""))
-        sessions = f"{c['session_count']} sessions" if c['session_count'] > 0 else "no sessions"
-        items.append((c['project'], f"{sessions} {path_short}".strip(), c))
+        sessions = f"{c['session_count']} sessions" if c["session_count"] > 0 else "no sessions"
+        items.append((c["project"], f"{sessions} {path_short}".strip(), c))
 
     sections = [("SELECT CONTAINER", items)]
     actions = [("0", "Back")]
@@ -578,7 +608,7 @@ def manage_select_menu() -> Optional[str]:
         return "main"
 
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(items):
             return ("manage_actions", items[idx][2])
 
@@ -630,7 +660,7 @@ def manage_actions_menu(container_data: dict) -> Optional[str]:
         return "manage_select"
 
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(all_items):
             action = all_items[idx][2]
             ctx = click.get_current_context()
@@ -719,7 +749,9 @@ def mcp_menu(container_data: dict, page: int = 0) -> Optional[str]:
     added_mcps = get_added_mcps(project_path)
 
     # Split into available and added
-    available = [(m["name"], m["description"][:40], m) for m in all_mcps if m["name"] not in added_mcps]
+    available = [
+        (m["name"], m["description"][:40], m) for m in all_mcps if m["name"] not in added_mcps
+    ]
     added = [(m["name"], "✓ added", m) for m in all_mcps if m["name"] in added_mcps]
 
     # Paginate available items
@@ -749,7 +781,7 @@ def mcp_menu(container_data: dict, page: int = 0) -> Optional[str]:
     # Handle MCP selection
     all_items = page_available + added
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(all_items):
             mcp_name = all_items[idx][0]
 
@@ -760,6 +792,7 @@ def mcp_menu(container_data: dict, page: int = 0) -> Optional[str]:
                 # Add the MCP server using internal function
                 console.print(f"\n[cyan]Adding {mcp_name}...[/cyan]\n")
                 from boxctl.cli.helpers import _get_project_context, _rebuild_container
+
                 try:
                     pctx = _get_project_context()
                     success, needs_rebuild = _add_mcp(mcp_name, lib, pctx)
@@ -767,7 +800,12 @@ def mcp_menu(container_data: dict, page: int = 0) -> Optional[str]:
                         console.print(f"[green]✓ Added '{mcp_name}' MCP server[/green]")
                         if needs_rebuild:
                             console.print("\n[blue]Rebuilding container...[/blue]")
-                            _rebuild_container(pctx.manager, pctx.project_name, pctx.project_dir, pctx.container_name)
+                            _rebuild_container(
+                                pctx.manager,
+                                pctx.project_name,
+                                pctx.project_dir,
+                                pctx.container_name,
+                            )
                             console.print("[green]✓ Container rebuilt[/green]")
                     else:
                         console.print(f"[red]Failed to add MCP server '{mcp_name}'[/red]")
@@ -810,11 +848,15 @@ def skill_menu(container_data: dict, page: int = 0) -> Optional[str]:
         name = skill["name"]
         for ext in [".yaml", ".yml", ".json"]:
             if name.endswith(ext):
-                name = name[:-len(ext)]
+                name = name[: -len(ext)]
         return name
 
     # Split into available and added
-    available = [(skill_name(s), s["description"][:40], s) for s in all_skills if skill_name(s) not in added_skills]
+    available = [
+        (skill_name(s), s["description"][:40], s)
+        for s in all_skills
+        if skill_name(s) not in added_skills
+    ]
     added = [(skill_name(s), "✓ added", s) for s in all_skills if skill_name(s) in added_skills]
 
     # Paginate available items
@@ -844,7 +886,7 @@ def skill_menu(container_data: dict, page: int = 0) -> Optional[str]:
     # Handle skill selection
     all_items = page_available + added
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(all_items):
             sname = all_items[idx][0]
 
@@ -855,6 +897,7 @@ def skill_menu(container_data: dict, page: int = 0) -> Optional[str]:
                 # Add the skill using internal function
                 console.print(f"\n[cyan]Adding {sname}...[/cyan]\n")
                 from boxctl.utils.project import get_boxctl_dir
+
                 try:
                     boxctl_dir = get_boxctl_dir(Path(project_path))
                     if _add_skill(sname, lib, boxctl_dir):
@@ -929,7 +972,7 @@ def network_menu(container_data: dict) -> Optional[str]:
     # Handle container selection
     all_items = available_items + connected_items
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(all_items):
             cname = all_items[idx][0]
             ctx = click.get_current_context()
@@ -1015,7 +1058,9 @@ def ports_menu(container_data: dict) -> Optional[str]:
         try:
             parsed = parse_port_spec(spec)
             desc = f"container:{parsed['container_port']} → host:{parsed['host_port']}"
-            exposed_items.append((f":{parsed['host_port']}", desc, ("exposed", spec, parsed["host_port"])))
+            exposed_items.append(
+                (f":{parsed['host_port']}", desc, ("exposed", spec, parsed["host_port"]))
+            )
         except Exception:
             exposed_items.append((spec, "invalid", ("exposed", spec, 0)))
 
@@ -1067,7 +1112,7 @@ def ports_menu(container_data: dict) -> Optional[str]:
 
     # Handle port selection (to remove)
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(all_items):
             port_type, port_id, port_data = all_items[idx][2]
 
@@ -1150,7 +1195,9 @@ def ports_forward_flow(container_data: dict) -> Optional[str]:
     return ("ports_menu", container_data)
 
 
-def folder_browser(start_path: str = None, title: str = "SELECT DIRECTORY", show_mode_options: bool = False) -> Optional[tuple]:
+def folder_browser(
+    start_path: str = None, title: str = "SELECT DIRECTORY", show_mode_options: bool = False
+) -> Optional[tuple]:
     """Browse and select a directory.
 
     Args:
@@ -1175,7 +1222,7 @@ def folder_browser(start_path: str = None, title: str = "SELECT DIRECTORY", show
         try:
             entries = []
             for entry in current_path.iterdir():
-                if entry.is_dir() and not entry.name.startswith('.'):
+                if entry.is_dir() and not entry.name.startswith("."):
                     entries.append(entry.name)
             entries.sort(key=str.lower)
         except PermissionError:
@@ -1249,7 +1296,7 @@ def folder_browser(start_path: str = None, title: str = "SELECT DIRECTORY", show
 
         # Handle directory selection
         if choice.isalpha() and len(choice) == 1:
-            idx = ord(choice) - ord('a')
+            idx = ord(choice) - ord("a")
             if 0 <= idx < len(page_items):
                 item_data = page_items[idx][2]
                 if item_data == "parent":
@@ -1275,7 +1322,7 @@ def workspace_menu(container_data: dict) -> Optional[str]:
     result = folder_browser(
         start_path=str(os.path.expanduser("~")),
         title=f"ADD WORKSPACE: {project}",
-        show_mode_options=True
+        show_mode_options=True,
     )
 
     if result is None:
@@ -1300,9 +1347,7 @@ def new_container_flow() -> Optional[str]:
 
     # Use folder browser to select project directory
     result = folder_browser(
-        start_path=str(Path.home()),
-        title="NEW CONTAINER",
-        show_mode_options=False
+        start_path=str(Path.home()), title="NEW CONTAINER", show_mode_options=False
     )
 
     if result is None:
@@ -1388,6 +1433,7 @@ def get_worktrees(container_name: str) -> list[dict]:
 
         # Get worktrees as JSON
         from boxctl.container import get_abox_environment
+
         exit_code, output = manager.exec_command(
             container_name,
             ["agentctl", "worktree", "list", "--json"],
@@ -1411,7 +1457,7 @@ def worktree_select_menu() -> Optional[str]:
     items = []
     for c in containers:
         path_short = shorten_path(c.get("project_path", ""))
-        items.append((c['project'], path_short, c))
+        items.append((c["project"], path_short, c))
 
     sections = [("SELECT CONTAINER", items)]
     actions = [("0", "Back")]
@@ -1424,7 +1470,7 @@ def worktree_select_menu() -> Optional[str]:
         return "main"
 
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(items):
             return ("worktree_menu", items[idx][2])
 
@@ -1471,7 +1517,7 @@ def worktree_menu(container_data: dict) -> Optional[str]:
 
     # Handle worktree selection
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(wt_items):
             wt_data = wt_items[idx][2]
             wt_data["_container_data"] = container_data  # Pass container info
@@ -1534,7 +1580,7 @@ def worktree_actions_menu(wt_data: dict) -> Optional[str]:
         return ("worktree_menu", container_data)
 
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(action_items):
             action = action_items[idx][2]
             ctx = click.get_current_context()
@@ -1608,14 +1654,16 @@ def main_menu() -> Optional[str]:
 
     # Handle letter selections
     if choice.isalpha() and len(choice) == 1:
-        idx = ord(choice) - ord('a')
+        idx = ord(choice) - ord("a")
         if 0 <= idx < len(all_items):
             action, data = all_items[idx][2]
 
             if action == "attach":
                 # Attach to session
                 manager = ContainerManager()
-                console.print(f"\n[cyan]Attaching to {data['project']}/{data['session_name']}...[/cyan]")
+                console.print(
+                    f"\n[cyan]Attaching to {data['project']}/{data['session_name']}...[/cyan]"
+                )
                 _attach_tmux_session(manager, data["container_name"], data["session_name"])
                 return None  # Exit after attach
 

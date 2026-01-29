@@ -44,6 +44,7 @@ class NotInitializedError(Exception):
 
 class ProjectContext(NamedTuple):
     """Container for common project context values."""
+
     manager: "ContainerManager"
     project_dir: Path
     boxctl_dir: Path
@@ -110,6 +111,7 @@ def _require_container_running(manager: "ContainerManager", container_name: str)
         click.ClickException: If container is not running
     """
     import click
+
     if not manager.is_running(container_name):
         raise click.ClickException(
             f"Container {container_name} is not running. Start it with: boxctl start"
@@ -127,10 +129,9 @@ def _require_boxctl_dir(boxctl_dir: Path, project_dir: Path) -> None:
         click.ClickException: If .boxctl directory doesn't exist
     """
     import click
+
     if not boxctl_dir.exists():
-        raise click.ClickException(
-            f".boxctl/ not found in {project_dir}. Run: boxctl init"
-        )
+        raise click.ClickException(f".boxctl/ not found in {project_dir}. Run: boxctl init")
 
 
 def show_error_panel(title: str, message: str, hint: str = None) -> None:
@@ -163,6 +164,7 @@ def require_initialized(project_dir: Path = None) -> Path:
     """
     if project_dir is None:
         from boxctl.utils.project import resolve_project_dir
+
         project_dir = resolve_project_dir()
 
     boxctl_dir = project_dir / ".boxctl"
@@ -219,6 +221,7 @@ def handle_errors(func: Callable) -> Callable:
             # Generic error panel for unexpected exceptions
             show_error_panel("Error", str(exc))
             sys.exit(1)
+
     return wrapper
 
 
@@ -273,8 +276,9 @@ def parse_env_file(env_path: Path) -> dict[str, str]:
 
         # Remove surrounding quotes if present
         if len(value) >= 2:
-            if (value.startswith('"') and value.endswith('"')) or \
-               (value.startswith("'") and value.endswith("'")):
+            if (value.startswith('"') and value.endswith('"')) or (
+                value.startswith("'") and value.endswith("'")
+            ):
                 value = value[1:-1]
 
         # Handle inline comments (only for unquoted values)
@@ -319,9 +323,20 @@ def _merge_directory(src: Path, dst: Path) -> None:
         dst: Destination directory
     """
     # Directories to skip when syncing MCPs
-    skip_dirs = {".git", ".boxctl", "__pycache__", ".pytest_cache",
-                 "node_modules", ".venv", "venv", ".tox", ".mypy_cache",
-                 ".ruff_cache", ".eggs", "*.egg-info"}
+    skip_dirs = {
+        ".git",
+        ".boxctl",
+        "__pycache__",
+        ".pytest_cache",
+        "node_modules",
+        ".venv",
+        "venv",
+        ".tox",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".eggs",
+        "*.egg-info",
+    }
 
     dst.mkdir(parents=True, exist_ok=True)
 
@@ -386,9 +401,19 @@ def _sync_mcp_dir(
                 _merge_directory(mcp_path, target_path)
             else:
                 # Fresh copy - use same skip patterns as _merge_directory
-                skip_dirs = {".git", ".boxctl", "__pycache__", ".pytest_cache",
-                             "node_modules", ".venv", "venv", ".tox", ".mypy_cache",
-                             ".ruff_cache", ".eggs"}
+                skip_dirs = {
+                    ".git",
+                    ".boxctl",
+                    "__pycache__",
+                    ".pytest_cache",
+                    "node_modules",
+                    ".venv",
+                    "venv",
+                    ".tox",
+                    ".mypy_cache",
+                    ".ruff_cache",
+                    ".eggs",
+                }
 
                 def ignore_patterns(directory, files):
                     """Ignore runtime/cache directories and egg-info."""
@@ -403,7 +428,9 @@ def _sync_mcp_dir(
             # Print update message first
             if not quiet:
                 if existed:
-                    _console.print(f"  [yellow]Updated MCP ({source_label}): {mcp_path.name}[/yellow]")
+                    _console.print(
+                        f"  [yellow]Updated MCP ({source_label}): {mcp_path.name}[/yellow]"
+                    )
                 else:
                     _console.print(f"  [green]Copied MCP ({source_label}): {mcp_path.name}[/green]")
 
@@ -411,7 +438,9 @@ def _sync_mcp_dir(
             # Always call sync even if commands/ doesn't exist - this ensures stale
             # commands are removed when a custom MCP overrides a library MCP
             if installed_mcps is not None and mcp_path.name in installed_mcps:
-                synced_cmds = _sync_mcp_commands(mcp_path, project_dir, mcp_path.name, is_custom=is_custom)
+                synced_cmds = _sync_mcp_commands(
+                    mcp_path, project_dir, mcp_path.name, is_custom=is_custom
+                )
                 if synced_cmds and not quiet:
                     _console.print(f"    [dim]Synced commands: {', '.join(synced_cmds)}[/dim]")
 
@@ -478,10 +507,14 @@ def _sync_library_skills(boxctl_dir: Path, quiet: bool = False) -> None:
         if skill_source.exists():
             # Always call sync even if commands/ doesn't exist - this ensures stale
             # commands are removed when a custom skill overrides a library skill
-            synced_cmds = _sync_skill_commands(skill_source, project_dir, skill_name, is_custom=is_custom)
+            synced_cmds = _sync_skill_commands(
+                skill_source, project_dir, skill_name, is_custom=is_custom
+            )
             if synced_cmds and not quiet:
                 source_label = "custom" if is_custom else "library"
-                _console.print(f"  [dim]Synced skill commands ({source_label}): {skill_name} -> {', '.join(synced_cmds)}[/dim]")
+                _console.print(
+                    f"  [dim]Synced skill commands ({source_label}): {skill_name} -> {', '.join(synced_cmds)}[/dim]"
+                )
 
 
 def _rebuild_container(
@@ -509,6 +542,7 @@ def _rebuild_container(
     # Check for missing devices before rebuilding
     if not quiet:
         from boxctl.cli.helpers.tmux_ops import _warn_if_devices_missing
+
         _warn_if_devices_missing(project_dir)
 
     if manager.container_exists(container_name):
@@ -538,6 +572,7 @@ def _rebuild_container(
     # Update boxctl version in config
     from boxctl.config import ProjectConfig
     from boxctl import __version__ as BOXCTL_VERSION
+
     config = ProjectConfig(project_dir)
     if config.exists():
         config.boxctl_version = BOXCTL_VERSION

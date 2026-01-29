@@ -102,28 +102,12 @@ ensure_abox_aliases() {
             echo "alias ad='tmux detach-client 2>/dev/null || echo \"Not in tmux session\"'"
             echo "# claude alias with settings (superclaude uses /usr/local/bin/superclaude wrapper)"
             echo "alias claude='\${HOME}/.local/bin/claude --settings /home/abox/.claude/settings.json --mcp-config /home/abox/.mcp.json'"
-            echo ""
-            echo "# Boxctl CLI tab completion"
-            # Single quotes intentional - eval runs at shell startup, not now
-            # shellcheck disable=SC2016
-            echo 'eval "$(_BOXCTL_COMPLETE=bash_source boxctl)"'
+            # Note: boxctl runs on the HOST, not in the container - no completion here
         } >>"${bashrc}"
     fi
     chown "${HOST_UID}:${HOST_GID}" "${bashrc}" 2>/dev/null || true
 
-    # Also set up zsh completion if zsh is available
-    local zshrc="${ABOX_HOME}/.zshrc"
-    local zsh_marker="# Boxctl completion"
-    if command -v zsh >/dev/null && ! grep -q "${zsh_marker}" "${zshrc}" 2>/dev/null; then
-        {
-            echo ""
-            echo "${zsh_marker}"
-            # Single quotes intentional - eval runs at shell startup, not now
-            # shellcheck disable=SC2016
-            echo 'eval "$(_BOXCTL_COMPLETE=zsh_source boxctl)"'
-        } >>"${zshrc}"
-        chown "${HOST_UID}:${HOST_GID}" "${zshrc}" 2>/dev/null || true
-    fi
+    # Note: boxctl completion is NOT set up here - boxctl runs on the HOST only
 }
 
 ensure_abox_aliases

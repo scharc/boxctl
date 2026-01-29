@@ -1,0 +1,137 @@
+#cloud-config
+# Prepared VM configuration for regression testing
+# This image has Docker + boxctl pre-installed for fast test execution
+#
+# NOTE: This config is Ubuntu-specific. For Fedora, use prepared-fedora-user-data.yaml
+
+users:
+  - name: testuser
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: [sudo, docker]
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+# Package update
+package_update: true
+package_upgrade: false
+
+packages:
+  # Docker (Ubuntu package names)
+  - docker.io
+  - docker-compose
+  # Python for testing
+  - python3
+  - python3-pip
+  - python3-venv
+  # Git
+  - git
+  # Common utilities
+  - curl
+  - wget
+  - jq
+  - vim
+  - tmux
+  # Required for building Python packages (Ubuntu names)
+  - build-essential
+  - python3-dev
+  # Poetry dependencies
+  - pipx
+
+# System configuration
+timezone: UTC
+
+# Setup Docker and boxctl
+runcmd:
+  # Enable and start Docker
+  - systemctl enable docker
+  - systemctl start docker
+  # Wait for Docker to be ready
+  - |
+    for i in {1..30}; do
+      docker info && break
+      sleep 2
+    done
+    if ! docker info >/dev/null 2>&1; then
+      echo "cloud-init-error: Docker failed to start" > /tmp/cloud-init-status
+      exit 1
+    fi
+  # Add testuser to docker group (already in groups above, but ensure)
+  - usermod -aG docker testuser
+  # Create directories
+  - mkdir -p /test-workspace
+  - chown testuser:testuser /test-workspace
+  - mkdir -p /opt/boxctl
+  - chown testuser:testuser /opt/boxctl
+  # Configure git for testuser
+  - su - testuser -c 'git config --global user.email "test@example.com"'
+  - su - testuser -c 'git config --global user.name "Test User"'
+  - su - testuser -c 'git config --global init.defaultBranch main'
+  # Install Poetry via pipx
+  - su - testuser -c 'pipx install poetry'
+  - su - testuser -c 'pipx ensurepath'
+  # Clone boxctl repository (critical step - must succeed)
+  - |
+    if ! su - testuser -c 'git clone https://github.com/mschuetze/boxctl.git /opt/boxctl'; then
+      echo "cloud-init-error: Failed to clone boxctl repository" > /tmp/cloud-init-status
+      exit 1
+    fi
+  # Install boxctl via Poetry (critical step)
+  - |
+    if ! su - testuser -c 'cd /opt/boxctl && /home/testuser/.local/bin/poetry install'; then
+      echo "cloud-init-error: Failed to install boxctl via Poetry" > /tmp/cloud-init-status
+      exit 1
+    fi
+  # Build boxctl-base image (this is the slow part, but critical)
+  - |
+    if ! su - testuser -c 'cd /opt/boxctl && docker build -f Dockerfile.base -t boxctl-base:latest .'; then
+      echo "cloud-init-error: Failed to build boxctl-base image" > /tmp/cloud-init-status
+      exit 1
+    fi
+  # Create a test project to verify everything works (optional, can fail)
+  - |
+    su - testuser -c '
+      cd /test-workspace
+      mkdir -p init-test && cd init-test
+      git init
+      /home/testuser/.local/bin/poetry -C /opt/boxctl run boxctl init
+    ' || echo "Warning: init-test failed, but continuing"
+  # Signal cloud-init completion
+  - touch /var/lib/cloud/instance/boot-finished
+  - echo "cloud-init-complete" > /tmp/cloud-init-status
+
+# Write files
+write_files:
+  # Helper script to check cloud-init status
+  - path: /usr/local/bin/check-cloud-init
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      if [ -f /var/lib/cloud/instance/boot-finished ]; then
+        echo "complete"
+        exit 0
+      else
+        echo "running"
+        exit 1
+      fi
+
+  # Wrapper script to run boxctl (handles Poetry path)
+  - path: /usr/local/bin/boxctl
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      exec /home/testuser/.local/bin/poetry -C /opt/boxctl run boxctl "$@"
+
+  # Environment setup for testuser
+  - path: /home/testuser/.bash_profile
+    permissions: '0644'
+    content: |
+      # boxctl test environment
+      export PATH="/home/testuser/.local/bin:$PATH"
+      export TEST_WORKSPACE="/test-workspace"
+      export BOXCTL_ROOT="/opt/boxctl"
+
+      # Activate Poetry environment
+      cd /opt/boxctl 2>/dev/null && eval "$(/home/testuser/.local/bin/poetry env info --path)/bin/activate" 2>/dev/null || true
+
+final_message: "Prepared VM ready for regression testing after $UPTIME seconds"

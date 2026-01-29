@@ -63,19 +63,21 @@ class TestRemoteQAConfig:
 
     def test_from_dict_full(self):
         """Create config with all fields."""
-        config = RemoteQAConfig.from_dict({
-            "enabled": True,
-            "check_interval_seconds": 5.0,
-            "idle_threshold_seconds": 10.0,
-            "telegram_bot_token": "test-token",
-            "telegram_chat_id": "12345",
-            "webhook_url": "https://example.com/webhook",
-            "auto_answer": {
+        config = RemoteQAConfig.from_dict(
+            {
                 "enabled": True,
-                "confirmations": True,
-                "default_yes": False,
-            },
-        })
+                "check_interval_seconds": 5.0,
+                "idle_threshold_seconds": 10.0,
+                "telegram_bot_token": "test-token",
+                "telegram_chat_id": "12345",
+                "webhook_url": "https://example.com/webhook",
+                "auto_answer": {
+                    "enabled": True,
+                    "confirmations": True,
+                    "default_yes": False,
+                },
+            }
+        )
         assert config.enabled
         assert config.check_interval_seconds == 5.0
         assert config.telegram_bot_token == "test-token"
@@ -85,10 +87,13 @@ class TestRemoteQAConfig:
 
     def test_from_dict_env_fallback(self):
         """Config falls back to environment variables."""
-        with patch.dict("os.environ", {
-            "TELEGRAM_BOT_TOKEN": "env-token",
-            "TELEGRAM_CHAT_ID": "env-chat",
-        }):
+        with patch.dict(
+            "os.environ",
+            {
+                "TELEGRAM_BOT_TOKEN": "env-token",
+                "TELEGRAM_CHAT_ID": "env-chat",
+            },
+        ):
             config = RemoteQAConfig.from_dict({"enabled": True})
             assert config.telegram_bot_token == "env-token"
             assert config.telegram_chat_id == "env-chat"
@@ -154,9 +159,7 @@ class TestRemoteQAManager:
         assert result
         assert question.answered_at is not None
         assert question.answer == "y"
-        mock_send_input.assert_called_once_with(
-            "test-container", "test-session", "y\n", True
-        )
+        mock_send_input.assert_called_once_with("test-container", "test-session", "y\n", True)
 
     def test_answer_nonexistent_question(self, manager):
         """Answering nonexistent question returns False."""
@@ -207,9 +210,7 @@ class TestRemoteQAManager:
         manager._check_session("test-container", "test-session")
 
         # Should have sent "y" automatically
-        mock_send_input.assert_called_with(
-            "test-container", "test-session", "y\n", True
-        )
+        mock_send_input.assert_called_with("test-container", "test-session", "y\n", True)
 
     def test_no_auto_answer_when_disabled(self, config, mock_get_buffer, mock_send_input):
         """Don't auto-answer when disabled."""

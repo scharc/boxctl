@@ -45,7 +45,6 @@ INPUT_PATTERNS: List[Tuple[str, InputType, Optional[str]]] = [
     (r"Select an option:", InputType.QUESTION, r"^\s*(\d+)\.\s+(.+)$"),
     (r"Choose.*:", InputType.QUESTION, None),
     (r"Which.*\?", InputType.QUESTION, None),
-
     # Yes/No confirmations
     (r"\[Y/n\]", InputType.CONFIRMATION, None),
     (r"\[y/N\]", InputType.CONFIRMATION, None),
@@ -54,30 +53,25 @@ INPUT_PATTERNS: List[Tuple[str, InputType, Optional[str]]] = [
     (r"Continue\?", InputType.CONFIRMATION, None),
     (r"Proceed\?", InputType.CONFIRMATION, None),
     (r"Are you sure\?", InputType.CONFIRMATION, None),
-
     # Text input prompts
     (r"Enter .+:", InputType.TEXT, None),
     (r"Type .+:", InputType.TEXT, None),
     (r"Input .+:", InputType.TEXT, None),
     (r"Provide .+:", InputType.TEXT, None),
     (r"Please enter", InputType.TEXT, None),
-
     # Password/sensitive input
     (r"[Pp]assword:", InputType.PASSWORD, None),
     (r"[Pp]assphrase:", InputType.PASSWORD, None),
     (r"[Tt]oken:", InputType.PASSWORD, None),
     (r"[Ss]ecret:", InputType.PASSWORD, None),
     (r"API [Kk]ey:", InputType.PASSWORD, None),
-
     # Press Enter prompts
     (r"Press Enter", InputType.CONFIRMATION, None),
     (r"Press any key", InputType.CONFIRMATION, None),
     (r"Hit Enter", InputType.CONFIRMATION, None),
-
     # npm/yarn prompts
     (r"Is this OK\?", InputType.CONFIRMATION, None),
     (r"Ok to proceed\?", InputType.CONFIRMATION, None),
-
     # Git prompts
     (r"Overwrite.*\?", InputType.CONFIRMATION, None),
     (r"Delete.*\?", InputType.CONFIRMATION, None),

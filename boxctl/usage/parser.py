@@ -179,9 +179,7 @@ def probe_agent(agent: str, timeout: int = 30) -> dict:
 
         # Calculate resets_at if we have resets_in_seconds
         if parsed.get("resets_in_seconds"):
-            resets_at = datetime.now(timezone.utc) + timedelta(
-                seconds=parsed["resets_in_seconds"]
-            )
+            resets_at = datetime.now(timezone.utc) + timedelta(seconds=parsed["resets_in_seconds"])
             parsed["resets_at"] = resets_at
 
         return parsed

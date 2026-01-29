@@ -108,17 +108,23 @@ def _run_worktree_agent(branch: str, agent: str, args: tuple):
         if is_super:
             prompt = _read_super_prompt()
             extra_args = [
-                "--settings", "/home/abox/.claude/settings-super.json",
-                "--mcp-config", "/home/abox/.mcp.json",
+                "--settings",
+                "/home/abox/.claude/settings-super.json",
+                "--mcp-config",
+                "/home/abox/.mcp.json",
                 "--dangerously-skip-permissions",
-                "--append-system-prompt", prompt,
+                "--append-system-prompt",
+                prompt,
             ]
         else:
             instructions = _read_agent_instructions()
             extra_args = [
-                "--settings", "/home/abox/.claude/settings.json",
-                "--mcp-config", "/home/abox/.mcp.json",
-                "--append-system-prompt", instructions,
+                "--settings",
+                "/home/abox/.claude/settings.json",
+                "--mcp-config",
+                "/home/abox/.mcp.json",
+                "--append-system-prompt",
+                instructions,
             ]
 
         if _has_vscode():
@@ -192,13 +198,17 @@ def _run_worktree_shell(branch: str):
 
     subprocess.run(
         [
-            "docker", "exec", "-it",
-            "-u", "abox",
-            "-w", worktree_path,
+            "docker",
+            "exec",
+            "-it",
+            "-u",
+            "abox",
+            "-w",
+            worktree_path,
             pctx.container_name,
-            "/bin/bash"
+            "/bin/bash",
         ],
-        check=False
+        check=False,
     )
 
 

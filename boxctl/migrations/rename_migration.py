@@ -93,7 +93,9 @@ def migrate_config_file(project_dir: Path, quiet: bool = False) -> bool:
     if target_file.exists():
         if not quiet:
             console.print(f"[yellow]Both {source_name} and .boxctl/config.yml exist[/yellow]")
-            console.print(f"[yellow]Please resolve manually (delete {source_name} if not needed)[/yellow]")
+            console.print(
+                f"[yellow]Please resolve manually (delete {source_name} if not needed)[/yellow]"
+            )
         return False
 
     try:
@@ -341,15 +343,15 @@ def _migrate_file_content(file_path: Path) -> bool:
         # Replacements for file content (more aggressive than shell RC files)
         replacements = [
             # Directory references
-            (r'\.agentbox/', '.boxctl/'),
-            (r'\.agentbox\b', '.boxctl'),
+            (r"\.agentbox/", ".boxctl/"),
+            (r"\.agentbox\b", ".boxctl"),
             # Command references (but keep 'abox' as it's the short alias)
-            (r'\bagentbox\b', 'boxctl'),
+            (r"\bagentbox\b", "boxctl"),
             # Capitalized references
-            (r'\bAgentbox\b', 'Boxctl'),
-            (r'\bAgentBox\b', 'BoxCtl'),
+            (r"\bAgentbox\b", "Boxctl"),
+            (r"\bAgentBox\b", "BoxCtl"),
             # Environment variables
-            (r'\bAGENTBOX_', 'BOXCTL_'),
+            (r"\bAGENTBOX_", "BOXCTL_"),
         ]
 
         for pattern, replacement in replacements:
@@ -537,10 +539,10 @@ def check_legacy_containers() -> List[str]:
             ["docker", "ps", "-a", "--filter", "name=agentbox-", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
         )
         if result.returncode == 0:
-            containers = [c.strip() for c in result.stdout.strip().split('\n') if c.strip()]
+            containers = [c.strip() for c in result.stdout.strip().split("\n") if c.strip()]
             return containers
     except Exception:
         pass
@@ -632,17 +634,18 @@ def check_shell_rc_files() -> List[Tuple[str, List[int]]]:
 
         try:
             import re
+
             content = rc_file.read_text()
             lines_with_agentbox = []
 
             # Patterns that indicate migration is needed (not arbitrary paths)
             migration_patterns = [
-                r'agentbox-completion\.(zsh|bash)',  # Completion filenames
+                r"agentbox-completion\.(zsh|bash)",  # Completion filenames
                 r"['\"]agentbox['\"]",  # Command in quotes
-                r'\.agentbox\b',  # Config directory
-                r'\bAGENTBOX_',  # Env var prefix
-                r'#\s*AgentBox\b',  # Comment mentioning AgentBox
-                r'\balias\s+\w+\s*=.*agentbox',  # Alias definitions
+                r"\.agentbox\b",  # Config directory
+                r"\bAGENTBOX_",  # Env var prefix
+                r"#\s*AgentBox\b",  # Comment mentioning AgentBox
+                r"\balias\s+\w+\s*=.*agentbox",  # Alias definitions
             ]
 
             for i, line in enumerate(content.splitlines(), 1):
@@ -676,22 +679,22 @@ def fix_shell_rc_files(dry_run: bool = False) -> List[Tuple[str, bool]]:
     # Replacement patterns (order matters - more specific first)
     replacements = [
         # Completion file names (not the directory path)
-        (r'agentbox-completion\.zsh', 'boxctl-completion.zsh'),
-        (r'agentbox-completion\.bash', 'boxctl-completion.bash'),
+        (r"agentbox-completion\.zsh", "boxctl-completion.zsh"),
+        (r"agentbox-completion\.bash", "boxctl-completion.bash"),
         # Command/alias references (in quotes)
         (r"='agentbox'", "='boxctl'"),
         (r'="agentbox"', '="boxctl"'),
         (r"= 'agentbox'", "= 'boxctl'"),
         (r'= "agentbox"', '= "boxctl"'),
         # Config directory references
-        (r'\.agentbox/', '.boxctl/'),
-        (r'\.agentbox\b', '.boxctl'),
+        (r"\.agentbox/", ".boxctl/"),
+        (r"\.agentbox\b", ".boxctl"),
         # Environment variable prefixes
-        (r'\bAGENTBOX_', 'BOXCTL_'),
+        (r"\bAGENTBOX_", "BOXCTL_"),
         # Comments mentioning AgentBox (at start of comment, not in paths)
-        (r'(#\s*)AgentBox(\s)', r'\1BoxCtl\2'),
+        (r"(#\s*)AgentBox(\s)", r"\1BoxCtl\2"),
         # "for agentbox" or "for boxctl" in comments (preserve space after)
-        (r'(\bfor\s+)agentbox(\s)', r'\1boxctl\2'),
+        (r"(\bfor\s+)agentbox(\s)", r"\1boxctl\2"),
     ]
 
     for file_path, line_nums in rc_files:
@@ -709,7 +712,7 @@ def fix_shell_rc_files(dry_run: bool = False) -> List[Tuple[str, bool]]:
                 else:
                     # Create backup
                     backup_path = Path(file_path).with_suffix(
-                        Path(file_path).suffix + '.agentbox-backup'
+                        Path(file_path).suffix + ".agentbox-backup"
                     )
                     if not backup_path.exists():
                         Path(file_path).rename(backup_path)
@@ -829,7 +832,7 @@ def fix_path_setup(dry_run: bool = False) -> bool:
 
     if dry_run:
         console.print(f"[blue]Would add to {rc_file}:[/blue]")
-        console.print(f"  export PATH=\"{bin_dir}:$PATH\"")
+        console.print(f'  export PATH="{bin_dir}:$PATH"')
         return True
 
     # Check if already present
@@ -890,7 +893,7 @@ def remove_legacy_containers(dry_run: bool = False, force: bool = False) -> Tupl
                 ["docker", "inspect", container, "--format", "{{.State.Running}}"],
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
             is_running = result.stdout.strip() == "true"
         except Exception:
@@ -900,11 +903,7 @@ def remove_legacy_containers(dry_run: bool = False, force: bool = False) -> Tupl
         if is_running:
             console.print(f"[yellow]Stopping:[/yellow] {container}")
             try:
-                subprocess.run(
-                    ["docker", "stop", container],
-                    capture_output=True,
-                    timeout=30
-                )
+                subprocess.run(["docker", "stop", container], capture_output=True, timeout=30)
                 stopped += 1
             except Exception as e:
                 console.print(f"[red]Failed to stop {container}: {e}[/red]")
@@ -975,9 +974,7 @@ def migrate_systemd_service(dry_run: bool = False, reinstall: bool = True) -> Tu
     console.print("[yellow]Stopping agentboxd.service...[/yellow]")
     try:
         subprocess.run(
-            ["systemctl", "--user", "stop", "agentboxd"],
-            capture_output=True,
-            timeout=30
+            ["systemctl", "--user", "stop", "agentboxd"], capture_output=True, timeout=30
         )
     except Exception:
         pass  # Service might not be running
@@ -986,9 +983,7 @@ def migrate_systemd_service(dry_run: bool = False, reinstall: bool = True) -> Tu
     console.print("[yellow]Disabling agentboxd.service...[/yellow]")
     try:
         subprocess.run(
-            ["systemctl", "--user", "disable", "agentboxd"],
-            capture_output=True,
-            timeout=10
+            ["systemctl", "--user", "disable", "agentboxd"], capture_output=True, timeout=10
         )
     except Exception:
         pass  # Service might not be enabled
@@ -1003,11 +998,7 @@ def migrate_systemd_service(dry_run: bool = False, reinstall: bool = True) -> Tu
 
     # Reload systemd
     try:
-        subprocess.run(
-            ["systemctl", "--user", "daemon-reload"],
-            capture_output=True,
-            timeout=10
-        )
+        subprocess.run(["systemctl", "--user", "daemon-reload"], capture_output=True, timeout=10)
     except Exception:
         pass
 

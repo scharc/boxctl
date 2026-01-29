@@ -36,7 +36,9 @@ class TestBranchSanitization:
         assert sanitize_branch_name("bug_fix-123") == "bug_fix-123"
 
     def test_complex_branch(self):
-        assert sanitize_branch_name("refs/heads/feature/auth-fix.v2@test") == "feature-auth-fix-v2test"
+        assert (
+            sanitize_branch_name("refs/heads/feature/auth-fix.v2@test") == "feature-auth-fix-v2test"
+        )
 
 
 class TestWorktreePath:

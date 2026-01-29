@@ -81,7 +81,7 @@ def _remove_commands(
     # Find and remove all files with this prefix
     for cmd_file in commands_dir.glob(f"{prefix}*.md"):
         # Get the original command name (without prefix and extension)
-        original_name = cmd_file.name[len(prefix):]  # e.g., "context.md"
+        original_name = cmd_file.name[len(prefix) :]  # e.g., "context.md"
         cmd_name = original_name[:-3] if original_name.endswith(".md") else original_name
 
         # Check if there's an ab- prefixed symlink pointing to this file
@@ -164,7 +164,7 @@ def _get_installed_command_names(
         if cmd_file.is_symlink():
             continue
         # Extract command name: "mcp-agentctl-context.md" -> "context"
-        cmd_name = cmd_file.name[len(prefix):-3]  # Remove prefix and .md
+        cmd_name = cmd_file.name[len(prefix) : -3]  # Remove prefix and .md
         installed.add(cmd_name)
 
     return installed

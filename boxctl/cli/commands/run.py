@@ -90,7 +90,9 @@ def _read_agent_instructions() -> str:
 
     agents_md = boxctl_dir / "agents.md"
     if not agents_md.exists():
-        base_instructions = "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        base_instructions = (
+            "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        )
     else:
         base_instructions = agents_md.read_text()
 
@@ -105,7 +107,9 @@ def _read_super_prompt() -> str:
 
     agents_md = boxctl_dir / "agents.md"
     if not agents_md.exists():
-        base_instructions = "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        base_instructions = (
+            "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        )
     else:
         base_instructions = agents_md.read_text()
 
@@ -134,18 +138,24 @@ def _build_extra_args(agent: str, config: dict) -> list[str]:
         if auto_approve:
             instructions = _read_super_prompt()
             extra_args = [
-                "--settings", "/home/abox/.claude/settings-super.json",
-                "--mcp-config", "/home/abox/.mcp.json",
+                "--settings",
+                "/home/abox/.claude/settings-super.json",
+                "--mcp-config",
+                "/home/abox/.mcp.json",
                 "--dangerously-skip-permissions",
-                "--append-system-prompt", instructions,
+                "--append-system-prompt",
+                instructions,
                 "-p",  # Print mode for non-interactive
             ]
         else:
             instructions = _read_agent_instructions()
             extra_args = [
-                "--settings", "/home/abox/.claude/settings.json",
-                "--mcp-config", "/home/abox/.mcp.json",
-                "--append-system-prompt", instructions,
+                "--settings",
+                "/home/abox/.claude/settings.json",
+                "--mcp-config",
+                "/home/abox/.mcp.json",
+                "--append-system-prompt",
+                instructions,
                 "-p",  # Print mode for non-interactive
             ]
     elif command == "codex":
@@ -195,14 +205,22 @@ def _run_noninteractive(
 
     # Build docker exec command without -it (non-interactive)
     docker_cmd = [
-        "docker", "exec",
-        "-u", "abox",
-        "-w", workdir or "/workspace",
-        "-e", "HOME=/home/abox",
-        "-e", "USER=abox",
-        "-e", f"BOXCTL_AGENT_LABEL={display}",
-        "-e", f"BOXCTL_CONTAINER={container_name}",
-        "-e", "BOXCTL_NONINTERACTIVE=1",
+        "docker",
+        "exec",
+        "-u",
+        "abox",
+        "-w",
+        workdir or "/workspace",
+        "-e",
+        "HOME=/home/abox",
+        "-e",
+        "USER=abox",
+        "-e",
+        f"BOXCTL_AGENT_LABEL={display}",
+        "-e",
+        f"BOXCTL_CONTAINER={container_name}",
+        "-e",
+        "BOXCTL_NONINTERACTIVE=1",
         container_name,
     ]
     docker_cmd.extend(cmd)

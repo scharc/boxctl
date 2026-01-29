@@ -24,7 +24,8 @@ def test_skill(tmp_path):
     skill_dir.mkdir()
 
     # Add SKILL.md
-    (skill_dir / "SKILL.md").write_text("""---
+    (skill_dir / "SKILL.md").write_text(
+        """---
 name: test-skill-fixture
 description: A test skill for testing.
 ---
@@ -32,7 +33,8 @@ description: A test skill for testing.
 # Test Skill
 
 This is a test skill.
-""")
+"""
+    )
 
     # Add config.json
     config = {"name": "test-skill-fixture", "version": "1.0.0"}
@@ -42,7 +44,7 @@ This is a test skill.
     (skill_dir / "README.md").write_text("# Test Skill\n\nFor testing purposes.")
 
     # Patch user_skills_dir to include our test skill
-    with patch('boxctl.library.HostPaths.user_skills_dir', return_value=tmp_path):
+    with patch("boxctl.library.HostPaths.user_skills_dir", return_value=tmp_path):
         yield skill_dir.name, skill_dir
 
 
@@ -122,10 +124,12 @@ def test_skill_files_accessible_in_container(test_project, test_skill):
     result = subprocess.run(
         ["docker", "exec", container_name, "ls", f"/home/abox/.boxctl/skills/{skill_name}"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
-    assert result.returncode == 0, f"Skill directory should be accessible in container: {result.stderr}"
+    assert (
+        result.returncode == 0
+    ), f"Skill directory should be accessible in container: {result.stderr}"
 
 
 def test_skill_show_displays_info(test_project, test_skill):
@@ -136,5 +140,6 @@ def test_skill_show_displays_info(test_project, test_skill):
 
     # Should succeed or show not found message
     if result.returncode == 0:
-        assert skill_name in result.stdout or "description" in result.stdout.lower(), \
-            "Output should contain skill info"
+        assert (
+            skill_name in result.stdout or "description" in result.stdout.lower()
+        ), "Output should contain skill info"

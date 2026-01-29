@@ -19,7 +19,10 @@ from boxctl.cli.helpers import (
     console,
     handle_errors,
 )
-from boxctl.cli.helpers.completions import _complete_docker_containers, _complete_connected_containers
+from boxctl.cli.helpers.completions import (
+    _complete_docker_containers,
+    _complete_connected_containers,
+)
 from boxctl.utils.project import resolve_project_dir, get_boxctl_dir
 
 
@@ -82,7 +85,9 @@ def available(show_all: Optional[str]):
 
     console.print(table)
     if connected_containers:
-        console.print(f"\n[green]Connected containers: {', '.join(sorted(connected_containers))}[/green]")
+        console.print(
+            f"\n[green]Connected containers: {', '.join(sorted(connected_containers))}[/green]"
+        )
     console.print("\n[blue]Connect with:[/blue] boxctl network connect <name>")
 
 
@@ -118,7 +123,11 @@ def list():
             target = pctx.manager.client.containers.get(cname)
             networks = pctx.manager.get_container_networks(cname)
             image = target.image.tags[0] if target.image.tags else target.id[:12]
-            status = "[green]Running[/green]" if target.status == "running" else f"[yellow]{target.status.title()}[/yellow]"
+            status = (
+                "[green]Running[/green]"
+                if target.status == "running"
+                else f"[yellow]{target.status.title()}[/yellow]"
+            )
         except Exception:
             status = "[red]Not Found[/red]"
             networks = []
@@ -136,7 +145,9 @@ def list():
     console.print(table)
 
     if warnings:
-        console.print("\n[yellow]⚠ Warning: The following containers are no longer available:[/yellow]")
+        console.print(
+            "\n[yellow]⚠ Warning: The following containers are no longer available:[/yellow]"
+        )
         for name in warnings:
             console.print(f"  - {name}")
         console.print("\n[blue]Remove with:[/blue] boxctl network disconnect <name>")
@@ -170,7 +181,7 @@ def connect(target_container: str):
         target = pctx.manager.client.containers.get(target_container)
     except Exception:
         containers = pctx.manager.get_all_containers(include_boxctl=False)
-        container_names = [c['name'] for c in containers]
+        container_names = [c["name"] for c in containers]
         raise click.ClickException(
             f"Container {target_container} not found. Available: {', '.join(container_names)}"
         )
@@ -192,10 +203,12 @@ def connect(target_container: str):
 
     if not already_connected:
         # Add new connection
-        connections.append({
-            "name": target_container,
-            "auto_reconnect": True,
-        })
+        connections.append(
+            {
+                "name": target_container,
+                "auto_reconnect": True,
+            }
+        )
         # Save connections
         _save_containers_config(pctx.boxctl_dir, connections)
 
@@ -228,7 +241,7 @@ def disconnect(target_container: str):
             break
 
     if not connection:
-        current_names = [conn.get('name') for conn in connections]
+        current_names = [conn.get("name") for conn in connections]
         raise click.ClickException(
             f"Not connected to {target_container}. Current connections: {', '.join(current_names)}"
         )
@@ -255,11 +268,15 @@ def disconnect(target_container: str):
         networks_to_remove = [n for n in networks if n not in networks_to_keep]
 
         if networks_to_remove and pctx.manager.container_exists(pctx.container_name):
-            console.print(f"[blue]Disconnecting from networks: {', '.join(networks_to_remove)}[/blue]")
+            console.print(
+                f"[blue]Disconnecting from networks: {', '.join(networks_to_remove)}[/blue]"
+            )
             pctx.manager.disconnect_from_networks(pctx.container_name, networks_to_remove)
 
         if set(networks) - set(networks_to_remove):
-            console.print(f"  Kept networks: {', '.join(set(networks) - set(networks_to_remove))} (used by other containers)")
+            console.print(
+                f"  Kept networks: {', '.join(set(networks) - set(networks_to_remove))} (used by other containers)"
+            )
 
     # Remove from connections
     connections = [c for c in connections if c.get("name") != target_container]

@@ -18,10 +18,13 @@ class TestSSHModes:
     def test_ssh_mode_disabled(self, test_project):
         """Test disabled SSH mode - no SSH access."""
         config_file = test_project / ".boxctl.yml"
-        config_file.write_text("""version: "1.0"
+        config_file.write_text(
+            """version: "1.0"
 ssh:
   enabled: false
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         result = run_abox("start", cwd=test_project)
         assert result.returncode == 0, f"start failed: {result.stderr}"
@@ -38,10 +41,13 @@ ssh:
     def test_ssh_mode_keys(self, test_project):
         """Test keys SSH mode - isolated writable known_hosts."""
         config_file = test_project / ".boxctl.yml"
-        config_file.write_text("""version: "1.0"
+        config_file.write_text(
+            """version: "1.0"
 ssh:
   mode: "keys"
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         result = run_abox("start", cwd=test_project)
         assert result.returncode == 0, f"start failed: {result.stderr}"
@@ -59,13 +65,14 @@ ssh:
 
         # Test 3: Write succeeds
         result = exec_in_container(
-            container_name,
-            'echo "test.example.com ssh-rsa FAKE" >> /home/abox/.ssh/known_hosts'
+            container_name, 'echo "test.example.com ssh-rsa FAKE" >> /home/abox/.ssh/known_hosts'
         )
         assert result.returncode == 0, f"Cannot write to known_hosts: {result.stderr}"
 
         # Test 4: Verify write persisted
-        result = exec_in_container(container_name, "grep test.example.com /home/abox/.ssh/known_hosts")
+        result = exec_in_container(
+            container_name, "grep test.example.com /home/abox/.ssh/known_hosts"
+        )
         assert result.returncode == 0, "Write to known_hosts did not persist"
 
         # Test 5: SSH directory has correct permissions (700)
@@ -78,10 +85,13 @@ ssh:
     def test_ssh_mode_mount(self, test_project):
         """Test mount SSH mode - bind mount read-write."""
         config_file = test_project / ".boxctl.yml"
-        config_file.write_text("""version: "1.0"
+        config_file.write_text(
+            """version: "1.0"
 ssh:
   mode: "mount"
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         result = run_abox("start", cwd=test_project)
         assert result.returncode == 0, f"start failed: {result.stderr}"
@@ -100,7 +110,7 @@ ssh:
         # Test 3: Write succeeds (would sync to host in real usage)
         result = exec_in_container(
             container_name,
-            'echo "mount-test.example.com ssh-rsa FAKE" >> /home/abox/.ssh/known_hosts'
+            'echo "mount-test.example.com ssh-rsa FAKE" >> /home/abox/.ssh/known_hosts',
         )
         assert result.returncode == 0, f"Cannot write to known_hosts: {result.stderr}"
 
@@ -109,10 +119,13 @@ ssh:
     def test_ssh_mode_config(self, test_project):
         """Test config SSH mode - config/known_hosts only, no keys."""
         config_file = test_project / ".boxctl.yml"
-        config_file.write_text("""version: "1.0"
+        config_file.write_text(
+            """version: "1.0"
 ssh:
   mode: "config"
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         result = run_abox("start", cwd=test_project)
         assert result.returncode == 0, f"start failed: {result.stderr}"
@@ -137,11 +150,14 @@ ssh:
     def test_ssh_mode_keys_with_forward_agent(self, test_project):
         """Test keys mode combined with agent forwarding."""
         config_file = test_project / ".boxctl.yml"
-        config_file.write_text("""version: "1.0"
+        config_file.write_text(
+            """version: "1.0"
 ssh:
   mode: "keys"
   forward_agent: true
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         result = run_abox("start", cwd=test_project)
         assert result.returncode == 0, f"start failed: {result.stderr}"
@@ -162,10 +178,13 @@ ssh:
     def test_known_hosts_created_if_missing(self, test_project):
         """Test that known_hosts is created if it doesn't exist."""
         config_file = test_project / ".boxctl.yml"
-        config_file.write_text("""version: "1.0"
+        config_file.write_text(
+            """version: "1.0"
 ssh:
   mode: "keys"
-""", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
 
         result = run_abox("start", cwd=test_project)
         assert result.returncode == 0, f"start failed: {result.stderr}"

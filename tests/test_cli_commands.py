@@ -67,8 +67,9 @@ class TestCLICommandsExist:
             timeout=10,
         )
         assert result.returncode == 0, f"Command '{command}' failed: {result.stderr}"
-        assert "Usage:" in result.stdout or "usage:" in result.stdout.lower(), \
-            f"Command '{command}' has no usage text"
+        assert (
+            "Usage:" in result.stdout or "usage:" in result.stdout.lower()
+        ), f"Command '{command}' has no usage text"
 
 
 class TestCLIMainHelp:

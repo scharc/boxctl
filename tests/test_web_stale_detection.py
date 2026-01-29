@@ -20,8 +20,8 @@ class TestStaleDetection:
         """Test that stale threshold can be configured"""
         # Test different threshold values
         for threshold in [10, 30, 60]:
-            activity = {'stale_threshold': threshold}
-            assert activity['stale_threshold'] == threshold
+            activity = {"stale_threshold": threshold}
+            assert activity["stale_threshold"] == threshold
 
     def test_notification_message_format(self):
         """Test notification message formatting"""
@@ -40,65 +40,65 @@ class TestStaleDetection:
     def test_state_transitions(self):
         """Test session state transitions"""
         activity = {
-            'was_active': False,
-            'notified': False,
+            "was_active": False,
+            "notified": False,
         }
 
         # Transition 1: IDLE -> ACTIVE (output appears)
-        activity['was_active'] = True
-        activity['notified'] = False
-        assert activity['was_active'] is True
+        activity["was_active"] = True
+        activity["notified"] = False
+        assert activity["was_active"] is True
 
         # Transition 2: ACTIVE -> STALE (no output for threshold)
-        activity['notified'] = True
-        activity['was_active'] = False
-        assert activity['notified'] is True
-        assert activity['was_active'] is False
+        activity["notified"] = True
+        activity["was_active"] = False
+        assert activity["notified"] is True
+        assert activity["was_active"] is False
 
         # Transition 3: STALE -> ACTIVE (output resumes)
-        activity['was_active'] = True
-        activity['notified'] = False
-        assert activity['was_active'] is True
-        assert activity['notified'] is False
+        activity["was_active"] = True
+        activity["notified"] = False
+        assert activity["was_active"] is True
+        assert activity["notified"] is False
 
     def test_no_notification_for_idle_sessions(self):
         """Test that idle sessions don't trigger notifications"""
         activity = {
-            'was_active': False,  # Never was active
-            'notified': False,
-            'last_change_time': None,
+            "was_active": False,  # Never was active
+            "notified": False,
+            "last_change_time": None,
         }
 
         # Session that was never active should not trigger notification
         # Even if time_since_change would exceed threshold
-        should_notify = activity['was_active'] and activity['last_change_time']
+        should_notify = activity["was_active"] and activity["last_change_time"]
         assert should_notify is False
 
     def test_no_duplicate_notifications(self):
         """Test that notifications are sent only once per stale period"""
         activity = {
-            'was_active': True,
-            'notified': False,
-            'last_change_time': 0,
-            'stale_threshold': 30,
+            "was_active": True,
+            "notified": False,
+            "last_change_time": 0,
+            "stale_threshold": 30,
         }
 
         now = 100  # 100 seconds later
-        time_since_change = now - activity['last_change_time']
+        time_since_change = now - activity["last_change_time"]
 
         # First check - should notify
-        if time_since_change >= activity['stale_threshold']:
-            if not activity['notified']:
-                activity['notified'] = True
+        if time_since_change >= activity["stale_threshold"]:
+            if not activity["notified"]:
+                activity["notified"] = True
                 notification_count = 1
 
         # Second check - should NOT notify again
-        if time_since_change >= activity['stale_threshold']:
-            if not activity['notified']:
+        if time_since_change >= activity["stale_threshold"]:
+            if not activity["notified"]:
                 notification_count += 1
 
         assert notification_count == 1
-        assert activity['notified'] is True
+        assert activity["notified"] is True
 
 
 class TestWebSocketIntegration:
@@ -114,7 +114,7 @@ class TestWebSocketIntegration:
         routes = [route.path for route in app.routes]
         assert "/api/sessions" in routes
 
-    @patch('boxctl.web.host_server.get_all_sessions')
+    @patch("boxctl.web.host_server.get_all_sessions")
     def test_get_sessions_endpoint(self, mock_get_sessions):
         """Test the /api/sessions endpoint"""
         pytest.importorskip("httpx")
@@ -126,7 +126,7 @@ class TestWebSocketIntegration:
                 "name": "claude",
                 "windows": 1,
                 "attached": False,
-                "created": "2024-01-01"
+                "created": "2024-01-01",
             }
         ]
 

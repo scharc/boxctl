@@ -24,9 +24,11 @@ class TestWorktreeList:
         result = run_abox("worktree", "list", cwd=test_project)
 
         # Should fail or indicate not a git repo
-        assert result.returncode != 0 or "not.*git" in result.stdout.lower() or "not.*git" in result.stderr.lower(), (
-            f"Should fail for non-git repo. stdout: {result.stdout}, stderr: {result.stderr}"
-        )
+        assert (
+            result.returncode != 0
+            or "not.*git" in result.stdout.lower()
+            or "not.*git" in result.stderr.lower()
+        ), f"Should fail for non-git repo. stdout: {result.stdout}, stderr: {result.stderr}"
 
     def test_list_empty_worktrees(self, running_container, test_project, fake_git_repo):
         """Test listing worktrees when only main workspace exists."""
@@ -44,9 +46,9 @@ class TestWorktreeList:
 
         assert result.returncode == 0, f"worktree list failed: {result.stderr}"
         # Should show the main workspace at minimum
-        assert "/workspace" in result.stdout or "main" in result.stdout.lower(), (
-            f"Expected main workspace in output: {result.stdout}"
-        )
+        assert (
+            "/workspace" in result.stdout or "main" in result.stdout.lower()
+        ), f"Expected main workspace in output: {result.stdout}"
 
     def test_list_json_output(self, running_container, test_project, fake_git_repo):
         """Test JSON output format."""
@@ -93,32 +95,23 @@ class TestWorktreeAdd:
                     shutil.copy2(item, test_project / item.name)
 
         # Verify branch exists (created by fake_git_repo fixture)
-        result = exec_in_container(
-            container_name,
-            "git branch --list feature-1"
-        )
+        result = exec_in_container(container_name, "git branch --list feature-1")
         assert result.returncode == 0, "feature-1 branch should exist"
 
         # Add worktree
         result = run_abox("worktree", "add", "feature-1", cwd=test_project)
 
         assert result.returncode == 0, f"worktree add failed: {result.stderr}"
-        assert "success" in result.stdout.lower() or "created" in result.stdout.lower(), (
-            f"Expected success message: {result.stdout}"
-        )
+        assert (
+            "success" in result.stdout.lower() or "created" in result.stdout.lower()
+        ), f"Expected success message: {result.stdout}"
 
         # Verify worktree directory exists in container
-        result = exec_in_container(
-            container_name,
-            "test -d /git-worktrees/worktree-feature-1"
-        )
+        result = exec_in_container(container_name, "test -d /git-worktrees/worktree-feature-1")
         assert result.returncode == 0, "Worktree directory should exist"
 
         # Verify worktree is in git worktree list
-        result = exec_in_container(
-            container_name,
-            "git worktree list"
-        )
+        result = exec_in_container(container_name, "git worktree list")
         assert result.returncode == 0
         assert "feature-1" in result.stdout, f"Worktree not in git list: {result.stdout}"
 
@@ -140,42 +133,31 @@ class TestWorktreeAdd:
                     shutil.copy2(item, test_project / item.name)
 
         # Verify branch doesn't exist
-        result = exec_in_container(
-            container_name,
-            "git branch --list new-branch"
-        )
+        result = exec_in_container(container_name, "git branch --list new-branch")
         assert "new-branch" not in result.stdout, "Branch should not exist yet"
 
         # Add worktree with --create (via abox worktree, which calls agentctl worktree add --create)
         # Note: The CLI interface may differ, let's test what we can
-        result = exec_in_container(
-            container_name,
-            "agentctl worktree add new-branch --create"
-        )
+        result = exec_in_container(container_name, "agentctl worktree add new-branch --create")
 
         assert result.returncode == 0, f"worktree add with --create failed: {result.stderr}"
 
         # Verify branch was created
-        result = exec_in_container(
-            container_name,
-            "git branch --list new-branch"
-        )
+        result = exec_in_container(container_name, "git branch --list new-branch")
         assert "new-branch" in result.stdout, "Branch should be created"
 
         # Verify worktree exists
-        result = exec_in_container(
-            container_name,
-            "test -d /git-worktrees/worktree-new-branch"
-        )
+        result = exec_in_container(container_name, "test -d /git-worktrees/worktree-new-branch")
         assert result.returncode == 0, "Worktree directory should exist"
 
         # Cleanup
         exec_in_container(
-            container_name,
-            "agentctl worktree remove new-branch --force 2>/dev/null || true"
+            container_name, "agentctl worktree remove new-branch --force 2>/dev/null || true"
         )
 
-    def test_add_worktree_fails_for_nonexistent_branch(self, running_container, test_project, fake_git_repo):
+    def test_add_worktree_fails_for_nonexistent_branch(
+        self, running_container, test_project, fake_git_repo
+    ):
         """Test adding worktree for non-existent branch fails."""
         # Setup git repo
         for item in fake_git_repo.iterdir():
@@ -191,9 +173,9 @@ class TestWorktreeAdd:
         result = run_abox("worktree", "add", "nonexistent-branch", cwd=test_project)
 
         assert result.returncode != 0, "Should fail for non-existent branch"
-        assert "not found" in result.stdout.lower() or "not found" in result.stderr.lower(), (
-            f"Expected 'not found' error"
-        )
+        assert (
+            "not found" in result.stdout.lower() or "not found" in result.stderr.lower()
+        ), f"Expected 'not found' error"
 
     def test_add_worktree_duplicate_fails(self, running_container, test_project, fake_git_repo):
         """Test adding duplicate worktree fails."""
@@ -217,9 +199,9 @@ class TestWorktreeAdd:
         result = run_abox("worktree", "add", "feature-1", cwd=test_project)
 
         assert result.returncode != 0, "Duplicate worktree should fail"
-        assert "already exists" in result.stdout.lower() or "already exists" in result.stderr.lower(), (
-            f"Expected 'already exists' error"
-        )
+        assert (
+            "already exists" in result.stdout.lower() or "already exists" in result.stderr.lower()
+        ), f"Expected 'already exists' error"
 
         # Cleanup
         run_abox("worktree", "remove", "feature-1", cwd=test_project)
@@ -248,10 +230,7 @@ class TestWorktreeRemove:
         assert result.returncode == 0, "Worktree add should succeed"
 
         # Verify it exists
-        result = exec_in_container(
-            container_name,
-            "test -d /git-worktrees/worktree-feature-2"
-        )
+        result = exec_in_container(container_name, "test -d /git-worktrees/worktree-feature-2")
         assert result.returncode == 0, "Worktree should exist"
 
         # Remove worktree
@@ -260,17 +239,11 @@ class TestWorktreeRemove:
         assert result.returncode == 0, f"worktree remove failed: {result.stderr}"
 
         # Verify worktree is gone
-        result = exec_in_container(
-            container_name,
-            "test -d /git-worktrees/worktree-feature-2"
-        )
+        result = exec_in_container(container_name, "test -d /git-worktrees/worktree-feature-2")
         assert result.returncode != 0, "Worktree directory should be removed"
 
         # Verify not in git worktree list
-        result = exec_in_container(
-            container_name,
-            "git worktree list"
-        )
+        result = exec_in_container(container_name, "git worktree list")
         assert "worktree-feature-2" not in result.stdout, "Worktree should not be in git list"
 
     def test_remove_nonexistent_worktree(self, running_container, test_project, fake_git_repo):
@@ -321,30 +294,24 @@ class TestWorktreeIntegration:
         assert branch in result.stdout, f"Branch not in list: {result.stdout}"
 
         # 3. Verify worktree directory structure
-        result = exec_in_container(
-            container_name,
-            f"test -d /git-worktrees/worktree-{branch}"
-        )
+        result = exec_in_container(container_name, f"test -d /git-worktrees/worktree-{branch}")
         assert result.returncode == 0, "Worktree directory should exist"
 
         # 4. Verify .boxctl is accessible (symlinked or copied)
         result = exec_in_container(
-            container_name,
-            f"test -d /git-worktrees/worktree-{branch}/.boxctl"
+            container_name, f"test -d /git-worktrees/worktree-{branch}/.boxctl"
         )
         assert result.returncode == 0, ".boxctl should be accessible in worktree"
 
         # 5. Create a file in worktree
         result = exec_in_container(
-            container_name,
-            f"echo 'test content' > /git-worktrees/worktree-{branch}/test-file.txt"
+            container_name, f"echo 'test content' > /git-worktrees/worktree-{branch}/test-file.txt"
         )
         assert result.returncode == 0, "Should be able to write in worktree"
 
         # 6. Verify file exists
         result = exec_in_container(
-            container_name,
-            f"cat /git-worktrees/worktree-{branch}/test-file.txt"
+            container_name, f"cat /git-worktrees/worktree-{branch}/test-file.txt"
         )
         assert result.returncode == 0
         assert "test content" in result.stdout
@@ -413,24 +380,20 @@ class TestWorktreeIntegration:
 
         # Create different files in each worktree
         exec_in_container(
-            container_name,
-            "echo 'feature 1' > /git-worktrees/worktree-feature-1/feature1.txt"
+            container_name, "echo 'feature 1' > /git-worktrees/worktree-feature-1/feature1.txt"
         )
         exec_in_container(
-            container_name,
-            "echo 'feature 2' > /git-worktrees/worktree-feature-2/feature2.txt"
+            container_name, "echo 'feature 2' > /git-worktrees/worktree-feature-2/feature2.txt"
         )
 
         # Verify files don't cross-contaminate
         result = exec_in_container(
-            container_name,
-            "test -f /git-worktrees/worktree-feature-1/feature2.txt"
+            container_name, "test -f /git-worktrees/worktree-feature-1/feature2.txt"
         )
         assert result.returncode != 0, "feature2.txt should not be in feature-1 worktree"
 
         result = exec_in_container(
-            container_name,
-            "test -f /git-worktrees/worktree-feature-2/feature1.txt"
+            container_name, "test -f /git-worktrees/worktree-feature-2/feature1.txt"
         )
         assert result.returncode != 0, "feature1.txt should not be in feature-2 worktree"
 

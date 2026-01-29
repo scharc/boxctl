@@ -68,11 +68,8 @@ def auto_detect_mcp_config(mcp_path: Path) -> Optional[Dict[str, Any]]:
         config = {
             "name": name,
             "description": description,
-            "config": {
-                "command": command,
-                "env": {}
-            },
-            "auto_detected": True
+            "config": {"command": command, "env": {}},
+            "auto_detected": True,
         }
     else:
         # No entry point - try to find server module
@@ -89,9 +86,9 @@ def auto_detect_mcp_config(mcp_path: Path) -> Optional[Dict[str, Any]]:
                         "config": {
                             "command": "python3",
                             "args": ["-m", f"{module_name}.server"],
-                            "env": {}
+                            "env": {},
                         },
-                        "auto_detected": True
+                        "auto_detected": True,
                     }
                     break
             else:
@@ -154,7 +151,7 @@ class LibraryManager:
                 # Fall back to path relative to package installation
                 # boxctl/library.py -> boxctl/ -> workspace/ -> library/
                 package_dir = Path(__file__).parent  # boxctl/
-                project_root = package_dir.parent     # workspace/
+                project_root = package_dir.parent  # workspace/
                 library_root = project_root / "library"
 
         self.library_root = library_root
@@ -253,12 +250,14 @@ class LibraryManager:
                 if readme_file.exists():
                     description = readme_file.read_text().split("\n")[0].replace("#", "").strip()
 
-                configs.append({
-                    "name": config_path.name,
-                    "path": str(config_path),
-                    "description": description,
-                    "has_config": config_file.exists(),
-                })
+                configs.append(
+                    {
+                        "name": config_path.name,
+                        "path": str(config_path),
+                        "description": description,
+                        "has_config": config_file.exists(),
+                    }
+                )
 
         return configs
 
@@ -317,7 +316,6 @@ class LibraryManager:
                     servers_by_name[info["name"]] = info
 
         return sorted(servers_by_name.values(), key=lambda x: x["name"])
-
 
     def _get_skill_info(self, skill_path: Path, source: str) -> Dict[str, str]:
         """Extract skill info from SKILL.md.

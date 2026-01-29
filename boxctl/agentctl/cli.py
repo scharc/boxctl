@@ -24,12 +24,7 @@ from boxctl.utils.terminal import reset_terminal
 console = Console()
 
 # Known agent names for validation
-AGENT_NAMES = [
-    "claude", "superclaude",
-    "codex", "supercodex",
-    "gemini", "supergemini",
-    "shell"
-]
+AGENT_NAMES = ["claude", "superclaude", "codex", "supercodex", "gemini", "supergemini", "shell"]
 
 
 @click.group(invoke_without_command=True)
@@ -81,7 +76,7 @@ def list_sessions(json_output: bool):
                 session["name"],
                 str(session["windows"]),
                 "yes" if session["attached"] else "no",
-                session["created"]
+                session["created"],
             )
 
         console.print(table)
@@ -107,7 +102,9 @@ def attach(agent: str):
             sys.exit(result.returncode)
         else:
             # Session doesn't exist, create it
-            console.print(f"[yellow]Session '{session_name}' not found. Creating new session...[/yellow]")
+            console.print(
+                f"[yellow]Session '{session_name}' not found. Creating new session...[/yellow]"
+            )
 
             # Get command for this agent
             cmd = get_agent_command(agent)
@@ -124,15 +121,13 @@ def attach(agent: str):
                 # Set SSH_AUTH_SOCK in tmux global environment before creating session
                 subprocess.run(
                     _tmux_cmd(["set-environment", "-g", "SSH_AUTH_SOCK", ssh_auth_sock]),
-                    check=False
+                    check=False,
                 )
 
             # Create new tmux session with standard boxctl config
-            result = subprocess.run(_tmux_cmd([
-                "new-session", "-s", session_name,
-                "-c", working_dir,
-                cmd
-            ]))
+            result = subprocess.run(
+                _tmux_cmd(["new-session", "-s", session_name, "-c", working_dir, cmd])
+            )
             sys.exit(result.returncode)
     finally:
         # Reset terminal to disable mouse mode when tmux exits
@@ -198,7 +193,9 @@ def peek(agent: str, lines: int, follow: bool):
 
         if session_info:
             status = "attached" if session_info["attached"] else "detached"
-            console.print(f"[cyan]=== {session_name} ({status}, {session_info['windows']} window(s)) ===[/cyan]")
+            console.print(
+                f"[cyan]=== {session_name} ({status}, {session_info['windows']} window(s)) ===[/cyan]"
+            )
         else:
             console.print(f"[cyan]=== {session_name} ===[/cyan]")
 

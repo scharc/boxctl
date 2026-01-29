@@ -24,7 +24,7 @@ class WorktreeMetadata:
             return {"worktrees": []}
 
         try:
-            with open(self.metadata_file, 'r') as f:
+            with open(self.metadata_file, "r") as f:
                 return json.load(f)
         except (json.JSONDecodeError, IOError):
             return {"worktrees": []}
@@ -34,7 +34,7 @@ class WorktreeMetadata:
         self._ensure_boxctl_dir()
 
         try:
-            with open(self.metadata_file, 'w') as f:
+            with open(self.metadata_file, "w") as f:
                 json.dump(data, f, indent=2)
         except IOError as e:
             raise Exception(f"Failed to save worktree metadata: {e}")
@@ -82,13 +82,15 @@ class WorktreeMetadata:
                 existing["commit"] = commit
         else:
             # Add new
-            worktrees.append({
-                "path": path,
-                "branch": branch,
-                "commit": commit,
-                "created": datetime.now().isoformat(),
-                "sessions": []
-            })
+            worktrees.append(
+                {
+                    "path": path,
+                    "branch": branch,
+                    "commit": commit,
+                    "created": datetime.now().isoformat(),
+                    "sessions": [],
+                }
+            )
 
         data["worktrees"] = worktrees
         self._save(data)

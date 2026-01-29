@@ -16,11 +16,13 @@ class TestContainerManagerImports:
     def test_container_manager_import(self):
         """Test that ContainerManager can be imported."""
         from boxctl.container import ContainerManager
+
         assert ContainerManager is not None
 
     def test_get_abox_environment_import(self):
         """Test that get_abox_environment can be imported."""
         from boxctl.container import get_abox_environment
+
         assert callable(get_abox_environment)
 
 
@@ -294,13 +296,7 @@ class TestMCPMounts:
             metadata = {
                 "servers": {
                     "test-server": {
-                        "mounts": [
-                            {
-                                "host": str(mount_dir),
-                                "container": "/data",
-                                "mode": "ro"
-                            }
-                        ]
+                        "mounts": [{"host": str(mount_dir), "container": "/data", "mode": "ro"}]
                     }
                 }
             }
@@ -378,7 +374,7 @@ class TestContainerManagerMethods:
 
         try:
             manager = ContainerManager()
-            assert hasattr(manager, 'create_container')
+            assert hasattr(manager, "create_container")
             assert callable(manager.create_container)
         except Exception:
             pass
@@ -390,7 +386,7 @@ class TestContainerManagerMethods:
         try:
             manager = ContainerManager()
             # Container manager should have methods for lifecycle
-            assert hasattr(manager, 'get_container')
-            assert hasattr(manager, 'is_running')
+            assert hasattr(manager, "get_container")
+            assert hasattr(manager, "is_running")
         except Exception:
             pass

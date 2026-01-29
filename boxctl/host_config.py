@@ -29,7 +29,7 @@ def get_tailscale_ip() -> Optional[str]:
             timeout=2.0,
         )
         if result.returncode == 0:
-            ip = result.stdout.strip().split('\n')[0]
+            ip = result.stdout.strip().split("\n")[0]
             if ip:
                 return ip
     except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
@@ -228,7 +228,7 @@ class HostConfig:
                 else:
                     return default
             # Convert Pydantic models to their values
-            if hasattr(value, 'model_dump'):
+            if hasattr(value, "model_dump"):
                 return value.model_dump()
             return value
 

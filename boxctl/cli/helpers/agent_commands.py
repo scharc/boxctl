@@ -13,7 +13,11 @@ from typing import Optional
 from rich.console import Console
 
 from boxctl.container import ContainerManager
-from boxctl.cli.helpers.tmux_ops import _sanitize_tmux_name, _resolve_tmux_prefix, _warn_if_base_outdated
+from boxctl.cli.helpers.tmux_ops import (
+    _sanitize_tmux_name,
+    _resolve_tmux_prefix,
+    _warn_if_base_outdated,
+)
 from boxctl.cli.helpers.utils import _sync_library_mcps, ContainerError
 from boxctl.cli.helpers.port_utils import (
     check_configured_ports,
@@ -160,20 +164,24 @@ def _build_agent_command(
     if extra_env:
         for key, value in extra_env.items():
             agent_cmd.extend(["-e", f"{key}={value}"])
-    agent_cmd.extend([
-        "-e",
-        f"BOXCTL_AGENT_LABEL={display}",
-        "-e",
-        f"BOXCTL_SESSION_NAME={session_name}",
-        "-e",
-        f"BOXCTL_CONTAINER={container_name}",
-    ])
-    agent_cmd.extend([
-        container_name,
-        "/bin/bash",
-        "-lc",
-        tmux_setup,
-    ])
+    agent_cmd.extend(
+        [
+            "-e",
+            f"BOXCTL_AGENT_LABEL={display}",
+            "-e",
+            f"BOXCTL_SESSION_NAME={session_name}",
+            "-e",
+            f"BOXCTL_CONTAINER={container_name}",
+        ]
+    )
+    agent_cmd.extend(
+        [
+            container_name,
+            "/bin/bash",
+            "-lc",
+            tmux_setup,
+        ]
+    )
 
     return agent_cmd, tmux_setup, display, session_name
 
@@ -249,7 +257,10 @@ def _handle_port_conflicts(project_dir: Path, container_name: str) -> bool:
     # Handle boxctl conflicts - offer to release
     for conflict in boxctl_conflicts:
         msg = format_conflict_message(conflict)
-        display_name = container_naming.extract_project_name(conflict.blocker_container) or conflict.blocker_container
+        display_name = (
+            container_naming.extract_project_name(conflict.blocker_container)
+            or conflict.blocker_container
+        )
 
         console.print(f"\n[bold]{msg}[/bold]")
         console.print(f"  0. Abort")
@@ -276,9 +287,13 @@ def _handle_port_conflicts(project_dir: Path, container_name: str) -> bool:
                 return False
         elif choice == 2:
             # Use different port
-            new_port = click.prompt(f"Enter new host port for container:{conflict.container_port}", type=int)
+            new_port = click.prompt(
+                f"Enter new host port for container:{conflict.container_port}", type=int
+            )
             _update_port_config(project_dir, conflict, new_port)
-            console.print(f"[green]Updated config: host:{new_port} → container:{conflict.container_port}[/green]")
+            console.print(
+                f"[green]Updated config: host:{new_port} → container:{conflict.container_port}[/green]"
+            )
         elif choice == 3:
             # Skip - remove from config temporarily
             console.print(f"[yellow]Skipping port {conflict.port}[/yellow]")
@@ -301,9 +316,13 @@ def _handle_port_conflicts(project_dir: Path, container_name: str) -> bool:
             return False
         elif choice == 1:
             # Use different port
-            new_port = click.prompt(f"Enter new host port for container:{conflict.container_port}", type=int)
+            new_port = click.prompt(
+                f"Enter new host port for container:{conflict.container_port}", type=int
+            )
             _update_port_config(project_dir, conflict, new_port)
-            console.print(f"[green]Updated config: host:{new_port} → container:{conflict.container_port}[/green]")
+            console.print(
+                f"[green]Updated config: host:{new_port} → container:{conflict.container_port}[/green]"
+            )
         elif choice == 2:
             # Skip
             console.print(f"[yellow]Skipping port {conflict.port}[/yellow]")
@@ -426,7 +445,9 @@ def _ensure_container_running(manager: ContainerManager, container_name: str) ->
                 hint=f"docker logs {container_name}  # Check container logs",
             ) from exc
 
-    console.print(f"[blue]Container {container_name} doesn't exist. Creating and starting...[/blue]")
+    console.print(
+        f"[blue]Container {container_name} doesn't exist. Creating and starting...[/blue]"
+    )
     project_name = manager.get_project_name(project_dir)
     boxctl_dir = get_boxctl_dir(project_dir)
 
@@ -443,6 +464,7 @@ def _ensure_container_running(manager: ContainerManager, container_name: str) ->
 
         # Apply config (packages) after container is created
         from boxctl.config import ProjectConfig
+
         config = ProjectConfig(project_dir)
         if config.exists():
             config.rebuild(manager, container_name)
@@ -522,6 +544,7 @@ def _run_agent_command(
     console.print(f"+{line}+")
     try:
         import subprocess
+
         result = subprocess.run(agent_cmd)
         sys.exit(result.returncode)
     finally:

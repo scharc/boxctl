@@ -45,6 +45,7 @@ def _show_warning_panel(message: str, title: str) -> None:
         title: Panel title (will be prefixed with ⚠)
     """
     from rich.panel import Panel
+
     console.print(Panel(message, title=f"⚠ {title}", border_style="yellow"))
 
 
@@ -57,6 +58,7 @@ def _get_tmux_socket(manager: ContainerManager, container_name: str) -> Optional
 def _get_tmux_sessions(manager: ContainerManager, container_name: str) -> list[dict]:
     """List tmux sessions in container. Wrapper for core function with CLI error handling."""
     from boxctl.utils.exceptions import TmuxError
+
     try:
         return list_tmux_sessions(manager, container_name)
     except TmuxError as e:
@@ -70,12 +72,19 @@ def _session_exists(manager: ContainerManager, container_name: str, session_name
     return session_exists(manager, container_name, session_name)
 
 
-def _get_agent_sessions(manager: ContainerManager, container_name: str, agent_type: Optional[str] = None) -> list[dict]:
+def _get_agent_sessions(
+    manager: ContainerManager, container_name: str, agent_type: Optional[str] = None
+) -> list[dict]:
     """Get tmux sessions filtered by agent type. Wrapper for core function."""
     return get_agent_sessions(manager, container_name, agent_type)
 
 
-def _generate_session_name(manager: ContainerManager, container_name: str, agent_type: str, identifier: Optional[str] = None) -> str:
+def _generate_session_name(
+    manager: ContainerManager,
+    container_name: str,
+    agent_type: str,
+    identifier: Optional[str] = None,
+) -> str:
     """Generate a unique session name for an agent instance. Wrapper for core function."""
     return generate_session_name(manager, container_name, agent_type, identifier)
 
@@ -93,7 +102,9 @@ def _resolve_tmux_prefix() -> Optional[str]:
     return None
 
 
-def _warn_if_agents_running(manager: ContainerManager, container_name: str, action: str = "rebuild") -> bool:
+def _warn_if_agents_running(
+    manager: ContainerManager, container_name: str, action: str = "rebuild"
+) -> bool:
     """Check for active sessions and warn user before disruptive actions.
 
     Warns about ALL tmux sessions (agents, shells, etc.) since any active
@@ -125,7 +136,9 @@ def _warn_if_agents_running(manager: ContainerManager, container_name: str, acti
     return click.confirm(f"\nProceed with {action}?", default=False)
 
 
-def _warn_if_base_outdated(manager: ContainerManager, container_name: str, project_dir: Optional[Path] = None) -> None:
+def _warn_if_base_outdated(
+    manager: ContainerManager, container_name: str, project_dir: Optional[Path] = None
+) -> None:
     """Show warnings if container or config is outdated.
 
     Checks:
@@ -148,6 +161,7 @@ def _warn_if_base_outdated(manager: ContainerManager, container_name: str, proje
         config = ProjectConfig(project_dir)
         if config.exists() and config.is_version_outdated():
             from boxctl import __version__ as current_version
+
             stored = config.boxctl_version or "unknown"
             warnings.append(f"Config created with boxctl {stored} (current: {current_version})")
     except Exception:
@@ -158,6 +172,7 @@ def _warn_if_base_outdated(manager: ContainerManager, container_name: str, proje
         warning_text += "\n\nRun 'abox rebase' to update."
         _show_warning_panel(warning_text, "Outdated Environment")
         import time
+
         time.sleep(2)  # Give user time to see the warning
 
 
@@ -190,11 +205,15 @@ def _warn_if_devices_missing(project_dir: Path) -> None:
         _show_warning_panel(
             f"The following devices are not available:\n{device_list}\n\n"
             f"[dim]Connect the device(s) and press Enter to retry, or type 'skip' to continue without them.[/dim]",
-            "Missing Devices"
+            "Missing Devices",
         )
 
         try:
-            user_input = console.input("[yellow]Press Enter to retry, or type 'skip': [/yellow]").strip().lower()
+            user_input = (
+                console.input("[yellow]Press Enter to retry, or type 'skip': [/yellow]")
+                .strip()
+                .lower()
+            )
         except (KeyboardInterrupt, EOFError):
             console.print("\n[yellow]Skipping missing devices...[/yellow]")
             break

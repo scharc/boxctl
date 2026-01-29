@@ -15,8 +15,8 @@ from boxctl.core.sessions import (
 class TestGetSessionsForContainer:
     """Test getting sessions for a specific container"""
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.list_tmux_sessions')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.list_tmux_sessions")
     def test_get_sessions_running_container(self, mock_list_tmux, mock_manager_class):
         """Test getting sessions from a running container"""
         mock_manager = Mock()
@@ -34,7 +34,7 @@ class TestGetSessionsForContainer:
         mock_manager.is_running.assert_called_once_with("boxctl-test")
         mock_list_tmux.assert_called_once_with(mock_manager, "boxctl-test")
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_get_sessions_stopped_container(self, mock_manager_class):
         """Test getting sessions from a stopped container"""
         mock_manager = Mock()
@@ -45,7 +45,7 @@ class TestGetSessionsForContainer:
 
         assert result == []
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_get_sessions_exception_handling(self, mock_manager_class):
         """Test exception handling in get_sessions_for_container"""
         mock_manager_class.side_effect = Exception("Connection failed")
@@ -58,8 +58,8 @@ class TestGetSessionsForContainer:
 class TestGetAllSessions:
     """Test getting sessions across all containers"""
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.list_tmux_sessions')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.list_tmux_sessions")
     def test_get_all_sessions_multiple_containers(self, mock_list_tmux, mock_manager_class):
         """Test getting sessions from multiple containers"""
         mock_manager = Mock()
@@ -75,7 +75,9 @@ class TestGetAllSessions:
         # Mock sessions for each container
         def mock_sessions(manager, container_name):
             if container_name == "boxctl-project1":
-                return [{"name": "claude", "windows": 1, "attached": False, "created": "2024-01-01"}]
+                return [
+                    {"name": "claude", "windows": 1, "attached": False, "created": "2024-01-01"}
+                ]
             elif container_name == "boxctl-project2":
                 return [{"name": "codex", "windows": 2, "attached": True, "created": "2024-01-02"}]
             return []
@@ -90,7 +92,7 @@ class TestGetAllSessions:
         assert result[1]["container"] == "boxctl-project2"
         assert result[1]["name"] == "codex"
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_get_all_sessions_no_containers(self, mock_manager_class):
         """Test getting sessions when no containers exist"""
         mock_manager = Mock()
@@ -101,8 +103,8 @@ class TestGetAllSessions:
 
         assert result == []
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.list_tmux_sessions')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.list_tmux_sessions")
     def test_get_all_sessions_filters_non_agentbox(self, mock_list_tmux, mock_manager_class):
         """Test that non-boxctl containers are filtered out"""
         mock_manager = Mock()
@@ -122,7 +124,7 @@ class TestGetAllSessions:
         assert len(result) == 1
         assert result[0]["container"] == "boxctl-project1"
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_get_all_sessions_exception_handling(self, mock_manager_class):
         """Test exception handling in get_all_sessions"""
         mock_manager_class.side_effect = Exception("Docker connection failed")
@@ -135,8 +137,8 @@ class TestGetAllSessions:
 class TestCaptureSessionOutput:
     """Test capturing session output"""
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.capture_pane')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.capture_pane")
     def test_capture_output_success(self, mock_capture, mock_manager_class):
         """Test successfully capturing session output"""
         mock_manager = Mock()
@@ -149,7 +151,7 @@ class TestCaptureSessionOutput:
         assert result == "Test output\nLine 2\nLine 3"
         mock_capture.assert_called_once_with(mock_manager, "boxctl-test", "claude", 50)
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_capture_output_stopped_container(self, mock_manager_class):
         """Test capturing output from stopped container"""
         mock_manager = Mock()
@@ -160,8 +162,8 @@ class TestCaptureSessionOutput:
 
         assert result == ""
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.capture_pane')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.capture_pane")
     def test_capture_output_command_failure(self, mock_capture, mock_manager_class):
         """Test handling command failure"""
         mock_manager = Mock()
@@ -173,7 +175,7 @@ class TestCaptureSessionOutput:
 
         assert result == ""
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_capture_output_exception_handling(self, mock_manager_class):
         """Test exception handling in capture_session_output"""
         mock_manager_class.side_effect = Exception("Failed")
@@ -186,8 +188,8 @@ class TestCaptureSessionOutput:
 class TestSendKeysToSession:
     """Test sending keys to a session"""
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.send_keys')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.send_keys")
     def test_send_keys_success(self, mock_send, mock_manager_class):
         """Test successfully sending keys"""
         mock_manager = Mock()
@@ -200,7 +202,7 @@ class TestSendKeysToSession:
         assert result is True
         mock_send.assert_called_once_with(mock_manager, "boxctl-test", "claude", "ls\n", True)
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_send_keys_stopped_container(self, mock_manager_class):
         """Test sending keys to stopped container"""
         mock_manager = Mock()
@@ -211,8 +213,8 @@ class TestSendKeysToSession:
 
         assert result is False
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.send_keys')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.send_keys")
     def test_send_keys_failure(self, mock_send, mock_manager_class):
         """Test handling send keys failure"""
         mock_manager = Mock()
@@ -228,8 +230,8 @@ class TestSendKeysToSession:
 class TestResizeSession:
     """Test resizing a session"""
 
-    @patch('boxctl.container.ContainerManager')
-    @patch('boxctl.core.sessions.resize_window')
+    @patch("boxctl.container.ContainerManager")
+    @patch("boxctl.core.sessions.resize_window")
     def test_resize_success(self, mock_resize, mock_manager_class):
         """Test successfully resizing a session"""
         mock_manager = Mock()
@@ -242,7 +244,7 @@ class TestResizeSession:
         assert result is True
         mock_resize.assert_called_once_with(mock_manager, "boxctl-test", "claude", 80, 24)
 
-    @patch('boxctl.container.ContainerManager')
+    @patch("boxctl.container.ContainerManager")
     def test_resize_stopped_container(self, mock_manager_class):
         """Test resizing session in stopped container"""
         mock_manager = Mock()

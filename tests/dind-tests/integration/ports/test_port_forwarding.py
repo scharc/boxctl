@@ -75,9 +75,9 @@ class TestPortsCommands:
             config = yaml.safe_load(f)
 
         host_ports = config.get("ports", {}).get("host", [])
-        assert "3000" in host_ports or 3000 in host_ports, (
-            f"Port 3000 not in host ports: {host_ports}"
-        )
+        assert (
+            "3000" in host_ports or 3000 in host_ports
+        ), f"Port 3000 not in host ports: {host_ports}"
 
     def test_expose_with_mapping(self, test_project):
         """expose command should support container:host port mapping."""
@@ -90,11 +90,11 @@ class TestPortsCommands:
 
         host_ports = config.get("ports", {}).get("host", [])
         # Should have the mapping stored
-        assert any("8080" in str(p) and "9090" in str(p) for p in host_ports) or \
-               "8080:9090" in host_ports or \
-               "9090" in host_ports, (
-            f"Port mapping not found in host ports: {host_ports}"
-        )
+        assert (
+            any("8080" in str(p) and "9090" in str(p) for p in host_ports)
+            or "8080:9090" in host_ports
+            or "9090" in host_ports
+        ), f"Port mapping not found in host ports: {host_ports}"
 
     def test_unexpose_removes_from_config(self, test_project):
         """unexpose command should remove port from .boxctl.yml."""
@@ -111,9 +111,9 @@ class TestPortsCommands:
             config = yaml.safe_load(f)
 
         host_ports = config.get("ports", {}).get("host", [])
-        assert "4000" not in host_ports and 4000 not in host_ports, (
-            f"Port 4000 still in host ports: {host_ports}"
-        )
+        assert (
+            "4000" not in host_ports and 4000 not in host_ports
+        ), f"Port 4000 still in host ports: {host_ports}"
 
     def test_forward_updates_config(self, test_project):
         """forward command should update .boxctl.yml with container port."""
@@ -152,9 +152,9 @@ class TestPortsCommands:
         container_ports = config.get("ports", {}).get("container", [])
         for entry in container_ports:
             if isinstance(entry, dict):
-                assert entry.get("name") != "remove-me", (
-                    f"Forward entry still in config: {container_ports}"
-                )
+                assert (
+                    entry.get("name") != "remove-me"
+                ), f"Forward entry still in config: {container_ports}"
 
     def test_unforward_by_port(self, test_project):
         """unforward command should accept port number."""
@@ -176,15 +176,14 @@ class TestPortsCommands:
 
         # Should show both types
         assert "3000" in result.stdout, f"Exposed port not in list: {result.stdout}"
-        assert "9100" in result.stdout or "test-list" in result.stdout, (
-            f"Forwarded port not in list: {result.stdout}"
-        )
+        assert (
+            "9100" in result.stdout or "test-list" in result.stdout
+        ), f"Forwarded port not in list: {result.stdout}"
 
 
 @pytest.mark.integration
 @pytest.mark.skipif(
-    not is_boxctld_running(),
-    reason="boxctld not running - skipping end-to-end tests"
+    not is_boxctld_running(), reason="boxctld not running - skipping end-to-end tests"
 )
 class TestPortForwardingEndToEnd:
     """End-to-end tests for port forwarding with boxctld.
@@ -210,9 +209,9 @@ class TestPortForwardingEndToEnd:
             container_name,
             f"python3 -c '"
             f"import socket; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); "
-            f"s.bind((\"0.0.0.0\", {test_port})); s.listen(1); "
-            f"print(\"READY\"); "
-            f"c,a=s.accept(); c.send(b\"HELLO\"); c.close(); s.close()' &",
+            f's.bind(("0.0.0.0", {test_port})); s.listen(1); '
+            f'print("READY"); '
+            f'c,a=s.accept(); c.send(b"HELLO"); c.close(); s.close()\' &',
         )
 
         # Give server time to start
@@ -276,10 +275,7 @@ class TestPortForwardingEndToEnd:
 
         try:
             # Forward the port into container
-            result = run_abox(
-                "ports", "forward", "test-e2e", str(test_port),
-                cwd=test_project
-            )
+            result = run_abox("ports", "forward", "test-e2e", str(test_port), cwd=test_project)
             assert result.returncode == 0, f"forward failed: {result.stderr}"
 
             # Give tunnel time to establish
@@ -291,9 +287,9 @@ class TestPortForwardingEndToEnd:
                 container_name,
                 f"python3 -c '"
                 f"import socket; s=socket.socket(); s.settimeout(5); "
-                f"s.connect((\"127.0.0.1\", {test_port})); "
+                f's.connect(("127.0.0.1", {test_port})); '
                 f"print(s.recv(1024)); "
-                f"s.send(b\"CONTAINER_HELLO\"); s.close()'",
+                f's.send(b"CONTAINER_HELLO"); s.close()\'',
                 timeout=15,
             )
 
@@ -359,8 +355,7 @@ class TestPortsListOutput:
         # Should differentiate between exposed and forwarded
         output = result.stdout.lower()
         # Check for some indication of direction (exact format may vary)
-        has_direction_info = (
-            ("expose" in output or "host" in output or "container" in output) or
-            ("forward" in output or "->" in result.stdout or "→" in result.stdout)
+        has_direction_info = ("expose" in output or "host" in output or "container" in output) or (
+            "forward" in output or "->" in result.stdout or "→" in result.stdout
         )
         assert has_direction_info, f"No direction info in output: {result.stdout}"

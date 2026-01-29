@@ -24,20 +24,20 @@ fi
 # Export env var so MCP can also detect super mode
 export BOXCTL_SUPER_MODE=true
 
-# Load .env files if they exist
-for envfile in ~/.env .env /workspace/.boxctl/.env; do
+# Load .env files if they exist (qwen-specific first, then general)
+for envfile in ~/.qwen/.env ~/.env .env /workspace/.boxctl/.env; do
     # shellcheck source=/dev/null
     [[ -f "$envfile" ]] && source "$envfile"
 done
 
 if [[ -z "$OPENAI_API_KEY" ]]; then
     echo "Error: OPENAI_API_KEY not set" >&2
-    echo "Add to ~/.env, .env, or /workspace/.boxctl/.env" >&2
+    echo "Add to ~/.qwen/.env, ~/.env, .env, or /workspace/.boxctl/.env" >&2
     exit 1
 fi
 
 exec qwen \
     --auth-type openai \
-    --model "${QWEN_MODEL:-qwen3-coder}" \
+    --model "${QWEN_MODEL:-${OPENAI_MODEL:-qwen3-coder}}" \
     --yolo \
     "$@"

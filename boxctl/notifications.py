@@ -47,7 +47,7 @@ def send_notification(
     container: Optional[str] = None,
     session: Optional[str] = None,
     buffer: Optional[str] = None,
-    enhance: bool = False
+    enhance: bool = False,
 ) -> bool:
     """Send a notification via the boxctld daemon.
 
@@ -113,7 +113,7 @@ def send_notification(
                         "title": title,
                         "message": message,
                         "urgency": urgency,
-                    }
+                    },
                 }
 
                 if metadata:
@@ -127,13 +127,11 @@ def send_notification(
 
                 # Read response with length prefix
                 response_header = await asyncio.wait_for(
-                    process.stdout.readexactly(4),
-                    timeout=timeout
+                    process.stdout.readexactly(4), timeout=timeout
                 )
                 response_length = struct.unpack(">I", response_header)[0]
                 response_data = await asyncio.wait_for(
-                    process.stdout.readexactly(response_length),
-                    timeout=timeout
+                    process.stdout.readexactly(response_length), timeout=timeout
                 )
                 response = json.loads(response_data.decode("utf-8"))
 
@@ -152,6 +150,7 @@ def send_notification(
             # Using daemon thread with join(timeout) instead of ThreadPoolExecutor
             # because TPE.shutdown(wait=True) blocks even after timeout
             import threading
+
             result_container = [False]
 
             def run_in_thread():

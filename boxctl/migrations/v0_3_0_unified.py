@@ -223,9 +223,7 @@ class UnifiedConfigStructure(Migration):
                 link_path.unlink()
             elif link_path.is_dir():
                 # Don't remove directories - they may contain state
-                logger.warning(
-                    f"Cannot create symlink at {link_path}: directory exists"
-                )
+                logger.warning(f"Cannot create symlink at {link_path}: directory exists")
                 return
 
         try:

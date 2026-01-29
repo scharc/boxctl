@@ -20,10 +20,7 @@ class TestNotificationClient:
         """Test that abox-notify script is available in container."""
         container_name = f"boxctl-{test_project.name}"
 
-        result = exec_in_container(
-            container_name,
-            "which abox-notify"
-        )
+        result = exec_in_container(container_name, "which abox-notify")
 
         assert result.returncode == 0, "abox-notify should be in PATH"
         assert "abox-notify" in result.stdout
@@ -35,8 +32,7 @@ class TestNotificationClient:
         # Note: This will fail if SSH tunnel is not running, which is expected in DinD
         # We're testing that the script exists and accepts correct arguments
         result = exec_in_container(
-            container_name,
-            "abox-notify 'Test Title' 'Test Message' 2>&1 || echo 'EXPECTED_FAIL'"
+            container_name, "abox-notify 'Test Title' 'Test Message' 2>&1 || echo 'EXPECTED_FAIL'"
         )
 
         # Should not crash - either succeeds or fails gracefully
@@ -51,7 +47,7 @@ class TestNotificationClient:
         for urgency in urgency_levels:
             result = exec_in_container(
                 container_name,
-                f"abox-notify 'Title' 'Message' {urgency} 2>&1 || echo 'EXPECTED_FAIL'"
+                f"abox-notify 'Title' 'Message' {urgency} 2>&1 || echo 'EXPECTED_FAIL'",
             )
             # Should accept the urgency level without error
             assert "EXPECTED_FAIL" in result.stdout or result.returncode == 0
@@ -67,7 +63,7 @@ class TestNotificationPayload:
 
         result = exec_in_container(
             container_name,
-            "python3 -c 'from boxctl.notifications import send_notification; print(\"OK\")'"
+            "python3 -c 'from boxctl.notifications import send_notification; print(\"OK\")'",
         )
 
         assert result.returncode == 0
@@ -82,9 +78,9 @@ class TestNotificationPayload:
             container_name,
             "python3 -c '"
             "from boxctl.notifications import send_notification; "
-            "result = send_notification(\"Title\", \"Message\"); "
-            "print(\"RESULT:\", result)"
-            "'"
+            'result = send_notification("Title", "Message"); '
+            'print("RESULT:", result)'
+            "'",
         )
 
         assert result.returncode == 0
@@ -109,10 +105,7 @@ result = send_notification(
 print(f"RESULT:{result}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         assert result.returncode == 0
         # Will be False without SSH tunnel, but should not crash
@@ -131,9 +124,9 @@ class TestNotificationErrorHandling:
             container_name,
             "python3 -c '"
             "from boxctl.notifications import send_notification; "
-            "result = send_notification(\"Title\", \"Message\"); "
+            'result = send_notification("Title", "Message"); '
             "exit(0 if result is False else 1)"
-            "'"
+            "'",
         )
 
         assert result.returncode == 0, "Should return False without SSH tunnel"
@@ -147,9 +140,9 @@ class TestNotificationErrorHandling:
             container_name,
             "python3 -c '"
             "from boxctl.notifications import send_notification; "
-            "result = send_notification(\"Title\", \"Message\", urgency=\"invalid\"); "
-            "print(\"OK\")"
-            "'"
+            'result = send_notification("Title", "Message", urgency="invalid"); '
+            'print("OK")'
+            "'",
         )
 
         assert result.returncode == 0
@@ -163,9 +156,9 @@ class TestNotificationErrorHandling:
             container_name,
             "python3 -c '"
             "from boxctl.notifications import send_notification; "
-            "result = send_notification(\"\", \"Message\"); "
-            "print(\"OK\")"
-            "'"
+            'result = send_notification("", "Message"); '
+            'print("OK")'
+            "'",
         )
 
         # Should not crash
@@ -183,9 +176,9 @@ class TestNotificationErrorHandling:
             container_name,
             f"python3 -c '"
             "from boxctl.notifications import send_notification; "
-            f"result = send_notification(\"Title\", \"{long_message}\"); "
-            "print(\"OK\")"
-            "'"
+            f'result = send_notification("Title", "{long_message}"); '
+            'print("OK")'
+            "'",
         )
 
         # Should handle long messages without crashing
@@ -206,8 +199,8 @@ class TestSshSocketPath:
             "python3 -c '"
             "from boxctl.notifications import _get_ssh_socket_path; "
             "result = _get_ssh_socket_path(); "
-            "print(f\"RESULT:{result}\")"
-            "'"
+            'print(f"RESULT:{result}")'
+            "'",
         )
 
         assert result.returncode == 0
@@ -224,10 +217,10 @@ class TestSshSocketPath:
             "from boxctl.notifications import _get_ssh_socket_path; "
             "# Create the file so it passes exists check; "
             "from pathlib import Path; "
-            "Path(\"/tmp/test.sock\").touch(); "
+            'Path("/tmp/test.sock").touch(); '
             "result = _get_ssh_socket_path(); "
-            "print(f\"RESULT:{result}\")"
-            "'"
+            'print(f"RESULT:{result}")'
+            "'",
         )
 
         assert result.returncode == 0
@@ -248,10 +241,10 @@ class TestNotificationConfigIntegration:
             "python3 -c '"
             "from boxctl.host_config import get_config; "
             "config = get_config(); "
-            "normal = config.get(\"notifications\", \"timeout\"); "
-            "enhanced = config.get(\"notifications\", \"timeout_enhanced\"); "
-            "print(f\"NORMAL:{normal} ENHANCED:{enhanced}\")"
-            "'"
+            'normal = config.get("notifications", "timeout"); '
+            'enhanced = config.get("notifications", "timeout_enhanced"); '
+            'print(f"NORMAL:{normal} ENHANCED:{enhanced}")'
+            "'",
         )
 
         assert result.returncode == 0
@@ -271,7 +264,7 @@ class TestNotificationIntegration:
         # Test with explicit arguments
         result = exec_in_container(
             container_name,
-            "abox-notify 'Integration Test' 'This is a test message' normal 2>&1 || echo 'CALLED'"
+            "abox-notify 'Integration Test' 'This is a test message' normal 2>&1 || echo 'CALLED'",
         )
 
         # Script should be called (may fail due to no SSH tunnel, but that's OK)
@@ -296,10 +289,7 @@ except Exception as e:
     print(f"ERROR:{e}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         # Should execute without crashing
         assert result.returncode == 0
@@ -324,10 +314,7 @@ result = send_notification(
 print(f"RESULT:{result}")
 """
 
-        result = exec_in_container(
-            container_name,
-            f"python3 -c '{script}'"
-        )
+        result = exec_in_container(container_name, f"python3 -c '{script}'")
 
         # Should execute without crashing
         assert result.returncode == 0
@@ -341,7 +328,7 @@ print(f"RESULT:{result}")
         result = exec_in_container(
             container_name,
             "tmux new-session -d -s notify-test "
-            "'abox-notify \"Session Test\" \"From tmux\" 2>&1 > /tmp/notify-output.txt; sleep 2'"
+            '\'abox-notify "Session Test" "From tmux" 2>&1 > /tmp/notify-output.txt; sleep 2\'',
         )
         assert result.returncode == 0
 
@@ -350,8 +337,7 @@ print(f"RESULT:{result}")
 
         # Check that command was executed
         result = exec_in_container(
-            container_name,
-            "test -f /tmp/notify-output.txt && echo 'EXISTS'"
+            container_name, "test -f /tmp/notify-output.txt && echo 'EXISTS'"
         )
         assert "EXISTS" in result.stdout
 

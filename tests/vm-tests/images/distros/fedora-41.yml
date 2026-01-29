@@ -1,0 +1,51 @@
+# Fedora 41 configuration
+# Copyright (c) 2025 Marc Schütze <scharc@gmail.com>
+# SPDX-License-Identifier: MIT
+
+name: fedora-41
+display_name: Fedora 41
+
+# Cloud image source
+cloud_image:
+  url: https://download.fedoraproject.org/pub/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-41-1.4.x86_64.qcow2
+  checksum_url: https://download.fedoraproject.org/pub/fedora/linux/releases/41/Cloud/x86_64/images/Fedora-Cloud-41-1.4-x86_64-CHECKSUM
+  format: qcow2
+
+# libvirt os-variant for optimizations
+# Note: fedora41 may not be available, use generic
+os_variant: fedora-unknown
+
+# Package manager
+package_manager: dnf
+
+# Docker installation
+docker:
+  package: docker
+  service: docker
+  install_cmd: |
+    dnf install -y docker
+    systemctl enable docker
+    systemctl start docker
+
+# Python setup
+python:
+  package: python3
+  pip_package: python3-pip
+  version: "3.12"
+
+# Additional packages for testing
+test_packages:
+  - python3-devel
+  - gcc
+  - git
+  - curl
+  - wget
+  - jq
+  - vim
+  - tmux
+  - pipx
+
+# Boot parameters
+boot:
+  timeout: 120
+  cloud_init_timeout: 600

@@ -22,10 +22,7 @@ def test_config_hostname_property():
         config_file.parent.mkdir(exist_ok=True)
 
         # Create config with hostname
-        config_data = {
-            "version": "1.0",
-            "hostname": "test-host"
-        }
+        config_data = {"version": "1.0", "hostname": "test-host"}
 
         with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
@@ -48,9 +45,7 @@ def test_config_no_hostname():
         config_file.parent.mkdir(exist_ok=True)
 
         # Create config without hostname
-        config_data = {
-            "version": "1.0"
-        }
+        config_data = {"version": "1.0"}
 
         with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
@@ -73,10 +68,7 @@ def test_config_rebuild_with_hostname_doesnt_crash():
         config_file.parent.mkdir(exist_ok=True)
 
         # Create config with hostname
-        config_data = {
-            "version": "1.0",
-            "hostname": "test-host"
-        }
+        config_data = {"version": "1.0", "hostname": "test-host"}
 
         with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
@@ -89,7 +81,7 @@ def test_config_rebuild_with_hostname_doesnt_crash():
 
         # This should not crash even though NetworkManager doesn't exist
         # The code now prints a warning instead of importing non-existent module
-        with patch('boxctl.config.console'):
+        with patch("boxctl.config.console"):
             # Should not raise ImportError
             config.rebuild(mock_manager, "test-container")
 
@@ -105,9 +97,7 @@ def test_config_rebuild_without_hostname():
         config_file.parent.mkdir(exist_ok=True)
 
         # Create config without hostname
-        config_data = {
-            "version": "1.0"
-        }
+        config_data = {"version": "1.0"}
 
         with open(config_file, "w") as f:
             yaml.safe_dump(config_data, f)
@@ -119,5 +109,5 @@ def test_config_rebuild_without_hostname():
         mock_manager = Mock()
 
         # Should work fine
-        with patch('boxctl.config.console'):
+        with patch("boxctl.config.console"):
             config.rebuild(mock_manager, "test-container")

@@ -34,9 +34,9 @@ class TestNetworkConnections:
 
         result = run_abox("network", "list", cwd=test_project)
         assert result.returncode == 0, f"network list failed: {result.stderr}"
-        assert nginx_container in result.stdout, (
-            f"Connected container not shown in network list. stdout: {result.stdout}"
-        )
+        assert (
+            nginx_container in result.stdout
+        ), f"Connected container not shown in network list. stdout: {result.stdout}"
 
         result = run_abox("network", "disconnect", nginx_container, cwd=test_project)
         assert result.returncode == 0, f"network disconnect failed: {result.stderr}"
@@ -47,6 +47,6 @@ class TestNetworkConnections:
             if result.returncode != 0:
                 break
             time.sleep(1)
-        assert result is not None and result.returncode != 0, (
-            "hostname still resolvable after disconnect; expected failure"
-        )
+        assert (
+            result is not None and result.returncode != 0
+        ), "hostname still resolvable after disconnect; expected failure"

@@ -72,7 +72,9 @@ def get_all_sessions() -> List[Dict]:
     from concurrent.futures import ThreadPoolExecutor, as_completed
     from boxctl.container import ContainerManager
 
-    def fetch_sessions_for_container(manager: "ContainerManager", container_name: str) -> List[Dict]:
+    def fetch_sessions_for_container(
+        manager: "ContainerManager", container_name: str
+    ) -> List[Dict]:
         """Fetch sessions for a single container (runs in thread pool)."""
         if not container_name.startswith(ContainerDefaults.CONTAINER_PREFIX):
             return []
@@ -95,7 +97,9 @@ def get_all_sessions() -> List[Dict]:
 
     try:
         manager = ContainerManager()
-        all_containers = manager.client.containers.list(filters={"name": ContainerDefaults.CONTAINER_PREFIX})
+        all_containers = manager.client.containers.list(
+            filters={"name": ContainerDefaults.CONTAINER_PREFIX}
+        )
 
         if not all_containers:
             return []
@@ -138,7 +142,9 @@ def capture_session_output(container_name: str, session_name: str, lines: int = 
         return ""
 
 
-def send_keys_to_session(container_name: str, session_name: str, keys: str, literal: bool = True) -> bool:
+def send_keys_to_session(
+    container_name: str, session_name: str, keys: str, literal: bool = True
+) -> bool:
     """Send keystrokes to a tmux session.
 
     Args:
@@ -219,7 +225,7 @@ def get_agent_sessions(
             elif session_name.startswith(f"{atype}-"):
                 # Named or numbered session
                 matched_agent = atype
-                identifier = session_name[len(atype) + 1:]
+                identifier = session_name[len(atype) + 1 :]
                 break
 
         # Skip sessions that don't match known agents
@@ -230,14 +236,16 @@ def get_agent_sessions(
         if agent_type and matched_agent != agent_type:
             continue
 
-        result.append({
-            "name": session_name,
-            "agent_type": matched_agent,
-            "identifier": identifier,
-            "windows": session["windows"],
-            "attached": session["attached"],
-            "created": session.get("created", ""),
-        })
+        result.append(
+            {
+                "name": session_name,
+                "agent_type": matched_agent,
+                "identifier": identifier,
+                "windows": session["windows"],
+                "attached": session["attached"],
+                "created": session.get("created", ""),
+            }
+        )
 
     return result
 
@@ -322,14 +330,22 @@ def create_agent_session(
 
         # Check if session already exists
         if session_exists(manager, container_name, session_name):
-            return {"success": False, "session_name": session_name, "message": "Session already exists"}
+            return {
+                "success": False,
+                "session_name": session_name,
+                "message": "Session already exists",
+            }
 
         # Get agent command
         command = AGENT_COMMANDS.get(agent_type, "/bin/bash")
 
         # Create tmux session
         if tmux_create_session(manager, container_name, session_name, command):
-            return {"success": True, "session_name": session_name, "message": "Session created successfully"}
+            return {
+                "success": True,
+                "session_name": session_name,
+                "message": "Session created successfully",
+            }
         else:
             return {"success": False, "session_name": "", "message": "Failed to create session"}
 

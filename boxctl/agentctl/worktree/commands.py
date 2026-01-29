@@ -69,6 +69,7 @@ def list_worktrees(json_output: bool):
 
     if json_output:
         import json
+
         # Add metadata to worktrees
         for wt in worktrees:
             meta = metadata_list.get(wt["path"], {})
@@ -78,7 +79,9 @@ def list_worktrees(json_output: bool):
     else:
         if not worktrees:
             console.print("[yellow]No worktrees found[/yellow]")
-            console.print("\n[dim]Tip: Create a worktree with: agentctl worktree add <branch>[/dim]")
+            console.print(
+                "\n[dim]Tip: Create a worktree with: agentctl worktree add <branch>[/dim]"
+            )
             return
 
         table = Table(title="GIT WORKTREES")
@@ -369,7 +372,7 @@ def switch_worktree(branch: str, agent: str):
                 "[yellow]The agent has been instructed to STOP working.[/yellow]\n"
             ),
             border_style="red",
-            title="[bold]Session Switch[/bold]"
+            title="[bold]Session Switch[/bold]",
         )
         console.print(panel)
 
@@ -404,8 +407,7 @@ def switch_worktree(branch: str, agent: str):
         if ssh_auth_sock:
             # Set SSH_AUTH_SOCK in tmux global environment before creating session
             subprocess.run(
-                _tmux_cmd(["set-environment", "-g", "SSH_AUTH_SOCK", ssh_auth_sock]),
-                check=False
+                _tmux_cmd(["set-environment", "-g", "SSH_AUTH_SOCK", ssh_auth_sock]), check=False
             )
 
         tmux_args = _tmux_cmd(["new-session", "-s", session_name, "-c", target_path, cmd])

@@ -60,9 +60,20 @@ class PTYSession:
             # Disable tmux mouse mode before attaching to prevent conflict with xterm.js
             # Tmux mouse mode interferes with xterm.js scrollback scrolling
             try:
-                disable_mouse = [BinPaths.TMUX, "set-option", "-t", self.session_name, "mouse", "off"]
-                container.exec_run(disable_mouse, user=ContainerPaths.USER, environment={"TMUX_TMPDIR": "/tmp"})
-                logger.debug(f"Disabled tmux mouse mode for web UI: {self.container_name}/{self.session_name}")
+                disable_mouse = [
+                    BinPaths.TMUX,
+                    "set-option",
+                    "-t",
+                    self.session_name,
+                    "mouse",
+                    "off",
+                ]
+                container.exec_run(
+                    disable_mouse, user=ContainerPaths.USER, environment={"TMUX_TMPDIR": "/tmp"}
+                )
+                logger.debug(
+                    f"Disabled tmux mouse mode for web UI: {self.container_name}/{self.session_name}"
+                )
             except Exception as e:
                 logger.warning(f"Could not disable tmux mouse mode: {e}")
 
@@ -83,17 +94,14 @@ class PTYSession:
                     "USER": ContainerPaths.USER,
                     "TMUX_TMPDIR": "/tmp",
                     "LANG": "en_US.UTF-8",
-                    "LC_ALL": "en_US.UTF-8"
-                }
+                    "LC_ALL": "en_US.UTF-8",
+                },
             )
             self.exec_id = exec_create["Id"]
 
             # Get socket for streaming - full duplex (read and write)
             self._socket = self.manager.client.api.exec_start(
-                self.exec_id,
-                tty=True,
-                socket=True,
-                demux=False
+                self.exec_id, tty=True, socket=True, demux=False
             )
 
             # Get underlying socket
@@ -105,7 +113,9 @@ class PTYSession:
             # Start read loop
             self._read_task = asyncio.create_task(self._read_loop())
 
-            logger.info(f"PTY streaming started (full duplex): {self.container_name}/{self.session_name}")
+            logger.info(
+                f"PTY streaming started (full duplex): {self.container_name}/{self.session_name}"
+            )
             return True
 
         except NotFound:
@@ -125,10 +135,7 @@ class PTYSession:
         while self.running:
             try:
                 # Read from socket in executor to avoid blocking
-                data = await loop.run_in_executor(
-                    None,
-                    self._blocking_read
-                )
+                data = await loop.run_in_executor(None, self._blocking_read)
 
                 if data is None:
                     # Error reading
@@ -207,10 +214,7 @@ class PTYSession:
 
         try:
             loop = asyncio.get_event_loop()
-            await loop.run_in_executor(
-                None,
-                lambda: self._raw_socket.sendall(data.encode('utf-8'))
-            )
+            await loop.run_in_executor(None, lambda: self._raw_socket.sendall(data.encode("utf-8")))
             return True
         except Exception as e:
             logger.error(f"PTY write error: {e}")
@@ -238,11 +242,7 @@ class PTYSession:
             logger.debug(f"PTY broadcasting paused for resize: {width}x{height}")
 
             # Resize the PTY
-            self.manager.client.api.exec_resize(
-                self.exec_id,
-                height=height,
-                width=width
-            )
+            self.manager.client.api.exec_resize(self.exec_id, height=height, width=width)
             logger.debug(f"PTY resized: {width}x{height}")
 
             # Wait for tmux to fully stabilize after resize (tmux redraws screen)
@@ -299,8 +299,10 @@ class PTYSession:
         if self._raw_socket and self.running:
             try:
                 # Send tmux prefix (Ctrl+B) followed by 'd' to detach
-                self._raw_socket.sendall(b'\x02d')
-                logger.debug(f"Sent detach sequence to tmux: {self.container_name}/{self.session_name}")
+                self._raw_socket.sendall(b"\x02d")
+                logger.debug(
+                    f"Sent detach sequence to tmux: {self.container_name}/{self.session_name}"
+                )
                 await asyncio.sleep(0.1)  # Give tmux time to process
             except Exception as e:
                 logger.warning(f"Failed to send detach sequence: {e}")
@@ -319,7 +321,9 @@ class PTYSession:
             try:
                 # Note: Docker doesn't provide exec_stop, but closing socket should terminate it
                 # If process doesn't terminate, we've sent detach sequence above
-                logger.debug(f"Closed exec {self.exec_id} for {self.container_name}/{self.session_name}")
+                logger.debug(
+                    f"Closed exec {self.exec_id} for {self.container_name}/{self.session_name}"
+                )
             except Exception as e:
                 logger.warning(f"Error during exec cleanup: {e}")
 
@@ -384,10 +388,7 @@ class PTYSessionManager:
                 logger.exception(f"Error in cleanup task: {e}")
 
     async def get_or_create_session(
-        self,
-        container: str,
-        session_name: str,
-        client_id: str
+        self, container: str, session_name: str, client_id: str
     ) -> Optional[PTYSession]:
         """Get existing or create new PTY session for a client.
 
@@ -414,7 +415,9 @@ class PTYSessionManager:
             session = PTYSession(container, session_name, client_id)
             if await session.start():
                 self._sessions[client_id] = session
-                logger.info(f"Created PTY session for client {client_id}: {container}/{session_name}")
+                logger.info(
+                    f"Created PTY session for client {client_id}: {container}/{session_name}"
+                )
                 return session
 
             return None

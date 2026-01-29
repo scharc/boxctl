@@ -148,16 +148,16 @@ def configure_logging(
     if _daemon_mode:
         stderr_handler = logging.StreamHandler(sys.stderr)
         stderr_handler.setLevel(level)
-        stderr_formatter = logging.Formatter(
-            "%(name)s: %(levelname)s: %(message)s"
-        )
+        stderr_formatter = logging.Formatter("%(name)s: %(levelname)s: %(message)s")
         stderr_handler.setFormatter(stderr_formatter)
         root_logger.addHandler(stderr_handler)
 
     _configured = True
 
     # Log startup info
-    root_logger.debug(f"Logging configured: level={level_name}, debug={_debug_mode}, daemon={_daemon_mode}")
+    root_logger.debug(
+        f"Logging configured: level={level_name}, debug={_debug_mode}, daemon={_daemon_mode}"
+    )
     if _log_file:
         root_logger.debug(f"Log file: {_log_file}")
 

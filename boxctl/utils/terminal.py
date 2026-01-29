@@ -15,8 +15,8 @@ MOUSE_RESET_SEQUENCES = (
     "\033[?1003l"  # Disable any-event mouse tracking
     "\033[?1002l"  # Disable button-event mouse tracking
     "\033[?1000l"  # Disable basic mouse tracking
-    "\033[?25h"    # Show cursor
-    "\033[0m"      # Reset all attributes (colors, bold, etc.)
+    "\033[?25h"  # Show cursor
+    "\033[0m"  # Reset all attributes (colors, bold, etc.)
 )
 
 

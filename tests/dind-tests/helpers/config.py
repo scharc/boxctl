@@ -36,7 +36,5 @@ def update_project_config(project_dir: Path, updates: Dict[str, Any]) -> Dict[st
     if "version" not in config:
         config["version"] = "1.0"
 
-    config_path.write_text(
-        yaml.safe_dump(config, default_flow_style=False, sort_keys=False)
-    )
+    config_path.write_text(yaml.safe_dump(config, default_flow_style=False, sort_keys=False))
     return config

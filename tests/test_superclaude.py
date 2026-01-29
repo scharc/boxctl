@@ -18,14 +18,13 @@ def test_superclaude_available_in_container(test_project):
 
     # Check if superclaude command exists
     result = subprocess.run(
-        ["docker", "exec", container_name, "which", "superclaude"],
-        capture_output=True,
-        text=True
+        ["docker", "exec", container_name, "which", "superclaude"], capture_output=True, text=True
     )
 
     assert result.returncode == 0, "superclaude command should exist in container"
-    assert "/superclaude" in result.stdout or "superclaude" in result.stdout, \
-        "which should return path to superclaude"
+    assert (
+        "/superclaude" in result.stdout or "superclaude" in result.stdout
+    ), "which should return path to superclaude"
 
 
 def test_superclaude_finds_config(test_project):
@@ -42,12 +41,11 @@ def test_superclaude_finds_config(test_project):
         ["docker", "exec", container_name, "superclaude", "--version"],
         capture_output=True,
         text=True,
-        timeout=10
+        timeout=10,
     )
 
     # Should not fail with config error
     # It might fail if no API key is set, but shouldn't complain about missing config files
-    assert "config" not in result.stderr.lower() or result.returncode == 0, \
-        "superclaude should find its config files"
-
-
+    assert (
+        "config" not in result.stderr.lower() or result.returncode == 0
+    ), "superclaude should find its config files"

@@ -64,7 +64,9 @@ def _read_agent_instructions() -> str:
     # Read agents.md
     agents_md = boxctl_dir / "agents.md"
     if not agents_md.exists():
-        base_instructions = "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        base_instructions = (
+            "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        )
     else:
         base_instructions = agents_md.read_text()
 
@@ -82,7 +84,9 @@ def _read_super_prompt() -> str:
     # Read agents.md
     agents_md = boxctl_dir / "agents.md"
     if not agents_md.exists():
-        base_instructions = "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        base_instructions = (
+            "# Agent Context\n\nYou are running in an boxctl container at /workspace."
+        )
     else:
         base_instructions = agents_md.read_text()
 

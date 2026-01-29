@@ -24,7 +24,9 @@ class TestWorkspaceMountModes:
         (test_dir / "test.txt").write_text("original content")
 
         # Add as read-only mount
-        result = run_abox("workspace", "add", str(test_dir), "ro", "readonly-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "ro", "readonly-mount", cwd=test_project
+        )
         assert result.returncode == 0, f"Failed to add readonly mount: {result.stderr}"
 
         # Wait for container to be ready after rebuild
@@ -32,27 +34,22 @@ class TestWorkspaceMountModes:
         wait_for_container_ready(container_name, timeout=30)
 
         # Verify mount exists
-        result = exec_in_container(
-            container_name,
-            "test -d /context/readonly-mount"
-        )
+        result = exec_in_container(container_name, "test -d /context/readonly-mount")
         assert result.returncode == 0, "Readonly mount should exist"
 
         # Verify file is readable
-        result = exec_in_container(
-            container_name,
-            "cat /context/readonly-mount/test.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/readonly-mount/test.txt")
         assert result.returncode == 0
         assert "original content" in result.stdout
 
         # Attempt to write should fail
         result = exec_in_container(
             container_name,
-            "echo 'new content' > /context/readonly-mount/test.txt 2>&1 || echo 'WRITE_FAILED'"
+            "echo 'new content' > /context/readonly-mount/test.txt 2>&1 || echo 'WRITE_FAILED'",
         )
-        assert "WRITE_FAILED" in result.stdout or "Read-only" in result.stdout, \
-            "Write to readonly mount should fail"
+        assert (
+            "WRITE_FAILED" in result.stdout or "Read-only" in result.stdout
+        ), "Write to readonly mount should fail"
 
     def test_readwrite_mount_allows_writes(self, running_container, test_project, tmp_path):
         """Test that read-write mounts allow write operations."""
@@ -62,7 +59,9 @@ class TestWorkspaceMountModes:
         (test_dir / "original.txt").write_text("original")
 
         # Add as read-write mount
-        result = run_abox("workspace", "add", str(test_dir), "rw", "readwrite-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "rw", "readwrite-mount", cwd=test_project
+        )
         assert result.returncode == 0, f"Failed to add readwrite mount: {result.stderr}"
 
         # Wait for container to be ready
@@ -71,8 +70,7 @@ class TestWorkspaceMountModes:
 
         # Write a new file
         result = exec_in_container(
-            container_name,
-            "echo 'new content' > /context/readwrite-mount/new.txt"
+            container_name, "echo 'new content' > /context/readwrite-mount/new.txt"
         )
         assert result.returncode == 0, "Write to readwrite mount should succeed"
 
@@ -97,7 +95,7 @@ class TestWorkspaceMountModes:
         # Attempt write should fail (default is ro)
         result = exec_in_container(
             container_name,
-            "echo 'test' > /context/default-mount/test.txt 2>&1 || echo 'WRITE_FAILED'"
+            "echo 'test' > /context/default-mount/test.txt 2>&1 || echo 'WRITE_FAILED'",
         )
         assert "WRITE_FAILED" in result.stdout or "Read-only" in result.stdout
 
@@ -121,10 +119,7 @@ class TestWorkspaceMountPaths:
         container_name = f"boxctl-{test_project.name}"
         wait_for_container_ready(container_name, timeout=30)
 
-        result = exec_in_container(
-            container_name,
-            "cat /context/spaced-mount/file.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/spaced-mount/file.txt")
         assert result.returncode == 0
         assert "content" in result.stdout
 
@@ -143,10 +138,7 @@ class TestWorkspaceMountPaths:
         container_name = f"boxctl-{test_project.name}"
         wait_for_container_ready(container_name, timeout=30)
 
-        result = exec_in_container(
-            container_name,
-            "cat /context/nested-mount/deep.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/nested-mount/deep.txt")
         assert "deep content" in result.stdout
 
     def test_mount_with_symlink_contents(self, running_container, test_project, tmp_path):
@@ -158,17 +150,16 @@ class TestWorkspaceMountPaths:
         (test_dir / "link.txt").symlink_to(test_dir / "real.txt")
 
         # Add mount
-        result = run_abox("workspace", "add", str(test_dir), "ro", "symlink-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "ro", "symlink-mount", cwd=test_project
+        )
         assert result.returncode == 0
 
         # Verify symlink works in container
         container_name = f"boxctl-{test_project.name}"
         wait_for_container_ready(container_name, timeout=30)
 
-        result = exec_in_container(
-            container_name,
-            "cat /context/symlink-mount/link.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/symlink-mount/link.txt")
         assert "real content" in result.stdout
 
 
@@ -290,7 +281,9 @@ class TestWorkspaceMountErrors:
         test_dir = tmp_path / "mode_test"
         test_dir.mkdir()
 
-        result = run_abox("workspace", "add", str(test_dir), "invalid-mode", "bad-mode-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "invalid-mode", "bad-mode-mount", cwd=test_project
+        )
         assert result.returncode != 0
         assert "invalid" in result.stderr.lower() or "mode" in result.stderr.lower()
 
@@ -307,7 +300,9 @@ class TestWorkspaceMountErrors:
         ]
 
         for invalid_name in invalid_names:
-            result = run_abox("workspace", "add", str(test_dir), "ro", invalid_name, cwd=test_project)
+            result = run_abox(
+                "workspace", "add", str(test_dir), "ro", invalid_name, cwd=test_project
+            )
             # Should either reject or sanitize - both are valid
             # Just verify it doesn't crash
             assert result.returncode in (0, 1)
@@ -338,10 +333,7 @@ class TestWorkspaceMountMultiple:
 
         # Verify all three are accessible
         for i in range(3):
-            result = exec_in_container(
-                container_name,
-                f"cat /context/mount-{i}/file_{i}.txt"
-            )
+            result = exec_in_container(container_name, f"cat /context/mount-{i}/file_{i}.txt")
             assert result.returncode == 0
             assert f"content {i}" in result.stdout
 
@@ -399,7 +391,9 @@ class TestWorkspaceMountPersistence:
         test_dir.mkdir()
         (test_dir / "persist.txt").write_text("persistent data")
 
-        result = run_abox("workspace", "add", str(test_dir), "ro", "persist-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "ro", "persist-mount", cwd=test_project
+        )
         assert result.returncode == 0
 
         # Stop container
@@ -415,10 +409,7 @@ class TestWorkspaceMountPersistence:
         wait_for_container_ready(container_name, timeout=30)
 
         # Verify mount still exists and works
-        result = exec_in_container(
-            container_name,
-            "cat /context/persist-mount/persist.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/persist-mount/persist.txt")
         assert result.returncode == 0
         assert "persistent data" in result.stdout
 
@@ -427,7 +418,9 @@ class TestWorkspaceMountPersistence:
         # Add mount
         test_dir = tmp_path / "rebuild_test"
         test_dir.mkdir()
-        result = run_abox("workspace", "add", str(test_dir), "ro", "rebuild-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "ro", "rebuild-mount", cwd=test_project
+        )
         assert result.returncode == 0
 
         # Rebuild container
@@ -455,27 +448,23 @@ class TestWorkspaceMountIntegration:
         (test_dir / "initial.txt").write_text("initial")
 
         # 1. Add mount
-        result = run_abox("workspace", "add", str(test_dir), "ro", "lifecycle-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "ro", "lifecycle-mount", cwd=test_project
+        )
         assert result.returncode == 0
 
         # 2. Verify accessible
         container_name = f"boxctl-{test_project.name}"
         wait_for_container_ready(container_name, timeout=30)
 
-        result = exec_in_container(
-            container_name,
-            "cat /context/lifecycle-mount/initial.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/lifecycle-mount/initial.txt")
         assert "initial" in result.stdout
 
         # 3. Add new file on host
         (test_dir / "added.txt").write_text("added content")
 
         # 4. Verify new file visible in container
-        result = exec_in_container(
-            container_name,
-            "cat /context/lifecycle-mount/added.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/lifecycle-mount/added.txt")
         assert "added content" in result.stdout
 
         # 5. Remove mount
@@ -501,8 +490,7 @@ class TestWorkspaceMountIntegration:
 
         # 1. Write from container
         result = exec_in_container(
-            container_name,
-            "echo 'from container' > /context/sync-mount/container-file.txt"
+            container_name, "echo 'from container' > /context/sync-mount/container-file.txt"
         )
         assert result.returncode == 0
 
@@ -516,10 +504,7 @@ class TestWorkspaceMountIntegration:
 
         # 4. Verify in container
         time.sleep(0.5)
-        result = exec_in_container(
-            container_name,
-            "cat /context/sync-mount/host-file.txt"
-        )
+        result = exec_in_container(container_name, "cat /context/sync-mount/host-file.txt")
         assert "from host" in result.stdout
 
     def test_mount_with_existing_files_accessible(self, running_container, test_project, tmp_path):
@@ -532,7 +517,9 @@ class TestWorkspaceMountIntegration:
             (test_dir / f"file_{i}.txt").write_text(f"content {i}")
 
         # Add mount
-        result = run_abox("workspace", "add", str(test_dir), "ro", "existing-mount", cwd=test_project)
+        result = run_abox(
+            "workspace", "add", str(test_dir), "ro", "existing-mount", cwd=test_project
+        )
         assert result.returncode == 0
 
         container_name = f"boxctl-{test_project.name}"
@@ -540,9 +527,6 @@ class TestWorkspaceMountIntegration:
 
         # Verify all files are accessible
         for i in range(5):
-            result = exec_in_container(
-                container_name,
-                f"cat /context/existing-mount/file_{i}.txt"
-            )
+            result = exec_in_container(container_name, f"cat /context/existing-mount/file_{i}.txt")
             assert result.returncode == 0
             assert f"content {i}" in result.stdout

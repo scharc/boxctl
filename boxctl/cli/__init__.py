@@ -49,53 +49,68 @@ def cli():
             click.echo("")
 
         groups = [
-            ("Agents", [
-                ("claude", "Run Claude Code"),
-                ("superclaude", "Run Claude Code (auto-approve)"),
-                ("codex", "Run Codex"),
-                ("supercodex", "Run Codex (auto-approve)"),
-                ("gemini", "Run Gemini"),
-                ("supergemini", "Run Gemini (auto-approve)"),
-                ("run", "Run agent non-interactively (for scripting)"),
-            ]),
-            ("Quick Commands", [
-                ("quick/q", "Mobile-friendly TUI menu"),
-                ("start", "Start container for current project"),
-                ("stop", "Stop container"),
-                ("list/ps", "List containers"),
-                ("shell", "Open shell in container"),
-                ("connect", "Connect to container/session"),
-                ("info", "Show container details"),
-                ("rebase", "Rebase project container to current base"),
-                ("remove", "Remove container"),
-                ("cleanup", "Remove stopped containers"),
-                ("setup", "Initialize + configure interactively"),
-                ("init", "Initialize .boxctl/ directory"),
-                ("reconfigure", "Change agent/project settings"),
-                ("rebuild", "Rebuild base Docker image"),
-            ]),
-            ("Command Groups", [
-                ("project", "Lifecycle (init/start/stop/rebase/remove/info/list)"),
-                ("session", "Tmux sessions (new/list/attach/remove/rename)"),
-                ("worktree", "Git worktrees (ls/add/remove/prune)"),
-                ("network", "Connect to containers (list/available/connect/disconnect)"),
-                ("base", "Base image (rebuild)"),
-            ]),
-            ("Libraries & Config", [
-                ("mcp/mcps", "MCP servers (manage/list/show/add/remove)"),
-                ("skill/skills", "Skills (manage/list/show/add/remove)"),
-                ("workspace", "Workspace mounts (list/add/remove)"),
-                ("packages", "Package management (list/add/remove)"),
-                ("ports", "Port forwarding (list/add/remove/status)"),
-                ("devices", "Device passthrough (list/add/remove/choose)"),
-                ("docker", "Docker socket access (enable/disable/status)"),
-                ("config", "Config utilities (migrate)"),
-                ("usage", "Agent rate limits (status/probe/reset/fallback)"),
-                ("logs", "Conversation logs (list/export/show)"),
-            ]),
-            ("Service", [
-                ("service", "Host daemon (install/start/stop/status/logs/serve)"),
-            ]),
+            (
+                "Agents",
+                [
+                    ("claude", "Run Claude Code"),
+                    ("superclaude", "Run Claude Code (auto-approve)"),
+                    ("codex", "Run Codex"),
+                    ("supercodex", "Run Codex (auto-approve)"),
+                    ("gemini", "Run Gemini"),
+                    ("supergemini", "Run Gemini (auto-approve)"),
+                    ("run", "Run agent non-interactively (for scripting)"),
+                ],
+            ),
+            (
+                "Quick Commands",
+                [
+                    ("quick/q", "Mobile-friendly TUI menu"),
+                    ("start", "Start container for current project"),
+                    ("stop", "Stop container"),
+                    ("list/ps", "List containers"),
+                    ("shell", "Open shell in container"),
+                    ("connect", "Connect to container/session"),
+                    ("info", "Show container details"),
+                    ("rebase", "Rebase project container to current base"),
+                    ("remove", "Remove container"),
+                    ("cleanup", "Remove stopped containers"),
+                    ("setup", "Initialize + configure interactively"),
+                    ("init", "Initialize .boxctl/ directory"),
+                    ("reconfigure", "Change agent/project settings"),
+                    ("rebuild", "Rebuild base Docker image"),
+                ],
+            ),
+            (
+                "Command Groups",
+                [
+                    ("project", "Lifecycle (init/start/stop/rebase/remove/info/list)"),
+                    ("session", "Tmux sessions (new/list/attach/remove/rename)"),
+                    ("worktree", "Git worktrees (ls/add/remove/prune)"),
+                    ("network", "Connect to containers (list/available/connect/disconnect)"),
+                    ("base", "Base image (rebuild)"),
+                ],
+            ),
+            (
+                "Libraries & Config",
+                [
+                    ("mcp/mcps", "MCP servers (manage/list/show/add/remove)"),
+                    ("skill/skills", "Skills (manage/list/show/add/remove)"),
+                    ("workspace", "Workspace mounts (list/add/remove)"),
+                    ("packages", "Package management (list/add/remove)"),
+                    ("ports", "Port forwarding (list/add/remove/status)"),
+                    ("devices", "Device passthrough (list/add/remove/choose)"),
+                    ("docker", "Docker socket access (enable/disable/status)"),
+                    ("config", "Config utilities (migrate)"),
+                    ("usage", "Agent rate limits (status/probe/reset/fallback)"),
+                    ("logs", "Conversation logs (list/export/show)"),
+                ],
+            ),
+            (
+                "Service",
+                [
+                    ("service", "Host daemon (install/start/stop/status/logs/serve)"),
+                ],
+            ),
         ]
 
         width = max(len(name) for _, rows in groups for name, _ in rows)
@@ -114,6 +129,7 @@ def main():
         warn_legacy_systemd_service,
         warn_shell_rc_files,
     )
+
     auto_migrate_project_dir()
     warn_legacy_env_vars()
     warn_shell_rc_files()
@@ -150,6 +166,7 @@ from boxctl.cli.commands import run  # noqa: E402,F401
 def start_shortcut():
     """Start container for current project (shortcut for: project start)."""
     from boxctl.cli.commands.project import start
+
     ctx = click.get_current_context()
     ctx.invoke(start)
 
@@ -159,6 +176,7 @@ def start_shortcut():
 def stop_shortcut(project_name):
     """Stop the project container (shortcut for: project stop)."""
     from boxctl.cli.commands.project import stop
+
     ctx = click.get_current_context()
     ctx.invoke(stop, project_name=project_name)
 
@@ -168,6 +186,7 @@ def stop_shortcut(project_name):
 def list_shortcut(show_all):
     """List all boxctl containers (shortcut for: project list)."""
     from boxctl.cli.commands.project import list as project_list
+
     ctx = click.get_current_context()
     ctx.invoke(project_list, show_all=show_all)
 
@@ -177,6 +196,7 @@ def list_shortcut(show_all):
 def ps_shortcut(show_all):
     """List all boxctl containers (alias for: list)."""
     from boxctl.cli.commands.project import list as project_list
+
     ctx = click.get_current_context()
     ctx.invoke(project_list, show_all=show_all)
 
@@ -186,6 +206,7 @@ def ps_shortcut(show_all):
 def shell_shortcut(project_name):
     """Open interactive shell in container (shortcut for: project shell)."""
     from boxctl.cli.commands.project import shell
+
     ctx = click.get_current_context()
     ctx.invoke(shell, project_name=project_name)
 
@@ -196,6 +217,7 @@ def shell_shortcut(project_name):
 def connect_shortcut(project_name, session):
     """Connect to container (shortcut for: project connect)."""
     from boxctl.cli.commands.project import connect
+
     ctx = click.get_current_context()
     ctx.invoke(connect, project_name=project_name, session=session)
 
@@ -205,6 +227,7 @@ def connect_shortcut(project_name, session):
 def info_shortcut(project_name):
     """Show container info (shortcut for: project info)."""
     from boxctl.cli.commands.project import info
+
     ctx = click.get_current_context()
     ctx.invoke(info, project_name=project_name)
 
@@ -215,6 +238,7 @@ def info_shortcut(project_name):
 def remove_shortcut(project_name, force_remove):
     """Remove the project container (shortcut for: project remove)."""
     from boxctl.cli.commands.project import remove
+
     ctx = click.get_current_context()
     ctx.invoke(remove, project_name=project_name, force_remove=force_remove)
 
@@ -223,6 +247,7 @@ def remove_shortcut(project_name, force_remove):
 def cleanup_shortcut():
     """Remove all stopped containers (shortcut for: project cleanup)."""
     from boxctl.cli.commands.project import cleanup
+
     ctx = click.get_current_context()
     ctx.invoke(cleanup)
 
@@ -235,6 +260,7 @@ def rebase_shortcut(scope: str):
     Pass 'all' as argument to rebase all existing containers.
     """
     from boxctl.cli.commands.project import rebase
+
     ctx = click.get_current_context()
     ctx.invoke(rebase, scope=scope)
 
@@ -243,6 +269,7 @@ def rebase_shortcut(scope: str):
 def init_shortcut():
     """Initialize .boxctl/ directory (shortcut for: project init)."""
     from boxctl.cli.commands.project import init
+
     ctx = click.get_current_context()
     ctx.invoke(init)
 
@@ -251,6 +278,7 @@ def init_shortcut():
 def setup_shortcut():
     """Initialize and configure boxctl (shortcut for: project setup)."""
     from boxctl.cli.commands.project import setup
+
     ctx = click.get_current_context()
     ctx.invoke(setup)
 
@@ -259,6 +287,7 @@ def setup_shortcut():
 def reconfigure_shortcut():
     """Reconfigure agent and project settings (shortcut for: project reconfigure)."""
     from boxctl.cli.commands.project import reconfigure
+
     ctx = click.get_current_context()
     ctx.invoke(reconfigure)
 
@@ -267,6 +296,7 @@ def reconfigure_shortcut():
 def rebuild_shortcut():
     """Rebuild base Docker image (shortcut for: base rebuild)."""
     from boxctl.cli.commands.base import rebuild
+
     ctx = click.get_current_context()
     ctx.invoke(rebuild)
 
@@ -281,6 +311,7 @@ def fix_terminal():
     This disables mouse tracking mode and resets terminal settings.
     """
     from boxctl.utils.terminal import reset_terminal
+
     reset_terminal()
     console.print("[green]Terminal reset complete[/green]")
 
@@ -308,6 +339,7 @@ def config():
 def config_migrate_shortcut(dry_run: bool, auto: bool):
     """Migrate config to latest format (shortcut for: project migrate)."""
     from boxctl.cli.commands.project import config_migrate
+
     ctx = click.get_current_context()
     ctx.invoke(config_migrate, dry_run=dry_run, auto=auto)
 
@@ -319,7 +351,14 @@ def config_migrate_shortcut(dry_run: bool, auto: bool):
 @click.option("--fix-shell-rc", is_flag=True, help="Fix agentbox references in shell RC files")
 @click.option("--fix-systemd", is_flag=True, help="Migrate agentboxd.service to boxctld.service")
 @click.option("--fix-path", is_flag=True, help="Add boxctl bin directory to PATH")
-def migrate_command(dry_run: bool, remove_containers: bool, force: bool, fix_shell_rc: bool, fix_systemd: bool, fix_path: bool):
+def migrate_command(
+    dry_run: bool,
+    remove_containers: bool,
+    force: bool,
+    fix_shell_rc: bool,
+    fix_systemd: bool,
+    fix_path: bool,
+):
     """Migrate from agentbox to boxctl.
 
     Migrates global configuration directories from the legacy 'agentbox'
@@ -385,6 +424,7 @@ def migrate_command(dry_run: bool, remove_containers: bool, force: bool, fix_she
     # Use BOXCTL_PROJECT_DIR (set by wrapper) since we run from boxctl source dir
     import os
     from pathlib import Path
+
     project_dir_str = os.environ.get("BOXCTL_PROJECT_DIR")
     cwd = Path(project_dir_str) if project_dir_str else Path.cwd()
 
@@ -434,11 +474,15 @@ def migrate_command(dry_run: bool, remove_containers: bool, force: bool, fix_she
             stopped, removed = remove_legacy_containers(dry_run=dry_run, force=force)
             if not dry_run:
                 console.print()
-                console.print(f"[green]Stopped {stopped} containers, removed {removed} containers[/green]")
+                console.print(
+                    f"[green]Stopped {stopped} containers, removed {removed} containers[/green]"
+                )
         else:
             warn_legacy_containers()
             console.print("[dim]Use --remove-containers to clean up legacy containers[/dim]")
-            console.print("[dim]Use --remove-containers --force to force-remove running containers[/dim]")
+            console.print(
+                "[dim]Use --remove-containers --force to force-remove running containers[/dim]"
+            )
             console.print()
 
     warn_legacy_env_vars()

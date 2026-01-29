@@ -32,11 +32,17 @@ def _start_agent_detached(container_name: str, agent: str, extra_args: list[str]
 
     subprocess.run(
         [
-            "docker", "exec", "-d",
-            "-u", "abox",
-            "-w", "/workspace",
-            "-e", "HOME=/home/abox",
-            "-e", "USER=abox",
+            "docker",
+            "exec",
+            "-d",
+            "-u",
+            "abox",
+            "-w",
+            "/workspace",
+            "-e",
+            "HOME=/home/abox",
+            "-e",
+            "USER=abox",
             container_name,
             *cmd,
         ],
@@ -128,22 +134,30 @@ class TestAgentPersistence:
         # Just verify codex can be invoked (will exit due to no TTY, but shouldn't error)
         result = subprocess.run(
             [
-                "docker", "exec",
-                "-u", "abox",
-                "-w", "/workspace",
-                "-e", "HOME=/home/abox",
-                "-e", "USER=abox",
+                "docker",
+                "exec",
+                "-u",
+                "abox",
+                "-w",
+                "/workspace",
+                "-e",
+                "HOME=/home/abox",
+                "-e",
+                "USER=abox",
                 container_name,
-                "codex", "--version",
+                "codex",
+                "--version",
             ],
             capture_output=True,
             text=True,
             timeout=30,
         )
         # Should output version info or at least not crash
-        assert result.returncode == 0 or "codex" in result.stdout.lower() or "codex" in result.stderr.lower(), (
-            f"codex should be runnable. stdout: {result.stdout}, stderr: {result.stderr}"
-        )
+        assert (
+            result.returncode == 0
+            or "codex" in result.stdout.lower()
+            or "codex" in result.stderr.lower()
+        ), f"codex should be runnable. stdout: {result.stdout}, stderr: {result.stderr}"
 
     def test_codex_with_prompt_completes(self, container_name):
         """Test that codex with a simple prompt runs and completes.
@@ -161,13 +175,20 @@ class TestAgentPersistence:
         # Using exec mode for non-interactive execution
         result = subprocess.run(
             [
-                "docker", "exec",
-                "-u", "abox",
-                "-w", "/workspace",
-                "-e", "HOME=/home/abox",
-                "-e", "USER=abox",
+                "docker",
+                "exec",
+                "-u",
+                "abox",
+                "-w",
+                "/workspace",
+                "-e",
+                "HOME=/home/abox",
+                "-e",
+                "USER=abox",
                 container_name,
-                "codex", "exec", "echo hello",
+                "codex",
+                "exec",
+                "echo hello",
             ],
             capture_output=True,
             text=True,
@@ -183,10 +204,9 @@ class TestAgentPersistence:
         # Check for common error patterns that indicate it actually tried to run
         output = result.stdout + result.stderr
         # Either it succeeded (return 0) or it gave an error about missing API key, config, etc
-        assert result.returncode == 0 or len(output) > 0, \
-            "codex should either succeed or produce error output"
-
-
+        assert (
+            result.returncode == 0 or len(output) > 0
+        ), "codex should either succeed or produce error output"
 
 
 class TestAgentCommandBuildingUnit:
@@ -278,9 +298,9 @@ class TestAgentCommandImplementation:
         captured_args = {}
 
         def mock_run_agent_command(manager, project, args, command, **kwargs):
-            captured_args['command'] = command
-            captured_args['args'] = args
-            captured_args['extra_args'] = kwargs.get('extra_args')
+            captured_args["command"] = command
+            captured_args["args"] = args
+            captured_args["extra_args"] = kwargs.get("extra_args")
             raise SystemExit(0)  # Exit early
 
         # Mock _has_vscode to return True (simulating VSCode being available)
@@ -294,20 +314,21 @@ class TestAgentCommandImplementation:
         result = runner.invoke(codex, [], catch_exceptions=False)
 
         # Verify no --ide in extra_args
-        extra_args = captured_args.get('extra_args') or []
-        assert "--ide" not in extra_args, (
-            f"codex should NOT pass --ide flag. extra_args: {extra_args}"
-        )
+        extra_args = captured_args.get("extra_args") or []
+        assert (
+            "--ide" not in extra_args
+        ), f"codex should NOT pass --ide flag. extra_args: {extra_args}"
 
     def test_supercodex_command_no_ide_flag(self, monkeypatch):
         """Verify supercodex() doesn't pass --ide flag."""
         from unittest.mock import Mock
+
         captured_args = {}
 
         def mock_run_agent_command(manager, project, args, command, **kwargs):
-            captured_args['command'] = command
-            captured_args['args'] = args
-            captured_args['extra_args'] = kwargs.get('extra_args')
+            captured_args["command"] = command
+            captured_args["args"] = args
+            captured_args["extra_args"] = kwargs.get("extra_args")
             raise SystemExit(0)
 
         monkeypatch.setattr("boxctl.cli.commands.agents._has_vscode", lambda: True)
@@ -320,10 +341,10 @@ class TestAgentCommandImplementation:
         runner = CliRunner()
         result = runner.invoke(supercodex, [], catch_exceptions=False)
 
-        extra_args = captured_args.get('extra_args') or []
-        assert "--ide" not in extra_args, (
-            f"supercodex should NOT pass --ide flag. extra_args: {extra_args}"
-        )
+        extra_args = captured_args.get("extra_args") or []
+        assert (
+            "--ide" not in extra_args
+        ), f"supercodex should NOT pass --ide flag. extra_args: {extra_args}"
         # But should have --dangerously-bypass-approvals-and-sandbox
         assert "--dangerously-bypass-approvals-and-sandbox" in extra_args
 
@@ -332,9 +353,9 @@ class TestAgentCommandImplementation:
         captured_args = {}
 
         def mock_run_agent_command(manager, project, args, command, **kwargs):
-            captured_args['command'] = command
-            captured_args['args'] = args
-            captured_args['extra_args'] = kwargs.get('extra_args')
+            captured_args["command"] = command
+            captured_args["args"] = args
+            captured_args["extra_args"] = kwargs.get("extra_args")
             raise SystemExit(0)
 
         monkeypatch.setattr("boxctl.cli.commands.agents._has_vscode", lambda: True)
@@ -346,19 +367,19 @@ class TestAgentCommandImplementation:
         runner = CliRunner()
         result = runner.invoke(gemini, [], catch_exceptions=False)
 
-        extra_args = captured_args.get('extra_args') or []
-        assert "--ide" not in extra_args, (
-            f"gemini should NOT pass --ide flag. extra_args: {extra_args}"
-        )
+        extra_args = captured_args.get("extra_args") or []
+        assert (
+            "--ide" not in extra_args
+        ), f"gemini should NOT pass --ide flag. extra_args: {extra_args}"
 
     def test_supergemini_command_no_ide_flag(self, monkeypatch):
         """Verify supergemini() doesn't pass --ide flag."""
         captured_args = {}
 
         def mock_run_agent_command(manager, project, args, command, **kwargs):
-            captured_args['command'] = command
-            captured_args['args'] = args
-            captured_args['extra_args'] = kwargs.get('extra_args')
+            captured_args["command"] = command
+            captured_args["args"] = args
+            captured_args["extra_args"] = kwargs.get("extra_args")
             raise SystemExit(0)
 
         monkeypatch.setattr("boxctl.cli.commands.agents._has_vscode", lambda: True)
@@ -370,20 +391,21 @@ class TestAgentCommandImplementation:
         runner = CliRunner()
         result = runner.invoke(supergemini, [], catch_exceptions=False)
 
-        extra_args = captured_args.get('extra_args') or []
-        assert "--ide" not in extra_args, (
-            f"supergemini should NOT pass --ide flag. extra_args: {extra_args}"
-        )
+        extra_args = captured_args.get("extra_args") or []
+        assert (
+            "--ide" not in extra_args
+        ), f"supergemini should NOT pass --ide flag. extra_args: {extra_args}"
 
     def test_claude_command_has_ide_flag(self, monkeypatch, tmp_path):
         """Verify claude() DOES pass --ide flag when VSCode available."""
         from unittest.mock import Mock
+
         captured_args = {}
 
         def mock_run_agent_command(manager, project, args, command, **kwargs):
-            captured_args['command'] = command
-            captured_args['args'] = args
-            captured_args['extra_args'] = kwargs.get('extra_args')
+            captured_args["command"] = command
+            captured_args["args"] = args
+            captured_args["extra_args"] = kwargs.get("extra_args")
             raise SystemExit(0)
 
         # Create minimal .boxctl structure for _read_agent_instructions
@@ -402,10 +424,10 @@ class TestAgentCommandImplementation:
         runner = CliRunner()
         result = runner.invoke(claude, [], catch_exceptions=False)
 
-        extra_args = captured_args.get('extra_args') or []
-        assert "--ide" in extra_args, (
-            f"claude SHOULD pass --ide flag when VSCode available. extra_args: {extra_args}"
-        )
+        extra_args = captured_args.get("extra_args") or []
+        assert (
+            "--ide" in extra_args
+        ), f"claude SHOULD pass --ide flag when VSCode available. extra_args: {extra_args}"
 
 
 class TestAgentFlagsValidation:
@@ -423,6 +445,7 @@ class TestAgentFlagsValidation:
     def _extract_command_from_tmux(self, tmux_setup: str) -> str:
         """Extract the actual command from tmux setup string."""
         import re
+
         # Match: exec <command>' or just the command in the bash -lc part
         match = re.search(r"exec ([^']+)'", tmux_setup)
         if match:
@@ -446,8 +469,7 @@ class TestAgentFlagsValidation:
 
         for flag in self.CLAUDE_ONLY_FLAGS:
             assert flag not in extracted_cmd, (
-                f"Codex command contains Claude-only flag '{flag}'. "
-                f"Command: {extracted_cmd}"
+                f"Codex command contains Claude-only flag '{flag}'. " f"Command: {extracted_cmd}"
             )
 
     def test_supercodex_no_claude_flags(self):
@@ -457,7 +479,8 @@ class TestAgentFlagsValidation:
         # Simulate what supercodex does - has its own extra_args but no --ide
         extra_args = [
             "--dangerously-bypass-approvals-and-sandbox",
-            "-c", 'notify=["test"]',
+            "-c",
+            'notify=["test"]',
         ]
 
         cmd, tmux_setup, display, session_name = _build_agent_command(
@@ -492,8 +515,7 @@ class TestAgentFlagsValidation:
 
         for flag in self.CLAUDE_ONLY_FLAGS:
             assert flag not in extracted_cmd, (
-                f"Gemini command contains Claude-only flag '{flag}'. "
-                f"Command: {extracted_cmd}"
+                f"Gemini command contains Claude-only flag '{flag}'. " f"Command: {extracted_cmd}"
             )
 
     def test_supergemini_no_claude_flags(self):
@@ -524,9 +546,12 @@ class TestAgentFlagsValidation:
 
         # Simulate claude with --ide
         extra_args = [
-            "--settings", "/path/to/settings",
-            "--mcp-config", "/path/to/mcp",
-            "--append-system-prompt", "instructions",
+            "--settings",
+            "/path/to/settings",
+            "--mcp-config",
+            "/path/to/mcp",
+            "--append-system-prompt",
+            "instructions",
             "--ide",
         ]
 

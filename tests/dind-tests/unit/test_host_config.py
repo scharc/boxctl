@@ -12,7 +12,8 @@ import yaml
 
 # Import from the boxctl package
 import sys
-sys.path.insert(0, '/workspace')
+
+sys.path.insert(0, "/workspace")
 
 from boxctl.host_config import HostConfig, get_config, get_tailscale_ip
 
@@ -79,14 +80,9 @@ class TestHostConfigLoading:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "web_server": {
-                "port": 9090,
-                "enabled": False
-            }
-        }
+        config_data = {"web_server": {"port": 9090, "enabled": False}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -108,7 +104,7 @@ class TestHostConfigLoading:
             }
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -127,7 +123,7 @@ class TestHostConfigLoading:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             f.write("invalid: yaml: content: [[[")
 
         config = HostConfig()
@@ -177,13 +173,9 @@ class TestHostConfigProperties:
 
         test_dir = tmp_path / "config_agentbox"
         config_file = config_dir / "config.yml"
-        config_data = {
-            "paths": {
-                "agentbox_dir": str(test_dir)
-            }
-        }
+        config_data = {"paths": {"agentbox_dir": str(test_dir)}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -223,13 +215,9 @@ class TestHostConfigProperties:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "web_server": {
-                "port": 9999
-            }
-        }
+        config_data = {"web_server": {"port": 9999}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -297,7 +285,7 @@ class TestDeepMerge:
             }
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -322,7 +310,7 @@ class TestDeepMerge:
             }
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -343,7 +331,7 @@ class TestGetConfigSingleton:
         config = get_config()
 
         assert isinstance(config, HostConfig)
-        assert hasattr(config, 'web_server_url')
+        assert hasattr(config, "web_server_url")
 
     def test_get_config_has_defaults(self, tmp_path, monkeypatch):
         """Test that get_config() instance has defaults."""
@@ -374,13 +362,9 @@ class TestTailscaleIntegration:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "web_server": {
-                "hosts": ["127.0.0.1", "tailscale"]
-            }
-        }
+        config_data = {"web_server": {"hosts": ["127.0.0.1", "tailscale"]}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -408,11 +392,9 @@ class TestConfigEdgeCases:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "web_server": None
-        }
+        config_data = {"web_server": None}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -433,13 +415,9 @@ class TestConfigEdgeCases:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "custom_section": {
-                "custom_key": "custom_value"
-            }
-        }
+        config_data = {"custom_section": {"custom_key": "custom_value"}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -499,13 +477,9 @@ class TestNetworkBindAddresses:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "network": {
-                "bind_addresses": ["127.0.0.1", "10.0.0.1"]
-            }
-        }
+        config_data = {"network": {"bind_addresses": ["127.0.0.1", "10.0.0.1"]}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -522,13 +496,9 @@ class TestNetworkBindAddresses:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "network": {
-                "bind_addresses": ["127.0.0.1", "tailscale"]
-            }
-        }
+        config_data = {"network": {"bind_addresses": ["127.0.0.1", "tailscale"]}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -543,13 +513,9 @@ class TestNetworkBindAddresses:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "network": {
-                "bind_addresses": ["127.0.0.1"]
-            }
-        }
+        config_data = {"network": {"bind_addresses": ["127.0.0.1"]}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -565,15 +531,11 @@ class TestNetworkBindAddresses:
 
         config_file = config_dir / "config.yml"
         config_data = {
-            "web_server": {
-                "hosts": ["127.0.0.1", "tailscale"]
-            },
-            "network": {
-                "bind_addresses": ["127.0.0.1"]
-            }
+            "web_server": {"hosts": ["127.0.0.1", "tailscale"]},
+            "network": {"bind_addresses": ["127.0.0.1"]},
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -589,15 +551,11 @@ class TestNetworkBindAddresses:
 
         config_file = config_dir / "config.yml"
         config_data = {
-            "web_server": {
-                "hosts": ["127.0.0.1"]
-            },
-            "network": {
-                "bind_addresses": ["127.0.0.1", "tailscale"]
-            }
+            "web_server": {"hosts": ["127.0.0.1"]},
+            "network": {"bind_addresses": ["127.0.0.1", "tailscale"]},
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -613,15 +571,11 @@ class TestNetworkBindAddresses:
 
         config_file = config_dir / "config.yml"
         config_data = {
-            "web_server": {
-                "hosts": ["127.0.0.1"]
-            },
-            "network": {
-                "bind_addresses": ["127.0.0.1"]
-            }
+            "web_server": {"hosts": ["127.0.0.1"]},
+            "network": {"bind_addresses": ["127.0.0.1"]},
         }
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()
@@ -636,13 +590,9 @@ class TestNetworkBindAddresses:
         config_dir.mkdir(parents=True)
 
         config_file = config_dir / "config.yml"
-        config_data = {
-            "network": {
-                "bind_addresses": ["127.0.0.1"]
-            }
-        }
+        config_data = {"network": {"bind_addresses": ["127.0.0.1"]}}
 
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             yaml.dump(config_data, f)
 
         config = HostConfig()

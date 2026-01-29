@@ -43,10 +43,7 @@ def _tmux_cmd(args: list[str]) -> tuple[int, str]:
         config = get_config()
         timeout = config.get("timeouts", "tmux_command", default=2.0)
         result = subprocess.run(
-            [BinPaths.TMUX] + args,
-            capture_output=True,
-            text=True,
-            timeout=timeout
+            [BinPaths.TMUX] + args, capture_output=True, text=True, timeout=timeout
         )
         return (result.returncode, result.stdout)
     except Exception:
@@ -59,11 +56,7 @@ def _get_container_env() -> dict:
     Returns:
         Dict of environment variables for container exec
     """
-    return {
-        "HOME": ContainerPaths.HOME,
-        "USER": ContainerPaths.USER,
-        "TMUX_TMPDIR": "/tmp"
-    }
+    return {"HOME": ContainerPaths.HOME, "USER": ContainerPaths.USER, "TMUX_TMPDIR": "/tmp"}
 
 
 def get_sessions_for_container(container_name: str) -> List[Dict]:
@@ -92,7 +85,9 @@ def get_all_sessions() -> List[Dict]:
     """
     try:
         manager = ContainerManager()
-        all_containers = manager.client.containers.list(filters={"name": ContainerDefaults.CONTAINER_PREFIX})
+        all_containers = manager.client.containers.list(
+            filters={"name": ContainerDefaults.CONTAINER_PREFIX}
+        )
 
         all_sessions = []
         for container in all_containers:
@@ -107,13 +102,15 @@ def get_all_sessions() -> List[Dict]:
             try:
                 sessions = _get_tmux_sessions(manager, container_name)
                 for sess in sessions:
-                    all_sessions.append({
-                        "container": container_name,
-                        "name": sess["name"],
-                        "windows": sess["windows"],
-                        "attached": sess["attached"],
-                        "created": sess.get("created", "")
-                    })
+                    all_sessions.append(
+                        {
+                            "container": container_name,
+                            "name": sess["name"],
+                            "windows": sess["windows"],
+                            "attached": sess["attached"],
+                            "created": sess.get("created", ""),
+                        }
+                    )
             except Exception as e:
                 # Skip containers that fail (broken, stale, etc.)
                 logger.warning(f"Skipping container {container_name}: {e}")
@@ -124,7 +121,9 @@ def get_all_sessions() -> List[Dict]:
         return []
 
 
-def capture_session_output(container_name: str, session_name: str, include_escape: bool = True) -> str:
+def capture_session_output(
+    container_name: str, session_name: str, include_escape: bool = True
+) -> str:
     """Capture current visible pane from a tmux session including scrollback history.
 
     Args:
@@ -186,7 +185,9 @@ def send_keys_to_session_fast(session_name: str, keys: str, literal: bool = True
         return False
 
 
-def send_keys_to_session(container_name: str, session_name: str, keys: str, literal: bool = True) -> bool:
+def send_keys_to_session(
+    container_name: str, session_name: str, keys: str, literal: bool = True
+) -> bool:
     """Send keystrokes to a tmux session.
 
     Args:
@@ -265,13 +266,11 @@ def get_cursor_position(container_name: str, session_name: str) -> tuple[int, in
         )
 
         exit_code, output = manager.exec_command(
-            container_name,
-            tmux_cmd,
-            environment=_get_container_env()
+            container_name, tmux_cmd, environment=_get_container_env()
         )
 
         if exit_code == 0 and output:
-            parts = output.strip().split(',')
+            parts = output.strip().split(",")
             if len(parts) == 2:
                 return (int(parts[0]), int(parts[1]))
         return (0, 0)
@@ -358,7 +357,12 @@ def get_session_dimensions(container_name: str, session_name: str) -> tuple[int,
 
         # Get window dimensions using display-message
         tmux_cmd = _build_tmux_cmd(
-            socket_path, "display-message", "-p", "-t", session_name, "#{window_width} #{window_height}"
+            socket_path,
+            "display-message",
+            "-p",
+            "-t",
+            session_name,
+            "#{window_width} #{window_height}",
         )
 
         exit_code, output = manager.exec_command(
@@ -404,7 +408,14 @@ def resize_session(container_name: str, session_name: str, width: int, height: i
 
         # Use resize-pane with -x and -y to set exact dimensions
         tmux_cmd = _build_tmux_cmd(
-            socket_path, "resize-pane", "-t", f"{session_name}:0.0", "-x", str(width), "-y", str(height)
+            socket_path,
+            "resize-pane",
+            "-t",
+            f"{session_name}:0.0",
+            "-x",
+            str(width),
+            "-y",
+            str(height),
         )
 
         exit_code, output = manager.exec_command(
@@ -417,7 +428,14 @@ def resize_session(container_name: str, session_name: str, width: int, height: i
         if exit_code != 0:
             # Fallback to resize-window if pane resize fails
             tmux_cmd = _build_tmux_cmd(
-                socket_path, "resize-window", "-t", session_name, "-x", str(width), "-y", str(height)
+                socket_path,
+                "resize-window",
+                "-t",
+                session_name,
+                "-x",
+                str(width),
+                "-y",
+                str(height),
             )
 
             exit_code, _ = manager.exec_command(

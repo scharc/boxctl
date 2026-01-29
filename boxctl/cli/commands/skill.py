@@ -112,14 +112,14 @@ def skill_manage():
     choices = []
     for skill_info in available_skills:
         name = skill_info["name"]
-        desc = skill_info["description"][:50] + "..." if len(skill_info["description"]) > 50 else skill_info["description"]
+        desc = (
+            skill_info["description"][:50] + "..."
+            if len(skill_info["description"]) > 50
+            else skill_info["description"]
+        )
         source = skill_info.get("source", "library")
         label = f"{name} ({source}) - {desc}"
-        choices.append(questionary.Choice(
-            title=label,
-            value=name,
-            checked=name in installed
-        ))
+        choices.append(questionary.Choice(title=label, value=name, checked=name in installed))
 
     console.print("[bold]Select skills to enable:[/bold]")
     console.print("[dim]Space to toggle, Enter to confirm, Ctrl+C to cancel[/dim]\n")

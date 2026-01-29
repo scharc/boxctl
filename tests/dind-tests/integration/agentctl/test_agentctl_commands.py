@@ -21,16 +21,15 @@ class TestAgentctlList:
         result = exec_in_container(running_container, "agentctl list")
 
         assert result.returncode == 0, f"agentctl list failed: {result.stderr}"
-        assert "No tmux sessions found" in result.stdout, (
-            f"Expected empty message, got: {result.stdout}"
-        )
+        assert (
+            "No tmux sessions found" in result.stdout
+        ), f"Expected empty message, got: {result.stdout}"
 
     def test_list_shows_sessions(self, running_container, test_project):
         """Test listing sessions when they exist."""
         # Create a tmux session
         result = exec_in_container(
-            running_container,
-            "tmux new-session -d -s test-session 'sleep 30'"
+            running_container, "tmux new-session -d -s test-session 'sleep 30'"
         )
         assert result.returncode == 0, f"Failed to create session: {result.stderr}"
 
@@ -38,20 +37,17 @@ class TestAgentctlList:
         result = exec_in_container(running_container, "agentctl list")
 
         assert result.returncode == 0, f"agentctl list failed: {result.stderr}"
-        assert "test-session" in result.stdout, (
-            f"Session not in list: {result.stdout}"
-        )
+        assert "test-session" in result.stdout, f"Session not in list: {result.stdout}"
 
         # Cleanup
-        exec_in_container(running_container, "tmux kill-session -t test-session 2>/dev/null || true")
+        exec_in_container(
+            running_container, "tmux kill-session -t test-session 2>/dev/null || true"
+        )
 
     def test_list_json_output(self, running_container, test_project):
         """Test JSON output format."""
         # Create a session
-        exec_in_container(
-            running_container,
-            "tmux new-session -d -s json-test 'sleep 30'"
-        )
+        exec_in_container(running_container, "tmux new-session -d -s json-test 'sleep 30'")
 
         # Get JSON output
         result = exec_in_container(running_container, "agentctl list --json")
@@ -66,9 +62,7 @@ class TestAgentctlList:
 
             # Check if our session is in the list
             session_names = [s["name"] for s in data["sessions"]]
-            assert "json-test" in session_names, (
-                f"Session not in JSON output: {session_names}"
-            )
+            assert "json-test" in session_names, f"Session not in JSON output: {session_names}"
         except json.JSONDecodeError as e:
             pytest.fail(f"Invalid JSON output: {e}\nOutput: {result.stdout}")
 
@@ -82,8 +76,7 @@ class TestAgentctlList:
         # Create multiple sessions
         for session in sessions:
             result = exec_in_container(
-                running_container,
-                f"tmux new-session -d -s {session} 'sleep 30'"
+                running_container, f"tmux new-session -d -s {session} 'sleep 30'"
             )
             assert result.returncode == 0, f"Failed to create {session}"
 
@@ -93,13 +86,13 @@ class TestAgentctlList:
 
         # Verify all sessions are shown
         for session in sessions:
-            assert session in result.stdout, (
-                f"Session {session} not in output: {result.stdout}"
-            )
+            assert session in result.stdout, f"Session {session} not in output: {result.stdout}"
 
         # Cleanup
         for session in sessions:
-            exec_in_container(running_container, f"tmux kill-session -t {session} 2>/dev/null || true")
+            exec_in_container(
+                running_container, f"tmux kill-session -t {session} 2>/dev/null || true"
+            )
 
 
 @pytest.mark.integration
@@ -111,9 +104,9 @@ class TestAgentctlPeek:
         result = exec_in_container(running_container, "agentctl peek nonexistent")
 
         assert result.returncode != 0, "Should fail for non-existent session"
-        assert "not found" in result.stdout or "not found" in result.stderr, (
-            f"Expected 'not found' error, got: {result.stdout} {result.stderr}"
-        )
+        assert (
+            "not found" in result.stdout or "not found" in result.stderr
+        ), f"Expected 'not found' error, got: {result.stdout} {result.stderr}"
 
     def test_peek_session_output(self, running_container, test_project):
         """Test viewing session output."""
@@ -121,7 +114,7 @@ class TestAgentctlPeek:
         test_output = "Hello from tmux session"
         result = exec_in_container(
             running_container,
-            f"tmux new-session -d -s peek-test \"echo '{test_output}'; sleep 30\""
+            f"tmux new-session -d -s peek-test \"echo '{test_output}'; sleep 30\"",
         )
         assert result.returncode == 0
 
@@ -132,9 +125,7 @@ class TestAgentctlPeek:
         result = exec_in_container(running_container, "agentctl peek peek-test 50")
 
         assert result.returncode == 0, f"agentctl peek failed: {result.stderr}"
-        assert test_output in result.stdout, (
-            f"Expected output not found. Got: {result.stdout}"
-        )
+        assert test_output in result.stdout, f"Expected output not found. Got: {result.stdout}"
 
         # Cleanup
         exec_in_container(running_container, "tmux kill-session -t peek-test 2>/dev/null || true")
@@ -144,7 +135,7 @@ class TestAgentctlPeek:
         # Create session with multiple lines
         result = exec_in_container(
             running_container,
-            "tmux new-session -d -s lines-test \"for i in {1..20}; do echo Line $i; done; sleep 30\""
+            'tmux new-session -d -s lines-test "for i in {1..20}; do echo Line $i; done; sleep 30"',
         )
         assert result.returncode == 0
 
@@ -156,7 +147,7 @@ class TestAgentctlPeek:
 
         assert result.returncode == 0, f"agentctl peek failed: {result.stderr}"
         # Should have output (exact lines may vary due to prompt)
-        line_count = len([l for l in result.stdout.split('\n') if l.strip()])
+        line_count = len([l for l in result.stdout.split("\n") if l.strip()])
         assert line_count > 0, "Should have output lines"
 
         # Cleanup
@@ -170,10 +161,7 @@ class TestAgentctlKill:
     def test_kill_session(self, running_container, test_project):
         """Test killing a session."""
         # Create session
-        result = exec_in_container(
-            running_container,
-            "tmux new-session -d -s kill-test 'sleep 60'"
-        )
+        result = exec_in_container(running_container, "tmux new-session -d -s kill-test 'sleep 60'")
         assert result.returncode == 0
 
         # Verify session exists
@@ -191,15 +179,12 @@ class TestAgentctlKill:
 
     def test_kill_nonexistent_session(self, running_container, test_project):
         """Test killing non-existent session fails gracefully."""
-        result = exec_in_container(
-            running_container,
-            "agentctl kill nonexistent --force"
-        )
+        result = exec_in_container(running_container, "agentctl kill nonexistent --force")
 
         assert result.returncode != 0, "Should fail for non-existent session"
-        assert "not found" in result.stdout or "not found" in result.stderr, (
-            f"Expected 'not found' error"
-        )
+        assert (
+            "not found" in result.stdout or "not found" in result.stderr
+        ), f"Expected 'not found' error"
 
 
 @pytest.mark.integration
@@ -219,29 +204,24 @@ class TestAgentctlAttach:
         session_name = "attach-test"
 
         # Verify session doesn't exist
-        result = exec_in_container(
-            running_container,
-            f"tmux has-session -t {session_name}"
-        )
+        result = exec_in_container(running_container, f"tmux has-session -t {session_name}")
         assert result.returncode != 0, "Session should not exist initially"
 
         # Try to create session in detached mode by simulating what agentctl does
         # We can't test actual attach (interactive), but we can test session creation
         result = exec_in_container(
-            running_container,
-            f"tmux new-session -d -s {session_name} 'bash'"
+            running_container, f"tmux new-session -d -s {session_name} 'bash'"
         )
         assert result.returncode == 0, f"Failed to create session: {result.stderr}"
 
         # Verify session now exists
-        result = exec_in_container(
-            running_container,
-            f"tmux has-session -t {session_name}"
-        )
+        result = exec_in_container(running_container, f"tmux has-session -t {session_name}")
         assert result.returncode == 0, "Session should exist after creation"
 
         # Cleanup
-        exec_in_container(running_container, f"tmux kill-session -t {session_name} 2>/dev/null || true")
+        exec_in_container(
+            running_container, f"tmux kill-session -t {session_name} 2>/dev/null || true"
+        )
 
     def test_session_naming_sanitization(self, running_container, test_project):
         """Test that session names are properly sanitized."""
@@ -251,20 +231,18 @@ class TestAgentctlAttach:
 
         # Create session with sanitized name
         result = exec_in_container(
-            running_container,
-            f"tmux new-session -d -s {expected_name} 'bash'"
+            running_container, f"tmux new-session -d -s {expected_name} 'bash'"
         )
         assert result.returncode == 0
 
         # Verify it exists with sanitized name
-        result = exec_in_container(
-            running_container,
-            f"tmux has-session -t {expected_name}"
-        )
+        result = exec_in_container(running_container, f"tmux has-session -t {expected_name}")
         assert result.returncode == 0
 
         # Cleanup
-        exec_in_container(running_container, f"tmux kill-session -t {expected_name} 2>/dev/null || true")
+        exec_in_container(
+            running_container, f"tmux kill-session -t {expected_name} 2>/dev/null || true"
+        )
 
 
 @pytest.mark.integration
@@ -276,7 +254,7 @@ class TestAgentctlWorkingDirectory:
         # Create a session and check its working directory
         result = exec_in_container(
             running_container,
-            "tmux new-session -d -s wd-test -c /workspace 'pwd > /tmp/wd-test.txt; sleep 5'"
+            "tmux new-session -d -s wd-test -c /workspace 'pwd > /tmp/wd-test.txt; sleep 5'",
         )
         assert result.returncode == 0
 
@@ -286,9 +264,9 @@ class TestAgentctlWorkingDirectory:
         # Check the recorded working directory
         result = exec_in_container(running_container, "cat /tmp/wd-test.txt")
         assert result.returncode == 0
-        assert "/workspace" in result.stdout, (
-            f"Session should start in /workspace, got: {result.stdout}"
-        )
+        assert (
+            "/workspace" in result.stdout
+        ), f"Session should start in /workspace, got: {result.stdout}"
 
         # Cleanup
         exec_in_container(running_container, "tmux kill-session -t wd-test 2>/dev/null || true")
@@ -312,15 +290,14 @@ class TestAgentctlSSHAgent:
         # shell variable expansion issues
         result = exec_in_container(
             running_container,
-            f"export SSH_AUTH_SOCK={test_socket} && "
-            "tmux new-session -d -s ssh-test -x 80 -y 24"
+            f"export SSH_AUTH_SOCK={test_socket} && " "tmux new-session -d -s ssh-test -x 80 -y 24",
         )
         assert result.returncode == 0, f"Failed to create session: {result.stderr}"
 
         # Send a command to the session to write SSH_AUTH_SOCK to a file
         result = exec_in_container(
             running_container,
-            "tmux send-keys -t ssh-test 'echo $SSH_AUTH_SOCK > /tmp/ssh-sock.txt' Enter"
+            "tmux send-keys -t ssh-test 'echo $SSH_AUTH_SOCK > /tmp/ssh-sock.txt' Enter",
         )
         assert result.returncode == 0, f"Failed to send keys: {result.stderr}"
 
@@ -330,9 +307,7 @@ class TestAgentctlSSHAgent:
         # Check the recorded SSH_AUTH_SOCK
         result = exec_in_container(running_container, "cat /tmp/ssh-sock.txt")
         assert result.returncode == 0, f"Failed to read file: {result.stderr}"
-        assert test_socket in result.stdout, (
-            f"SSH_AUTH_SOCK not preserved, got: {result.stdout}"
-        )
+        assert test_socket in result.stdout, f"SSH_AUTH_SOCK not preserved, got: {result.stdout}"
 
         # Cleanup
         exec_in_container(running_container, "tmux kill-session -t ssh-test 2>/dev/null || true")
@@ -350,7 +325,7 @@ class TestAgentctlIntegration:
         # 1. Create session
         result = exec_in_container(
             running_container,
-            f"tmux new-session -d -s {session_name} 'echo lifecycle-marker; sleep 30'"
+            f"tmux new-session -d -s {session_name} 'echo lifecycle-marker; sleep 30'",
         )
         assert result.returncode == 0
 
@@ -366,10 +341,7 @@ class TestAgentctlIntegration:
         assert "lifecycle-marker" in result.stdout
 
         # 4. Kill session
-        result = exec_in_container(
-            running_container,
-            f"agentctl kill {session_name} --force"
-        )
+        result = exec_in_container(running_container, f"agentctl kill {session_name} --force")
         assert result.returncode == 0
 
         # 5. Verify it's gone
@@ -385,7 +357,7 @@ class TestAgentctlIntegration:
         for session in sessions:
             result = exec_in_container(
                 running_container,
-                f"tmux new-session -d -s {session} 'echo {session}-output; sleep 30'"
+                f"tmux new-session -d -s {session} 'echo {session}-output; sleep 30'",
             )
             assert result.returncode == 0
 
@@ -404,10 +376,7 @@ class TestAgentctlIntegration:
 
         # Kill all
         for session in sessions:
-            result = exec_in_container(
-                running_container,
-                f"agentctl kill {session} --force"
-            )
+            result = exec_in_container(running_container, f"agentctl kill {session} --force")
             assert result.returncode == 0
 
         # Verify all gone

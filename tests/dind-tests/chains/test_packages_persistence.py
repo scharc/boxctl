@@ -39,6 +39,7 @@ class TestPackagesPersistence:
 
         # Give time for package installation
         import time
+
         time.sleep(5)
 
         # 3. Verify package is installed
@@ -62,9 +63,7 @@ class TestPackagesPersistence:
             f"cowsay not installed after rebuild. "
             f"stdout: {result.stdout}, stderr: {result.stderr}"
         )
-        assert "cowsay" in result.stdout, (
-            f"cowsay not in npm list after rebuild: {result.stdout}"
-        )
+        assert "cowsay" in result.stdout, f"cowsay not in npm list after rebuild: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -82,6 +81,7 @@ class TestPackagesPersistence:
         wait_for_container_ready(container_name, timeout=120)
 
         import time
+
         time.sleep(5)
 
         # 3. Rebuild
@@ -96,9 +96,9 @@ class TestPackagesPersistence:
         assert config_path.exists(), ".boxctl.yml not created"
         with open(config_path) as f:
             config = yaml.safe_load(f) or {}
-        assert "httpie" in config.get("packages", {}).get("pip", []), (
-            f"httpie not in pip packages config: {config}"
-        )
+        assert "httpie" in config.get("packages", {}).get(
+            "pip", []
+        ), f"httpie not in pip packages config: {config}"
 
         # 5. Verify package is actually installed in container
         result = exec_in_container(container_name, "pip show httpie 2>/dev/null")
@@ -106,9 +106,7 @@ class TestPackagesPersistence:
             f"httpie not installed after rebuild. "
             f"stdout: {result.stdout}, stderr: {result.stderr}"
         )
-        assert "httpie" in result.stdout.lower(), (
-            f"httpie not in pip show output: {result.stdout}"
-        )
+        assert "httpie" in result.stdout.lower(), f"httpie not in pip show output: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -132,6 +130,7 @@ class TestPackagesPersistence:
         wait_for_container_ready(container_name, timeout=120)
 
         import time
+
         time.sleep(10)  # Give time for apt install
 
         # 3. Verify package is in config
@@ -139,9 +138,9 @@ class TestPackagesPersistence:
         assert config_path.exists(), ".boxctl.yml not created"
         with open(config_path) as f:
             config = yaml.safe_load(f) or {}
-        assert "tree" in config.get("packages", {}).get("apt", []), (
-            f"tree not in apt packages config: {config}"
-        )
+        assert "tree" in config.get("packages", {}).get(
+            "apt", []
+        ), f"tree not in apt packages config: {config}"
 
         # 4. Verify package is actually installed in container
         result = exec_in_container(container_name, "which tree")
@@ -149,9 +148,9 @@ class TestPackagesPersistence:
             f"tree not installed after rebuild. "
             f"stdout: {result.stdout}, stderr: {result.stderr}"
         )
-        assert "/tree" in result.stdout or "tree" in result.stdout, (
-            f"tree path not found: {result.stdout}"
-        )
+        assert (
+            "/tree" in result.stdout or "tree" in result.stdout
+        ), f"tree path not found: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -171,12 +170,12 @@ class TestPackagesConfig:
         result = run_abox("packages", "list", cwd=test_project)
 
         assert result.returncode == 0, f"packages list failed: {result.stderr}"
-        assert "cowsay" in result.stdout, (
-            f"cowsay not shown in packages list output: {result.stdout}"
-        )
-        assert "httpie" in result.stdout, (
-            f"httpie not shown in packages list output: {result.stdout}"
-        )
+        assert (
+            "cowsay" in result.stdout
+        ), f"cowsay not shown in packages list output: {result.stdout}"
+        assert (
+            "httpie" in result.stdout
+        ), f"httpie not shown in packages list output: {result.stdout}"
 
     def test_packages_remove_cleans_config(self, test_project):
         """Test package removal cleans configuration."""

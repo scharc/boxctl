@@ -130,7 +130,9 @@ class MigrationRunner:
         console.print(f"[dim]{migration.get_suggestion()}[/dim]")
 
         try:
-            response = console.input("\n[yellow]Apply this migration? [y/N]: [/yellow]").strip().lower()
+            response = (
+                console.input("\n[yellow]Apply this migration? [y/N]: [/yellow]").strip().lower()
+            )
             return response in ("y", "yes")
         except (KeyboardInterrupt, EOFError):
             return False

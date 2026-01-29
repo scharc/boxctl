@@ -100,9 +100,7 @@ class TestProjectStart:
         assert result.returncode == 0, "/workspace directory not mounted"
 
         # Verify file created on host is visible in container
-        result = exec_in_container(
-            container_name, "cat /workspace/dind_bind_test.txt"
-        )
+        result = exec_in_container(container_name, "cat /workspace/dind_bind_test.txt")
         assert result.returncode == 0, f"Test file not readable in container: {result.stderr}"
         assert test_content in result.stdout, (
             f"File content mismatch - bind mount not working correctly. "
@@ -112,18 +110,17 @@ class TestProjectStart:
         # Verify writes from container are visible on host
         write_content = "Written from inside container"
         result = exec_in_container(
-            container_name,
-            f"echo '{write_content}' > /workspace/container_write_test.txt"
+            container_name, f"echo '{write_content}' > /workspace/container_write_test.txt"
         )
         assert result.returncode == 0, f"Failed to write file in container: {result.stderr}"
 
         write_test_file = test_project / "container_write_test.txt"
-        assert write_test_file.exists(), (
-            "File written in container not visible on host - bind mount is read-only or broken"
-        )
-        assert write_content in write_test_file.read_text(), (
-            "File content written in container does not match on host"
-        )
+        assert (
+            write_test_file.exists()
+        ), "File written in container not visible on host - bind mount is read-only or broken"
+        assert (
+            write_content in write_test_file.read_text()
+        ), "File content written in container does not match on host"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -268,9 +265,9 @@ class TestTrueDinD:
 
         # Enable Docker MCP to mount the socket
         result = run_abox("mcp", "add", "docker", cwd=test_project)
-        assert result.returncode == 0 or "already" in result.stdout.lower(), (
-            f"Failed to add Docker MCP: {result.stderr}"
-        )
+        assert (
+            result.returncode == 0 or "already" in result.stdout.lower()
+        ), f"Failed to add Docker MCP: {result.stderr}"
 
         # Start container
         result = run_abox("start", cwd=test_project)
@@ -301,7 +298,7 @@ class TestTrueDinD:
         # Run a simple alpine container from inside
         result = exec_in_container(
             docker_enabled_container,
-            f"docker run --rm --name {nested_container} alpine:latest echo 'nested-ok'"
+            f"docker run --rm --name {nested_container} alpine:latest echo 'nested-ok'",
         )
 
         assert result.returncode == 0, (
@@ -310,8 +307,7 @@ class TestTrueDinD:
             f"stderr: {result.stderr}"
         )
         assert "nested-ok" in result.stdout, (
-            f"Nested container ran but output unexpected. "
-            f"stdout: {result.stdout}"
+            f"Nested container ran but output unexpected. " f"stdout: {result.stdout}"
         )
 
     def test_nested_docker_build(self, docker_enabled_container, test_project):
@@ -325,47 +321,44 @@ class TestTrueDinD:
             docker_enabled_container,
             "mkdir -p /tmp/build-test && "
             "echo 'FROM alpine:latest' > /tmp/build-test/Dockerfile && "
-            "echo 'RUN echo built-ok' >> /tmp/build-test/Dockerfile"
+            "echo 'RUN echo built-ok' >> /tmp/build-test/Dockerfile",
         )
         assert result.returncode == 0, f"Failed to create Dockerfile: {result.stderr}"
 
         # Build the image
         result = exec_in_container(
-            docker_enabled_container,
-            "docker build -t nested-build-test:latest /tmp/build-test"
+            docker_enabled_container, "docker build -t nested-build-test:latest /tmp/build-test"
         )
 
         assert result.returncode == 0, (
-            f"Docker build failed inside container. "
-            f"stderr: {result.stderr}"
+            f"Docker build failed inside container. " f"stderr: {result.stderr}"
         )
         # Docker build output goes to stderr (buildkit progress), not stdout
         build_output = result.stdout + result.stderr
-        assert "built-ok" in build_output or "Successfully" in build_output, (
-            f"Build output unexpected. stdout: {result.stdout}, stderr: {result.stderr}"
-        )
+        assert (
+            "built-ok" in build_output or "Successfully" in build_output
+        ), f"Build output unexpected. stdout: {result.stdout}, stderr: {result.stderr}"
 
         # Cleanup the built image
-        exec_in_container(docker_enabled_container, "docker rmi nested-build-test:latest 2>/dev/null || true")
+        exec_in_container(
+            docker_enabled_container, "docker rmi nested-build-test:latest 2>/dev/null || true"
+        )
 
     def test_docker_socket_accessible(self, docker_enabled_container, test_project):
         """Test that Docker socket is accessible in the container."""
         result = exec_in_container(
-            docker_enabled_container,
-            "test -S /var/run/docker.sock && echo 'socket-exists'"
+            docker_enabled_container, "test -S /var/run/docker.sock && echo 'socket-exists'"
         )
 
         assert result.returncode == 0, (
-            f"Docker socket not found at /var/run/docker.sock. "
-            f"stderr: {result.stderr}"
+            f"Docker socket not found at /var/run/docker.sock. " f"stderr: {result.stderr}"
         )
         assert "socket-exists" in result.stdout
 
         # Verify we can query Docker
         result = exec_in_container(docker_enabled_container, "docker info")
         assert result.returncode == 0, (
-            f"Docker info failed - socket may not be usable. "
-            f"stderr: {result.stderr}"
+            f"Docker info failed - socket may not be usable. " f"stderr: {result.stderr}"
         )
 
 
@@ -393,15 +386,15 @@ class TestVersionTracking:
             "from boxctl.config import ProjectConfig; "
             "from boxctl import __version__; "
             "config = ProjectConfig(); "
-            "print(f\"VERSION:{config.boxctl_version}\"); "
-            "print(f\"CURRENT:{__version__}\"); "
-            "print(f\"MATCH:{config.boxctl_version == __version__}\")'"
+            'print(f"VERSION:{config.boxctl_version}"); '
+            'print(f"CURRENT:{__version__}"); '
+            'print(f"MATCH:{config.boxctl_version == __version__}")\'',
         )
 
         assert result.returncode == 0, f"Version check failed: {result.stderr}"
-        assert "MATCH:True" in result.stdout, (
-            f"Version not updated after rebuild. Output: {result.stdout}"
-        )
+        assert (
+            "MATCH:True" in result.stdout
+        ), f"Version not updated after rebuild. Output: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -416,19 +409,17 @@ class TestVersionTracking:
             "python3 -c '"
             "from boxctl.config import ProjectConfig; "
             "config = ProjectConfig(); "
-            "config.boxctl_version = \"0.0.1\"; "
+            'config.boxctl_version = "0.0.1"; '
             "config.save(quiet=True); "
-            "print(f\"SET:{config.boxctl_version}\"); "
-            "print(f\"OUTDATED:{config.is_version_outdated()}\")'"
+            'print(f"SET:{config.boxctl_version}"); '
+            'print(f"OUTDATED:{config.is_version_outdated()}")\'',
         )
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "SET:0.0.1" in result.stdout, (
-            f"Failed to set old version. Output: {result.stdout}"
-        )
-        assert "OUTDATED:True" in result.stdout, (
-            f"Expected is_version_outdated to return True. Output: {result.stdout}"
-        )
+        assert "SET:0.0.1" in result.stdout, f"Failed to set old version. Output: {result.stdout}"
+        assert (
+            "OUTDATED:True" in result.stdout
+        ), f"Expected is_version_outdated to return True. Output: {result.stdout}"
 
     def test_current_version_not_outdated(self, running_container, test_project):
         """Test that current version is not detected as outdated."""
@@ -442,13 +433,13 @@ class TestVersionTracking:
             "config = ProjectConfig(); "
             "config.boxctl_version = __version__; "
             "config.save(quiet=True); "
-            "print(f\"OUTDATED:{config.is_version_outdated()}\")'"
+            'print(f"OUTDATED:{config.is_version_outdated()}")\'',
         )
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "OUTDATED:False" in result.stdout, (
-            f"Current version should not be outdated. Output: {result.stdout}"
-        )
+        assert (
+            "OUTDATED:False" in result.stdout
+        ), f"Current version should not be outdated. Output: {result.stdout}"
 
 
 class TestOutdatedEnvironmentWarning:
@@ -462,13 +453,13 @@ class TestOutdatedEnvironmentWarning:
             container_name,
             "python3 -c '"
             "from boxctl.cli.helpers.tmux_ops import _warn_if_base_outdated; "
-            "print(f\"CALLABLE:{callable(_warn_if_base_outdated)}\")'"
+            'print(f"CALLABLE:{callable(_warn_if_base_outdated)}")\'',
         )
 
         assert result.returncode == 0, f"Import failed: {result.stderr}"
-        assert "CALLABLE:True" in result.stdout, (
-            f"_warn_if_base_outdated should be callable. Output: {result.stdout}"
-        )
+        assert (
+            "CALLABLE:True" in result.stdout
+        ), f"_warn_if_base_outdated should be callable. Output: {result.stdout}"
 
     def test_warning_logic_with_outdated_config(self, running_container, test_project):
         """Test warning is triggered when config version is outdated."""
@@ -481,22 +472,22 @@ class TestOutdatedEnvironmentWarning:
             "from boxctl.config import ProjectConfig; "
             "from boxctl.container import ContainerManager; "
             "config = ProjectConfig(); "
-            "config.boxctl_version = \"0.0.1\"; "
+            'config.boxctl_version = "0.0.1"; '
             "config.save(quiet=True); "
             "manager = ContainerManager(); "
-            "base_outdated = manager.is_base_image_outdated(\"" + container_name + "\"); "
+            'base_outdated = manager.is_base_image_outdated("' + container_name + '"); '
             "config_outdated = config.is_version_outdated(); "
-            "print(f\"CONFIG_OUTDATED:{config_outdated}\"); "
-            "print(f\"WOULD_WARN:{base_outdated or config_outdated}\")'"
+            'print(f"CONFIG_OUTDATED:{config_outdated}"); '
+            'print(f"WOULD_WARN:{base_outdated or config_outdated}")\'',
         )
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "CONFIG_OUTDATED:True" in result.stdout, (
-            f"Config should be outdated. Output: {result.stdout}"
-        )
-        assert "WOULD_WARN:True" in result.stdout, (
-            f"Warning should be triggered. Output: {result.stdout}"
-        )
+        assert (
+            "CONFIG_OUTDATED:True" in result.stdout
+        ), f"Config should be outdated. Output: {result.stdout}"
+        assert (
+            "WOULD_WARN:True" in result.stdout
+        ), f"Warning should be triggered. Output: {result.stdout}"
 
     def test_warning_format_components(self, running_container, test_project):
         """Test warning message format and components."""
@@ -511,16 +502,16 @@ class TestOutdatedEnvironmentWarning:
             "source = inspect.getsource(_warn_if_base_outdated); "
             "print(f\"HAS_PANEL:{'Panel' in source}\"); "
             "print(f\"HAS_REBASE:{'rebase' in source.lower()}\"); "
-            "print(f\"HAS_WARNING:{'warning' in source.lower()}\")'"
+            "print(f\"HAS_WARNING:{'warning' in source.lower()}\")'",
         )
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "HAS_PANEL:True" in result.stdout, (
-            f"Warning should use Rich Panel. Output: {result.stdout}"
-        )
-        assert "HAS_REBASE:True" in result.stdout, (
-            f"Warning should mention 'rebase' command. Output: {result.stdout}"
-        )
+        assert (
+            "HAS_PANEL:True" in result.stdout
+        ), f"Warning should use Rich Panel. Output: {result.stdout}"
+        assert (
+            "HAS_REBASE:True" in result.stdout
+        ), f"Warning should mention 'rebase' command. Output: {result.stdout}"
 
 
 class TestRebaseCommand:
@@ -532,9 +523,7 @@ class TestRebaseCommand:
 
         assert result.returncode == 0, f"rebase --help failed: {result.stderr}"
         # Should have some description
-        assert len(result.stdout) > 50, (
-            f"Expected help output. Got: {result.stdout}"
-        )
+        assert len(result.stdout) > 50, f"Expected help output. Got: {result.stdout}"
 
     def test_rebase_recreates_container(self, test_project):
         """Test rebase recreates the container with new base image."""
@@ -580,8 +569,8 @@ class TestRebaseCommand:
             "python3 -c '"
             "from boxctl.config import ProjectConfig; "
             "config = ProjectConfig(); "
-            "config.boxctl_version = \"0.0.1\"; "
-            "config.save(quiet=True)'"
+            'config.boxctl_version = "0.0.1"; '
+            "config.save(quiet=True)'",
         )
 
         # Verify old version set
@@ -589,7 +578,7 @@ class TestRebaseCommand:
             container_name,
             "python3 -c '"
             "from boxctl.config import ProjectConfig; "
-            "print(ProjectConfig().boxctl_version)'"
+            "print(ProjectConfig().boxctl_version)'",
         )
         assert "0.0.1" in result.stdout, "Old version should be set"
 
@@ -605,14 +594,14 @@ class TestRebaseCommand:
             "from boxctl.config import ProjectConfig; "
             "from boxctl import __version__; "
             "config = ProjectConfig(); "
-            "print(f\"VERSION:{config.boxctl_version}\"); "
-            "print(f\"MATCH:{config.boxctl_version == __version__}\")'"
+            'print(f"VERSION:{config.boxctl_version}"); '
+            'print(f"MATCH:{config.boxctl_version == __version__}")\'',
         )
 
         assert result.returncode == 0, f"Version check failed: {result.stderr}"
-        assert "MATCH:True" in result.stdout, (
-            f"Version should match current after rebase. Output: {result.stdout}"
-        )
+        assert (
+            "MATCH:True" in result.stdout
+        ), f"Version should match current after rebase. Output: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -636,14 +625,14 @@ class TestOutdatedBaseImageDetectionIntegration:
             f"python3 -c '"
             "from boxctl.container import ContainerManager; "
             f"m = ContainerManager(); "
-            f"print(f\"OUTDATED:{{m.is_base_image_outdated(\"{container_name}\")}}\")'"
+            f'print(f"OUTDATED:{{m.is_base_image_outdated("{container_name}")}}")\'',
         )
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
         # A fresh container should NOT be outdated
-        assert "OUTDATED:False" in result.stdout, (
-            f"Fresh container should not be marked as outdated. Output: {result.stdout}"
-        )
+        assert (
+            "OUTDATED:False" in result.stdout
+        ), f"Fresh container should not be marked as outdated. Output: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)
@@ -657,13 +646,13 @@ class TestOutdatedBaseImageDetectionIntegration:
             f"python3 -c '"
             "import docker; "
             "client = docker.from_env(); "
-            f"container = client.containers.get(\"{container_name}\"); "
-            "image_id = container.attrs.get(\"Image\", \"\"); "
-            "print(f\"HAS_IMAGE_ID:{{bool(image_id)}}\"); "
-            "print(f\"ID_PREFIX:{{image_id[:12] if image_id else None}}\")'"
+            f'container = client.containers.get("{container_name}"); '
+            'image_id = container.attrs.get("Image", ""); '
+            'print(f"HAS_IMAGE_ID:{{bool(image_id)}}"); '
+            'print(f"ID_PREFIX:{{image_id[:12] if image_id else None}}")\'',
         )
 
         assert result.returncode == 0, f"Script failed: {result.stderr}"
-        assert "HAS_IMAGE_ID:True" in result.stdout, (
-            f"Should be able to get container image ID. Output: {result.stdout}"
-        )
+        assert (
+            "HAS_IMAGE_ID:True" in result.stdout
+        ), f"Should be able to get container image ID. Output: {result.stdout}"

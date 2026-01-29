@@ -22,10 +22,12 @@ def test_claude_config_mounted_in_container(test_project):
     # Check if config files are accessible in container
     result = subprocess.run(
         ["docker", "exec", container_name, "test", "-f", "/home/abox/.claude/config.json"],
-        capture_output=True
+        capture_output=True,
     )
 
-    assert result.returncode == 0, "Claude config.json should be accessible in container at /home/abox/.claude/config.json"
+    assert (
+        result.returncode == 0
+    ), "Claude config.json should be accessible in container at /home/abox/.claude/config.json"
 
 
 def test_claude_super_config_mounted_in_container(test_project):
@@ -38,7 +40,7 @@ def test_claude_super_config_mounted_in_container(test_project):
     # Check if super config is accessible
     result = subprocess.run(
         ["docker", "exec", container_name, "test", "-f", "/home/abox/.claude/config-super.json"],
-        capture_output=True
+        capture_output=True,
     )
 
     assert result.returncode == 0, "Claude config-super.json should be accessible in container"
@@ -54,7 +56,7 @@ def test_claude_mcp_config_mounted_in_container(test_project):
     # Check if MCP config is accessible (now at ~/.mcp.json)
     result = subprocess.run(
         ["docker", "exec", container_name, "test", "-f", "/home/abox/.mcp.json"],
-        capture_output=True
+        capture_output=True,
     )
 
     assert result.returncode == 0, "MCP config should be accessible at /home/abox/.mcp.json"
@@ -70,10 +72,12 @@ def test_codex_config_mounted_in_container(test_project):
     # Check if Codex config is accessible (now in home directory from host mount)
     result = subprocess.run(
         ["docker", "exec", container_name, "test", "-f", "/home/abox/.codex/config.toml"],
-        capture_output=True
+        capture_output=True,
     )
 
-    assert result.returncode == 0, "Codex config.toml should be accessible at /home/abox/.codex/config.toml"
+    assert (
+        result.returncode == 0
+    ), "Codex config.toml should be accessible at /home/abox/.codex/config.toml"
 
 
 def test_mcp_config_contains_added_server(test_project):
@@ -90,7 +94,7 @@ def test_mcp_config_contains_added_server(test_project):
     result = subprocess.run(
         ["docker", "exec", container_name, "cat", "/home/abox/.mcp.json"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, "Should be able to read MCP config from container"
@@ -119,8 +123,7 @@ def test_workspace_mount_visible_in_container(test_project, workspace_dir):
     workspaces_config = config_data.get("workspaces", [])
 
     workspace_entry = next(
-        (w for w in workspaces_config if w.get("path") == str(workspace_dir)),
-        None
+        (w for w in workspaces_config if w.get("path") == str(workspace_dir)), None
     )
 
     assert workspace_entry is not None, "Workspace should be in config"
@@ -135,7 +138,7 @@ def test_workspace_mount_visible_in_container(test_project, workspace_dir):
     result = subprocess.run(
         ["docker", "exec", container_name, "cat", f"/context/{mount_name}/test_marker.txt"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, f"Should be able to read file from /context/{mount_name}"
@@ -155,8 +158,7 @@ def test_workspace_mount_read_only(test_project, workspace_dir):
     workspaces_config = config_data.get("workspaces", [])
 
     workspace_entry = next(
-        (w for w in workspaces_config if w.get("path") == str(workspace_dir)),
-        None
+        (w for w in workspaces_config if w.get("path") == str(workspace_dir)), None
     )
 
     mount_name = workspace_entry.get("mount")
@@ -170,13 +172,14 @@ def test_workspace_mount_read_only(test_project, workspace_dir):
     result = subprocess.run(
         ["docker", "exec", container_name, "touch", f"/context/{mount_name}/test_write.txt"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     # Should fail with permission denied or read-only filesystem error
     assert result.returncode != 0, "Writing to read-only mount should fail"
-    assert "read-only" in result.stderr.lower() or "permission denied" in result.stderr.lower(), \
-        "Error should indicate read-only or permission issue"
+    assert (
+        "read-only" in result.stderr.lower() or "permission denied" in result.stderr.lower()
+    ), "Error should indicate read-only or permission issue"
 
 
 def test_workspace_mount_read_write(test_project, workspace_dir):
@@ -192,8 +195,7 @@ def test_workspace_mount_read_write(test_project, workspace_dir):
     workspaces_config = config_data.get("workspaces", [])
 
     workspace_entry = next(
-        (w for w in workspaces_config if w.get("path") == str(workspace_dir)),
-        None
+        (w for w in workspaces_config if w.get("path") == str(workspace_dir)), None
     )
 
     mount_name = workspace_entry.get("mount")
@@ -206,10 +208,16 @@ def test_workspace_mount_read_write(test_project, workspace_dir):
     # Write to the read-write mount (should succeed)
     test_content = "rw_test_content"
     result = subprocess.run(
-        ["docker", "exec", container_name, "sh", "-c",
-         f"echo '{test_content}' > /context/{mount_name}/test_rw.txt"],
+        [
+            "docker",
+            "exec",
+            container_name,
+            "sh",
+            "-c",
+            f"echo '{test_content}' > /context/{mount_name}/test_rw.txt",
+        ],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, "Writing to read-write mount should succeed"
@@ -236,7 +244,7 @@ def test_project_workspace_mounted_at_workspace(test_project):
     result = subprocess.run(
         ["docker", "exec", container_name, "cat", "/workspace/project_marker.txt"],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, "Should be able to read project file from /workspace"
@@ -260,11 +268,19 @@ def test_env_file_loaded_in_container(test_project):
 
     # Check if env file exists and can be sourced
     result = subprocess.run(
-        ["docker", "exec", container_name, "bash", "-c",
-         "source /workspace/.boxctl/.env && echo $TEST_VAR"],
+        [
+            "docker",
+            "exec",
+            container_name,
+            "bash",
+            "-c",
+            "source /workspace/.boxctl/.env && echo $TEST_VAR",
+        ],
         capture_output=True,
-        text=True
+        text=True,
     )
 
     assert result.returncode == 0, "Should be able to source env file"
-    assert "test_value_123" in result.stdout, "Environment variable should be available after sourcing .env file"
+    assert (
+        "test_value_123" in result.stdout
+    ), "Environment variable should be available after sourcing .env file"

@@ -13,6 +13,7 @@ from boxctl.container import ContainerManager
 def _load_workspaces_config(boxctl_dir: Path) -> list[dict]:
     """Load workspaces from .boxctl/config.yml."""
     from boxctl.config import ProjectConfig
+
     config = ProjectConfig(boxctl_dir.parent)
     return config.workspaces
 
@@ -20,6 +21,7 @@ def _load_workspaces_config(boxctl_dir: Path) -> list[dict]:
 def _save_workspaces_config(boxctl_dir: Path, workspaces: list[dict]) -> None:
     """Save workspaces to .boxctl/config.yml."""
     from boxctl.config import ProjectConfig
+
     config = ProjectConfig(boxctl_dir.parent)
     config.workspaces = workspaces
     config.save()
@@ -28,6 +30,7 @@ def _save_workspaces_config(boxctl_dir: Path, workspaces: list[dict]) -> None:
 def _load_containers_config(boxctl_dir: Path) -> list[dict]:
     """Load container connections from .boxctl/config.yml."""
     from boxctl.config import ProjectConfig
+
     config = ProjectConfig(boxctl_dir.parent)
     return config.containers
 
@@ -35,6 +38,7 @@ def _load_containers_config(boxctl_dir: Path) -> list[dict]:
 def _save_containers_config(boxctl_dir: Path, connections: list[dict]) -> None:
     """Save container connections to .boxctl/config.yml."""
     from boxctl.config import ProjectConfig
+
     config = ProjectConfig(boxctl_dir.parent)
     config.containers = connections
     config.save()

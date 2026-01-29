@@ -169,9 +169,9 @@ class TestMCPInWorktree:
             "cat /home/abox/.mcp.json",
         )
         assert result.returncode == 0, f"MCP config not accessible: {result.stderr}"
-        assert "litellm" in result.stdout, (
-            f"MCP 'litellm' not in config at ~/.mcp.json. Got: {result.stdout}"
-        )
+        assert (
+            "litellm" in result.stdout
+        ), f"MCP 'litellm' not in config at ~/.mcp.json. Got: {result.stdout}"
 
         # Cleanup
         run_abox("stop", cwd=test_project)

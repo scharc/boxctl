@@ -462,5 +462,5 @@ class ContainerDefaults:
         """Extract project name from container name."""
         prefix = ContainerDefaults.CONTAINER_PREFIX
         if container_name.startswith(prefix):
-            return container_name[len(prefix):]
+            return container_name[len(prefix) :]
         return container_name
